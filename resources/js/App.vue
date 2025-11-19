@@ -33,7 +33,8 @@
 
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
-                <slot></slot>
+                <component v-if="pageComponent" :is="pageComponent" />
+                <slot v-else></slot>
             </main>
         </div>
     </div>
@@ -46,12 +47,17 @@ import ThemeToggle from './components/ThemeToggle.vue'
 
 const pageTitle = ref('Tableau de bord')
 const user = ref(null)
+const pageComponent = ref('')
 
 onMounted(() => {
     // Get page title from data attribute on the app element
     const appEl = document.getElementById('app')
     if (appEl && appEl.dataset.pageTitle) {
         pageTitle.value = appEl.dataset.pageTitle
+    }
+
+    if (appEl && appEl.dataset.pageComponent) {
+        pageComponent.value = appEl.dataset.pageComponent
     }
     
     // Get user info from data attribute

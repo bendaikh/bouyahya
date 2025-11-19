@@ -46,6 +46,14 @@
                     :is-active="currentRoute === menuItems.dashboard.route"
                 />
 
+                <!-- Gestion des Clients -->
+                <CollapsibleMenuItem 
+                    :item="menuItems.clients" 
+                    :is-collapsed="isCollapsed"
+                    :is-open="openMenus.clients"
+                    @toggle="toggleMenu('clients')"
+                />
+
                 <!-- Gestion des Achats -->
                 <CollapsibleMenuItem 
                     :item="menuItems.achats" 
@@ -111,6 +119,7 @@ const isMobile = ref(false)
 const openMenus = ref({
     achats: false,
     ventes: false,
+    clients: false,
     stock: false,
     tresorerie: false
 })
@@ -153,6 +162,14 @@ const menuItems = {
             { title: 'Règlements recouvrement', route: '/ventes/reglements-recouvrement', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
             { title: 'Historique ventes', route: '/ventes/historique', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
             { title: 'Relevé compte clients', route: '/ventes/releve-compte-clients', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
+        ]
+    },
+    clients: {
+        title: 'Gestion des clients',
+        icon: 'M17 20h5V8H2v12h5m10 0V8m0 12v2m-10-2v2m0-2H2m10 0h10M2 8l10-6 10 6',
+        children: [
+            { title: 'Liste des clients', route: '/clients', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+            { title: 'Nouveau client', route: '/clients/create', icon: 'M12 4v16m8-8H4' }
         ]
     },
     stock: {
@@ -219,6 +236,8 @@ onMounted(() => {
         openMenus.value.achats = true
     } else if (currentPath.startsWith('/ventes')) {
         openMenus.value.ventes = true
+    } else if (currentPath.startsWith('/clients')) {
+        openMenus.value.clients = true
     } else if (currentPath.startsWith('/stock')) {
         openMenus.value.stock = true
     } else if (currentPath.startsWith('/tresorerie')) {

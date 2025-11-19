@@ -38,6 +38,7 @@
     <div 
         id="app" 
         data-page-title="{{ $page_title ?? 'Tableau de bord' }}"
+        data-page-component="{{ $vue_component ?? '' }}"
         data-user="{{ json_encode(auth()->user()) }}"
     >
         <!-- Content will be rendered here by Vue -->

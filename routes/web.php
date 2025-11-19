@@ -135,6 +135,17 @@ Route::middleware('auth')->group(function () {
         })->name('tresorerie.types-charges');
 });
 
+    // Gestion des clients
+    Route::prefix('clients')->group(function () {
+        Route::get('/', function () {
+            return view('clients.index', ['page_title' => 'Liste des clients']);
+        })->name('clients.index');
+
+        Route::get('/create', function () {
+            return view('clients.create', ['page_title' => 'Nouveau client']);
+        })->name('clients.create');
+    });
+
     // Old routes (kept for backward compatibility)
     Route::get('/blade-example', function () {
         return view('blade-example');
