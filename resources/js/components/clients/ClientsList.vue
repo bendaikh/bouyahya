@@ -248,7 +248,7 @@ const props = defineProps({
     }
 })
 
-const { clients, deleteClient, updateClient } = useClients()
+const { clients, isLoading, fetchClients, deleteClient, updateClient } = useClients()
 
 const searchTerm = ref('')
 const pageSize = ref(10)
@@ -418,7 +418,9 @@ const handleUpdate = () => {
     closeEditModal()
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await fetchClients()
+    
     const searchParams = new URLSearchParams(window.location.search)
     if (searchParams.get('created') === '1') {
         setFeedback('Client créé avec succès.')

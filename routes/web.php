@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\FournisseurController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -155,6 +157,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', function () {
             return view('fournisseurs.create', ['page_title' => 'Nouveau fournisseur']);
         })->name('fournisseurs.create');
+    });
+
+    // API Routes for Clients
+    Route::prefix('api/clients')->group(function () {
+        Route::get('/', [ClientController::class, 'index']);
+        Route::post('/', [ClientController::class, 'store']);
+        Route::get('/next-code', [ClientController::class, 'nextCode']);
+        Route::get('/{id}', [ClientController::class, 'show']);
+        Route::put('/{id}', [ClientController::class, 'update']);
+        Route::delete('/{id}', [ClientController::class, 'destroy']);
+    });
+
+    // API Routes for Fournisseurs
+    Route::prefix('api/fournisseurs')->group(function () {
+        Route::get('/', [FournisseurController::class, 'index']);
+        Route::post('/', [FournisseurController::class, 'store']);
+        Route::get('/next-code', [FournisseurController::class, 'nextCode']);
+        Route::get('/{id}', [FournisseurController::class, 'show']);
+        Route::put('/{id}', [FournisseurController::class, 'update']);
+        Route::delete('/{id}', [FournisseurController::class, 'destroy']);
     });
 
     // Old routes (kept for backward compatibility)

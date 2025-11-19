@@ -1,124 +1,140 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import axios from 'axios'
 
-const STORAGE_KEY = 'bouyahya-fournisseurs'
+const fournisseurs = ref([])
+const isLoading = ref(false)
+const error = ref(null)
 
-const defaultFournisseurs = [
-    {
-        id: 'fournisseur-1',
-        codeFournisseur: 'F-0001',
-        nomFournisseur: 'Distributions Alpha',
-        nomGerant: 'Ahmed Benali',
-        telephone: '0612345678',
-        email: 'contact@alpha-dist.com',
-        activite: 'Distribution de produits alimentaires',
-        ville: 'Casablanca',
-        ice: 'ICE-1234567890',
-        modePaiement: 'Virement bancaire'
-    },
-    {
-        id: 'fournisseur-2',
-        codeFournisseur: 'F-0002',
-        nomFournisseur: 'Tech Solutions',
-        nomGerant: 'Fatima Alami',
-        telephone: '0623456789',
-        email: 'info@techsol.ma',
-        activite: 'Fourniture de matériel informatique',
-        ville: 'Rabat',
-        ice: 'ICE-2233445566',
-        modePaiement: 'Chèque'
+// Map database fields (snake_case) to frontend fields (camelCase)
+const mapFournisseurFromApi = (apiFournisseur) => {
+    return {
+        id: apiFournisseur.id,
+        codeFournisseur: apiFournisseur.code_fournisseur,
+        nomFournisseur: apiFournisseur.nom_fournisseur,
+        nomGerant: apiFournisseur.nom_gerant,
+        telephone: apiFournisseur.telephone,
+        email: apiFournisseur.email,
+        activite: apiFournisseur.activite,
+        ville: apiFournisseur.ville,
+        ice: apiFournisseur.ice,
+        modePaiement: apiFournisseur.mode_paiement
     }
-]
+}
 
-const getInitialFournisseurs = () => {
-    if (typeof window === 'undefined') {
-        return [...defaultFournisseurs]
+// Map frontend fields (camelCase) to database fields (snake_case)
+const mapFournisseurToApi = (fournisseur) => {
+    return {
+        code_fournisseur: fournisseur.codeFournisseur,
+        nom_fournisseur: fournisseur.nomFournisseur,
+        nom_gerant: fournisseur.nomGerant,
+        telephone: fournisseur.telephone,
+        email: fournisseur.email || null,
+        activite: fournisseur.activite || null,
+        ville: fournisseur.ville || null,
+        ice: fournisseur.ice || null,
+        mode_paiement: fournisseur.modePaiement || null
     }
+}
 
+const fetchFournisseurs = async () => {
+    isLoading.value = true
+    error.value = null
     try {
-        const stored = window.localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-            return JSON.parse(stored)
-        }
-    } catch (error) {
-        console.error('Unable to load fournisseurs from localStorage', error)
+        const response = await axios.get('/api/fournisseurs')
+        fournisseurs.value = response.data.map(mapFournisseurFromApi)
+    } catch (err) {
+        error.value = err.message
+        console.error('Error fetching fournisseurs:', err)
+    } finally {
+        isLoading.value = false
     }
-
-    return [...defaultFournisseurs]
 }
 
-const fournisseurs = ref(getInitialFournisseurs())
-
-const persistFournisseurs = () => {
-    if (typeof window === 'undefined') {
-        return
-    }
-
+const generateFournisseurCode = async () => {
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fournisseurs.value))
-    } catch (error) {
-        console.error('Unable to save fournisseurs to localStorage', error)
+        const response = await axios.get('/api/fournisseurs/next-code')
+        return response.data.code
+    } catch (err) {
+        console.error('Error generating fournisseur code:', err)
+        // Fallback: generate locally
+        const maxCode = fournisseurs.value.reduce((max, fournisseur) => {
+            const numeric = parseInt(fournisseur.codeFournisseur?.replace('F-', '') || '0', 10)
+            return Math.max(max, numeric)
+        }, 0)
+        const next = maxCode + 1
+        return `F-${String(next).padStart(5, '0')}`
     }
 }
 
-watch(
-    fournisseurs,
-    () => {
-        persistFournisseurs()
-    },
-    { deep: true }
-)
-
-const generateId = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID()
+const createFournisseur = async (payload) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        const apiData = mapFournisseurToApi(payload)
+        const response = await axios.post('/api/fournisseurs', apiData)
+        const newFournisseur = mapFournisseurFromApi(response.data)
+        fournisseurs.value = [newFournisseur, ...fournisseurs.value]
+        return newFournisseur
+    } catch (err) {
+        error.value = err.response?.data?.errors || err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    return `fournisseur-${Math.random().toString(36).slice(2, 11)}`
 }
 
-const parseCodeNumber = (code) => {
-    if (!code) {
-        return 0
+const updateFournisseur = async (fournisseurId, updates) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        const apiData = mapFournisseurToApi({ 
+            ...updates, 
+            codeFournisseur: updates.codeFournisseur || fournisseurs.value.find(f => f.id === fournisseurId)?.codeFournisseur 
+        })
+        const response = await axios.put(`/api/fournisseurs/${fournisseurId}`, apiData)
+        const updatedFournisseur = mapFournisseurFromApi(response.data)
+        fournisseurs.value = fournisseurs.value.map((fournisseur) => {
+            if (fournisseur.id === fournisseurId) {
+                return updatedFournisseur
+            }
+            return fournisseur
+        })
+        return updatedFournisseur
+    } catch (err) {
+        error.value = err.response?.data?.errors || err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    const numeric = parseInt(code.replace('F-', ''), 10)
-    return Number.isNaN(numeric) ? 0 : numeric
 }
 
-const generateFournisseurCode = () => {
-    const maxCode = fournisseurs.value.reduce((max, fournisseur) => {
-        return Math.max(max, parseCodeNumber(fournisseur.codeFournisseur))
-    }, 0)
-    const next = maxCode + 1
-    return `F-${String(next).padStart(5, '0')}`
-}
-
-const createFournisseur = (payload) => {
-    const newFournisseur = {
-        ...payload,
-        id: generateId(),
-        codeFournisseur: payload.codeFournisseur || generateFournisseurCode()
+const deleteFournisseur = async (fournisseurId) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await axios.delete(`/api/fournisseurs/${fournisseurId}`)
+        fournisseurs.value = fournisseurs.value.filter((fournisseur) => fournisseur.id !== fournisseurId)
+    } catch (err) {
+        error.value = err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    fournisseurs.value = [newFournisseur, ...fournisseurs.value]
-    return newFournisseur
-}
-
-const updateFournisseur = (fournisseurId, updates) => {
-    fournisseurs.value = fournisseurs.value.map((fournisseur) => {
-        if (fournisseur.id === fournisseurId) {
-            return { ...fournisseur, ...updates }
-        }
-        return fournisseur
-    })
-}
-
-const deleteFournisseur = (fournisseurId) => {
-    fournisseurs.value = fournisseurs.value.filter((fournisseur) => fournisseur.id !== fournisseurId)
 }
 
 const getFournisseurById = (fournisseurId) => fournisseurs.value.find((fournisseur) => fournisseur.id === fournisseurId)
 
 export function useFournisseurs() {
+    // Load fournisseurs on first use
+    if (fournisseurs.value.length === 0 && !isLoading.value) {
+        fetchFournisseurs()
+    }
+
     return {
         fournisseurs,
+        isLoading,
+        error,
+        fetchFournisseurs,
         createFournisseur,
         updateFournisseur,
         deleteFournisseur,
@@ -126,4 +142,3 @@ export function useFournisseurs() {
         generateFournisseurCode
     }
 }
-

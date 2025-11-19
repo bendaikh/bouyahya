@@ -203,7 +203,7 @@ const props = defineProps({
     }
 })
 
-const { fournisseurs, deleteFournisseur, updateFournisseur } = useFournisseurs()
+const { fournisseurs, isLoading, fetchFournisseurs, deleteFournisseur, updateFournisseur } = useFournisseurs()
 
 const searchTerm = ref('')
 const pageSize = ref(10)
@@ -366,7 +366,9 @@ const handleUpdate = () => {
     closeEditModal()
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await fetchFournisseurs()
+    
     const searchParams = new URLSearchParams(window.location.search)
     if (searchParams.get('created') === '1') {
         setFeedback('Fournisseur créé avec succès.')

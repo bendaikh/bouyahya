@@ -1,157 +1,151 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import axios from 'axios'
 
-const STORAGE_KEY = 'bouyahya-clients'
+const clients = ref([])
+const isLoading = ref(false)
+const error = ref(null)
 
-const defaultClients = [
-    {
-        id: 'client-1',
-        codeClient: 'C-0001',
-        raisonSociale: 'Alpha Distribution',
-        nomGerant: 'Karim Lahlou',
-        ville: 'Casablanca',
-        typeClient: 'Société',
-        modePaiement: 'Virement',
-        echeance: '30j',
-        cin: 'AA123456',
-        ifFiscal: '123456789',
-        patente: 'P-98765',
-        cnss: 'CNSS-456789',
-        ice: 'ICE-1234567890',
-        banque: 'Banque Populaire',
-        rib: '123 456 789 000000000000 12',
-        plafond: 250000,
-        bloquer: false
-    },
-    {
-        id: 'client-2',
-        codeClient: 'C-0002',
-        raisonSociale: 'Beldi Market',
-        nomGerant: 'Fatima Zahra',
-        ville: 'Marrakech',
-        typeClient: 'Particulier',
-        modePaiement: 'Espèces',
-        echeance: '0j',
-        cin: 'BB654321',
-        ifFiscal: '2233445566',
-        patente: 'P-12345',
-        cnss: 'CNSS-123456',
-        ice: 'ICE-2233445566',
-        banque: 'Attijariwafa Bank',
-        rib: '321 654 987 111111111111 98',
-        plafond: 80000,
-        bloquer: false
-    },
-    {
-        id: 'client-3',
-        codeClient: 'C-0003',
-        raisonSociale: 'Tech Horizon',
-        nomGerant: 'Youssef Haddad',
-        ville: 'Rabat',
-        typeClient: 'Société',
-        modePaiement: 'Chèque',
-        echeance: '45j',
-        cin: 'CC789123',
-        ifFiscal: '9988776655',
-        patente: 'P-54321',
-        cnss: 'CNSS-654321',
-        ice: 'ICE-9988776655',
-        banque: 'CIH Bank',
-        rib: '456 789 123 222222222222 45',
-        plafond: 150000,
-        bloquer: true
+// Map database fields (snake_case) to frontend fields (camelCase)
+const mapClientFromApi = (apiClient) => {
+    return {
+        id: apiClient.id,
+        codeClient: apiClient.code_client,
+        raisonSociale: apiClient.raison_sociale,
+        nomGerant: apiClient.nom_gerant,
+        ville: apiClient.ville,
+        typeClient: apiClient.type_client,
+        modePaiement: apiClient.mode_paiement,
+        echeance: apiClient.echeance,
+        cin: apiClient.cin,
+        ifFiscal: apiClient.if_fiscal,
+        patente: apiClient.patente,
+        cnss: apiClient.cnss,
+        ice: apiClient.ice,
+        banque: apiClient.banque,
+        rib: apiClient.rib,
+        plafond: apiClient.plafond ? parseFloat(apiClient.plafond) : null,
+        bloquer: apiClient.bloquer || false
     }
-]
+}
 
-const getInitialClients = () => {
-    if (typeof window === 'undefined') {
-        return [...defaultClients]
+// Map frontend fields (camelCase) to database fields (snake_case)
+const mapClientToApi = (client) => {
+    return {
+        code_client: client.codeClient,
+        raison_sociale: client.raisonSociale,
+        nom_gerant: client.nomGerant,
+        ville: client.ville,
+        type_client: client.typeClient,
+        mode_paiement: client.modePaiement,
+        echeance: client.echeance,
+        cin: client.cin || null,
+        if_fiscal: client.ifFiscal || null,
+        patente: client.patente || null,
+        cnss: client.cnss || null,
+        ice: client.ice || null,
+        banque: client.banque || null,
+        rib: client.rib || null,
+        plafond: client.plafond || null,
+        bloquer: client.bloquer || false
     }
+}
 
+const fetchClients = async () => {
+    isLoading.value = true
+    error.value = null
     try {
-        const stored = window.localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-            return JSON.parse(stored)
-        }
-    } catch (error) {
-        console.error('Unable to load clients from localStorage', error)
+        const response = await axios.get('/api/clients')
+        clients.value = response.data.map(mapClientFromApi)
+    } catch (err) {
+        error.value = err.message
+        console.error('Error fetching clients:', err)
+    } finally {
+        isLoading.value = false
     }
-
-    return [...defaultClients]
 }
 
-const clients = ref(getInitialClients())
-
-const persistClients = () => {
-    if (typeof window === 'undefined') {
-        return
-    }
-
+const generateClientCode = async () => {
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(clients.value))
-    } catch (error) {
-        console.error('Unable to save clients to localStorage', error)
+        const response = await axios.get('/api/clients/next-code')
+        return response.data.code
+    } catch (err) {
+        console.error('Error generating client code:', err)
+        // Fallback: generate locally
+        const maxCode = clients.value.reduce((max, client) => {
+            const numeric = parseInt(client.codeClient?.replace('C-', '') || '0', 10)
+            return Math.max(max, numeric)
+        }, 0)
+        const next = maxCode + 1
+        return `C-${String(next).padStart(4, '0')}`
     }
 }
 
-watch(
-    clients,
-    () => {
-        persistClients()
-    },
-    { deep: true }
-)
-
-const generateId = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID()
+const createClient = async (payload) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        const apiData = mapClientToApi(payload)
+        const response = await axios.post('/api/clients', apiData)
+        const newClient = mapClientFromApi(response.data)
+        clients.value = [newClient, ...clients.value]
+        return newClient
+    } catch (err) {
+        error.value = err.response?.data?.errors || err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    return `client-${Math.random().toString(36).slice(2, 11)}`
 }
 
-const parseCodeNumber = (code) => {
-    if (!code) {
-        return 0
+const updateClient = async (clientId, updates) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        const apiData = mapClientToApi({ ...updates, codeClient: updates.codeClient || clients.value.find(c => c.id === clientId)?.codeClient })
+        const response = await axios.put(`/api/clients/${clientId}`, apiData)
+        const updatedClient = mapClientFromApi(response.data)
+        clients.value = clients.value.map((client) => {
+            if (client.id === clientId) {
+                return updatedClient
+            }
+            return client
+        })
+        return updatedClient
+    } catch (err) {
+        error.value = err.response?.data?.errors || err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    const numeric = parseInt(code.replace('C-', ''), 10)
-    return Number.isNaN(numeric) ? 0 : numeric
 }
 
-const generateClientCode = () => {
-    const maxCode = clients.value.reduce((max, client) => {
-        return Math.max(max, parseCodeNumber(client.codeClient))
-    }, 0)
-    const next = maxCode + 1
-    return `C-${String(next).padStart(4, '0')}`
-}
-
-const createClient = (payload) => {
-    const newClient = {
-        ...payload,
-        id: generateId(),
-        codeClient: payload.codeClient || generateClientCode()
+const deleteClient = async (clientId) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await axios.delete(`/api/clients/${clientId}`)
+        clients.value = clients.value.filter((client) => client.id !== clientId)
+    } catch (err) {
+        error.value = err.message
+        throw err
+    } finally {
+        isLoading.value = false
     }
-    clients.value = [newClient, ...clients.value]
-    return newClient
-}
-
-const updateClient = (clientId, updates) => {
-    clients.value = clients.value.map((client) => {
-        if (client.id === clientId) {
-            return { ...client, ...updates }
-        }
-        return client
-    })
-}
-
-const deleteClient = (clientId) => {
-    clients.value = clients.value.filter((client) => client.id !== clientId)
 }
 
 const getClientById = (clientId) => clients.value.find((client) => client.id === clientId)
 
 export function useClients() {
+    // Load clients on first use
+    if (clients.value.length === 0 && !isLoading.value) {
+        fetchClients()
+    }
+
     return {
         clients,
+        isLoading,
+        error,
+        fetchClients,
         createClient,
         updateClient,
         deleteClient,
@@ -159,5 +153,3 @@ export function useClients() {
         generateClientCode
     }
 }
-
-

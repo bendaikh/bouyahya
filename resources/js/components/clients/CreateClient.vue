@@ -195,10 +195,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useClients } from '../../composables/useClients'
 
-const { createClient, generateClientCode } = useClients()
+const { createClient, generateClientCode, isLoading } = useClients()
 const clientsListUrl = '/clients'
 
 const villeOptions = [
@@ -218,7 +218,7 @@ const modePaiementOptions = ['Espèces', 'Virement', 'Chèque', 'Traite']
 const echeanceOptions = ['0j', '30j', '45j', '60j', '90j']
 
 const createEmptyForm = () => ({
-    codeClient: generateClientCode(),
+    codeClient: '',
     raisonSociale: '',
     nomGerant: '',
     ville: '',
@@ -297,6 +297,10 @@ const handleSubmit = async () => {
         isSubmitting.value = false
     }
 }
+
+onMounted(async () => {
+    form.codeClient = await generateClientCode()
+})
 </script>
 
 <style scoped>

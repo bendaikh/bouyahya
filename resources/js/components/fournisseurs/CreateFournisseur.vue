@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useFournisseurs } from '../../composables/useFournisseurs'
 
 const { createFournisseur, generateFournisseurCode } = useFournisseurs()
@@ -202,7 +202,7 @@ const villeOptions = [
 const modePaiementOptions = ['Virement bancaire', 'Espèces', 'Chèque', 'Traite']
 
 const createEmptyForm = () => ({
-    codeFournisseur: generateFournisseurCode(),
+    codeFournisseur: '',
     nomFournisseur: '',
     nomGerant: '',
     telephone: '',
@@ -282,6 +282,10 @@ const handleDelete = () => {
 const handlePrint = () => {
     window.print()
 }
+
+onMounted(async () => {
+    form.codeFournisseur = await generateFournisseurCode()
+})
 </script>
 
 <style scoped>
