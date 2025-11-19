@@ -12,6 +12,8 @@ import ThemeToggle from './components/ThemeToggle.vue';
 import App from './App.vue';
 import CreateClient from './components/clients/CreateClient.vue';
 import ClientsList from './components/clients/ClientsList.vue';
+import CreateFournisseur from './components/fournisseurs/CreateFournisseur.vue';
+import FournisseursList from './components/fournisseurs/FournisseursList.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -26,6 +28,8 @@ app.component('CollapsibleMenuItem', CollapsibleMenuItem);
 app.component('ThemeToggle', ThemeToggle);
 app.component('CreateClient', CreateClient);
 app.component('ClientsList', ClientsList);
+app.component('CreateFournisseur', CreateFournisseur);
+app.component('FournisseursList', FournisseursList);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {

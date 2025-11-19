@@ -54,6 +54,14 @@
                     @toggle="toggleMenu('clients')"
                 />
 
+                <!-- Gestion des Fournisseurs -->
+                <CollapsibleMenuItem 
+                    :item="menuItems.fournisseurs" 
+                    :is-collapsed="isCollapsed"
+                    :is-open="openMenus.fournisseurs"
+                    @toggle="toggleMenu('fournisseurs')"
+                />
+
                 <!-- Gestion des Achats -->
                 <CollapsibleMenuItem 
                     :item="menuItems.achats" 
@@ -120,6 +128,7 @@ const openMenus = ref({
     achats: false,
     ventes: false,
     clients: false,
+    fournisseurs: false,
     stock: false,
     tresorerie: false
 })
@@ -170,6 +179,14 @@ const menuItems = {
         children: [
             { title: 'Liste des clients', route: '/clients', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
             { title: 'Nouveau client', route: '/clients/create', icon: 'M12 4v16m8-8H4' }
+        ]
+    },
+    fournisseurs: {
+        title: 'Gestion des Fournisseurs',
+        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        children: [
+            { title: 'Liste des fournisseurs', route: '/fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+            { title: 'Nouveau fournisseur', route: '/fournisseurs/create', icon: 'M12 4v16m8-8H4' }
         ]
     },
     stock: {
@@ -238,6 +255,8 @@ onMounted(() => {
         openMenus.value.ventes = true
     } else if (currentPath.startsWith('/clients')) {
         openMenus.value.clients = true
+    } else if (currentPath.startsWith('/fournisseurs')) {
+        openMenus.value.fournisseurs = true
     } else if (currentPath.startsWith('/stock')) {
         openMenus.value.stock = true
     } else if (currentPath.startsWith('/tresorerie')) {

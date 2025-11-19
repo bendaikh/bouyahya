@@ -146,6 +146,17 @@ Route::middleware('auth')->group(function () {
         })->name('clients.create');
     });
 
+    // Gestion des fournisseurs
+    Route::prefix('fournisseurs')->group(function () {
+        Route::get('/', function () {
+            return view('fournisseurs.index', ['page_title' => 'Liste des fournisseurs']);
+        })->name('fournisseurs.index');
+
+        Route::get('/create', function () {
+            return view('fournisseurs.create', ['page_title' => 'Nouveau fournisseur']);
+        })->name('fournisseurs.create');
+    });
+
     // Old routes (kept for backward compatibility)
     Route::get('/blade-example', function () {
         return view('blade-example');
