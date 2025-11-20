@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\FournisseurController;
+use App\Http\Controllers\Api\SettingsController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -177,6 +178,22 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [FournisseurController::class, 'show']);
         Route::put('/{id}', [FournisseurController::class, 'update']);
         Route::delete('/{id}', [FournisseurController::class, 'destroy']);
+    });
+
+    // Paramètres (Settings)
+    Route::get('/parametres', function () {
+        return view('parametres', ['page_title' => 'Paramètres']);
+    })->name('parametres');
+
+    // API Routes for Settings
+    Route::prefix('api/settings')->group(function () {
+        Route::get('/', [SettingsController::class, 'index']);
+        Route::post('/app-name', [SettingsController::class, 'updateAppName']);
+        Route::post('/logo', [SettingsController::class, 'uploadLogo']);
+        Route::delete('/logo', [SettingsController::class, 'deleteLogo']);
+        Route::post('/cities', [SettingsController::class, 'updateCities']);
+        Route::post('/cities/add', [SettingsController::class, 'addCity']);
+        Route::post('/cities/remove', [SettingsController::class, 'removeCity']);
     });
 
     // Old routes (kept for backward compatibility)

@@ -14,6 +14,7 @@ import CreateClient from './components/clients/CreateClient.vue';
 import ClientsList from './components/clients/ClientsList.vue';
 import CreateFournisseur from './components/fournisseurs/CreateFournisseur.vue';
 import FournisseursList from './components/fournisseurs/FournisseursList.vue';
+import Settings from './components/Settings.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -30,6 +31,7 @@ app.component('CreateClient', CreateClient);
 app.component('ClientsList', ClientsList);
 app.component('CreateFournisseur', CreateFournisseur);
 app.component('FournisseursList', FournisseursList);
+app.component('Settings', Settings);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {

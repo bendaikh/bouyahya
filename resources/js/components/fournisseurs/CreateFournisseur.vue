@@ -183,21 +183,13 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { useFournisseurs } from '../../composables/useFournisseurs'
+import { useSettings } from '../../composables/useSettings'
 
 const { createFournisseur, generateFournisseurCode } = useFournisseurs()
+const { fetchCities } = useSettings()
 const fournisseursListUrl = '/fournisseurs'
 
-const villeOptions = [
-    'Casablanca',
-    'Rabat',
-    'Marrakech',
-    'Fès',
-    'Agadir',
-    'Tanger',
-    'Kenitra',
-    'Oujda',
-    'Tetouan'
-]
+const villeOptions = ref([])
 
 const modePaiementOptions = ['Virement bancaire', 'Espèces', 'Chèque', 'Traite']
 
@@ -285,6 +277,26 @@ const handlePrint = () => {
 
 onMounted(async () => {
     form.codeFournisseur = await generateFournisseurCode()
+    // Load cities from settings
+    try {
+        villeOptions.value = await fetchCities()
+        // Fallback to default cities if none configured
+        if (villeOptions.value.length === 0) {
+            villeOptions.value = [
+                'Casablanca',
+                'Rabat',
+                'Marrakech',
+                'Fès',
+                'Agadir',
+                'Tanger',
+                'Kenitra',
+                'Oujda',
+                'Tetouan'
+            ]
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des villes:', error)
+    }
 })
 </script>
 

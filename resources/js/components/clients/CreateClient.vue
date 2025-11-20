@@ -197,21 +197,13 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { useClients } from '../../composables/useClients'
+import { useSettings } from '../../composables/useSettings'
 
 const { createClient, generateClientCode, isLoading } = useClients()
+const { fetchCities } = useSettings()
 const clientsListUrl = '/clients'
 
-const villeOptions = [
-    'Casablanca',
-    'Rabat',
-    'Marrakech',
-    'Fès',
-    'Agadir',
-    'Tanger',
-    'Kenitra',
-    'Oujda',
-    'Tetouan'
-]
+const villeOptions = ref([])
 
 const typeOptions = ['Particulier', 'Société']
 const modePaiementOptions = ['Espèces', 'Virement', 'Chèque', 'Traite']
@@ -300,6 +292,26 @@ const handleSubmit = async () => {
 
 onMounted(async () => {
     form.codeClient = await generateClientCode()
+    // Load cities from settings
+    try {
+        villeOptions.value = await fetchCities()
+        // Fallback to default cities if none configured
+        if (villeOptions.value.length === 0) {
+            villeOptions.value = [
+                'Casablanca',
+                'Rabat',
+                'Marrakech',
+                'Fès',
+                'Agadir',
+                'Tanger',
+                'Kenitra',
+                'Oujda',
+                'Tetouan'
+            ]
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des villes:', error)
+    }
 })
 </script>
 

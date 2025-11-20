@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         // Create superadmin user
         $this->call([
             SuperAdminSeeder::class,
+            SettingsSeeder::class,
         ]);
     }
 }
