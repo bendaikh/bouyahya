@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\FournisseurController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\BonAchatFournisseurController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -28,6 +29,10 @@ Route::middleware('auth')->group(function () {
 
     // La gestion des achats
     Route::prefix('achats')->group(function () {
+        Route::get('/bon-achat-fournisseur', function () {
+            return view('achats.bon-achat-fournisseur', ['page_title' => 'Bon d\'achat Fournisseur']);
+        })->name('achats.bon-achat-fournisseur');
+        
         Route::get('/bon-commande', function () {
         return view('achats.bon-commande', ['page_title' => 'Bon de commande']);
     })->name('achats.bon-commande');
@@ -178,6 +183,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [FournisseurController::class, 'show']);
         Route::put('/{id}', [FournisseurController::class, 'update']);
         Route::delete('/{id}', [FournisseurController::class, 'destroy']);
+    });
+    
+    // API Routes for Bon d'achat Fournisseur
+    Route::prefix('api/bon-achat-fournisseur')->group(function () {
+        Route::get('/', [BonAchatFournisseurController::class, 'index']);
+        Route::post('/', [BonAchatFournisseurController::class, 'store']);
+        Route::get('/next-numero', [BonAchatFournisseurController::class, 'nextNumeroBon']);
+        Route::get('/{id}', [BonAchatFournisseurController::class, 'show']);
+        Route::put('/{id}', [BonAchatFournisseurController::class, 'update']);
+        Route::post('/{id}/validate', [BonAchatFournisseurController::class, 'validateBon']);
+        Route::post('/{id}/cancel', [BonAchatFournisseurController::class, 'cancel']);
+        Route::delete('/{id}', [BonAchatFournisseurController::class, 'destroy']);
     });
 
     // Paramètres (Settings)
