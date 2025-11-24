@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\FournisseurController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\BonAchatFournisseurController;
+use App\Http\Controllers\BonCommandeClientController;
+use App\Http\Controllers\BonCommandeFournisseurController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -33,9 +35,13 @@ Route::middleware('auth')->group(function () {
             return view('achats.bon-achat-fournisseur', ['page_title' => 'Bon d\'achat Fournisseur']);
         })->name('achats.bon-achat-fournisseur');
         
-        Route::get('/bon-commande', function () {
-        return view('achats.bon-commande', ['page_title' => 'Bon de commande']);
-    })->name('achats.bon-commande');
+        Route::get('/bon-commande', [BonCommandeFournisseurController::class, 'index'])->name('achats.bon-commande');
+        Route::post('/bon-commande', [BonCommandeFournisseurController::class, 'store'])->name('achats.bon-commande.store');
+        Route::get('/bon-commande/next-numero', [BonCommandeFournisseurController::class, 'nextNumero'])->name('achats.bon-commande.next-numero');
+        Route::get('/bon-commande/{id}', [BonCommandeFournisseurController::class, 'show'])->name('achats.bon-commande.show');
+        Route::put('/bon-commande/{id}', [BonCommandeFournisseurController::class, 'update'])->name('achats.bon-commande.update');
+        Route::delete('/bon-commande/{id}', [BonCommandeFournisseurController::class, 'destroy'])->name('achats.bon-commande.destroy');
+        Route::get('/bon-commande/{id}/print', [BonCommandeFournisseurController::class, 'print'])->name('achats.bon-commande.print');
     
     Route::get('/bon-reception', function () {
         return view('achats.bon-reception', ['page_title' => 'Bon de réception']);
@@ -60,9 +66,13 @@ Route::middleware('auth')->group(function () {
 
     // La gestion des ventes
     Route::prefix('ventes')->group(function () {
-        Route::get('/bon-commande', function () {
-            return view('ventes.bon-commande', ['page_title' => 'Bon de commande']);
-        })->name('ventes.bon-commande');
+        Route::get('/bon-commande', [BonCommandeClientController::class, 'index'])->name('ventes.bon-commande');
+        Route::post('/bon-commande', [BonCommandeClientController::class, 'store'])->name('ventes.bon-commande.store');
+        Route::get('/bon-commande/next-numero', [BonCommandeClientController::class, 'nextNumero'])->name('ventes.bon-commande.next-numero');
+        Route::get('/bon-commande/{id}', [BonCommandeClientController::class, 'show'])->name('ventes.bon-commande.show');
+        Route::put('/bon-commande/{id}', [BonCommandeClientController::class, 'update'])->name('ventes.bon-commande.update');
+        Route::delete('/bon-commande/{id}', [BonCommandeClientController::class, 'destroy'])->name('ventes.bon-commande.destroy');
+        Route::get('/bon-commande/{id}/print', [BonCommandeClientController::class, 'print'])->name('ventes.bon-commande.print');
         
         Route::get('/bon-livraison', function () {
             return view('ventes.bon-livraison', ['page_title' => 'Bon de livraison']);
