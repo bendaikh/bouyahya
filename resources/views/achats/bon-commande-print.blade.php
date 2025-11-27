@@ -182,8 +182,8 @@
                     <td>{{ $article->code_article }}</td>
                     <td>{{ $article->designation }}</td>
                     <td class="text-center">{{ $article->quantite }}</td>
-                    <td class="text-right">{{ number_format($article->prix_unitaire, 2, ',', ' ') }} €</td>
-                    <td class="text-right">{{ number_format($article->sous_total, 2, ',', ' ') }} €</td>
+                    <td class="text-right">{{ number_format($article->prix_unitaire, 2, ',', ' ') }} DH</td>
+                    <td class="text-right">{{ number_format($article->sous_total, 2, ',', ' ') }} DH</td>
                 </tr>
             @endforeach
         </tbody>
@@ -197,7 +197,7 @@
             </tr>
             <tr class="total-row">
                 <td><strong>Total Général TTC:</strong></td>
-                <td class="text-right">{{ number_format($bonCommande->total_general, 2, ',', ' ') }} €</td>
+                <td class="text-right">{{ number_format($bonCommande->total_general, 2, ',', ' ') }} DH</td>
             </tr>
         </table>
     </div>

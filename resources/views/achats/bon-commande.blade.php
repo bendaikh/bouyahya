@@ -305,7 +305,7 @@ function printBonCommande(id) {
                             <td class="px-4 py-3">
                                 <input type="number" x-model="item.prix_unitaire" @input="updateSousTotal(item)" min="0" step="0.01" class="w-28 px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white" x-text="item.sous_total.toFixed(2) + ' €'"></td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white" x-text="item.sous_total.toFixed(2) + ' DH'"></td>
                             <td class="px-4 py-3">
                                 <button @click="removeItem(index)" class="text-red-600 hover:text-red-900 dark:text-red-400 text-sm font-medium">delete</button>
                             </td>
@@ -334,7 +334,7 @@ function printBonCommande(id) {
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
                     <span class="text-base font-semibold text-gray-800 dark:text-gray-200">Total Général TTC</span>
-                    <span class="text-lg font-bold text-blue-600 dark:text-blue-400" x-text="totalGeneral.toFixed(2) + ' €'"></span>
+                    <span class="text-lg font-bold text-blue-600 dark:text-blue-400" x-text="totalGeneral.toFixed(2) + ' DH'"></span>
                 </div>
             </div>
         </div>
@@ -383,7 +383,7 @@ function printBonCommande(id) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->numero_bon }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->fournisseur->nom_fournisseur }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->date->format('d/m/Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ number_format($bonCommande->total_general, 2, ',', ' ') }} €</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ number_format($bonCommande->total_general, 2, ',', ' ') }} DH</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full 
                                         @if($bonCommande->statut === 'Validé') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
