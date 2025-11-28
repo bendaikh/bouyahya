@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\FournisseurController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\BonAchatFournisseurController;
+use App\Http\Controllers\Api\ReglementFournisseurController;
 use App\Http\Controllers\BonCommandeClientController;
 use App\Http\Controllers\BonCommandeFournisseurController;
 
@@ -48,7 +49,7 @@ Route::middleware('auth')->group(function () {
     })->name('achats.bon-reception');
     
     Route::get('/reglements-fournisseurs', function () {
-        return view('achats.reglements-fournisseurs', ['page_title' => 'Règlements fournisseurs']);
+        return view('achats.reglements-fournisseurs', ['page_title' => 'Règlements fournisseurs', 'vue_component' => 'ReglementsFournisseurs']);
     })->name('achats.reglements-fournisseurs');
     
     Route::get('/historique', function () {
@@ -205,6 +206,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/validate', [BonAchatFournisseurController::class, 'validateBon']);
         Route::post('/{id}/cancel', [BonAchatFournisseurController::class, 'cancel']);
         Route::delete('/{id}', [BonAchatFournisseurController::class, 'destroy']);
+    });
+
+    // API Routes for Règlements Fournisseurs
+    Route::prefix('api/reglements-fournisseurs')->group(function () {
+        Route::get('/', [ReglementFournisseurController::class, 'index']);
+        Route::post('/', [ReglementFournisseurController::class, 'store']);
+        Route::get('/next-code', [ReglementFournisseurController::class, 'nextCode']);
+        Route::get('/bons-achat/{fournisseurId}', [ReglementFournisseurController::class, 'getBonsAchatFournisseur']);
+        Route::get('/{id}', [ReglementFournisseurController::class, 'show']);
+        Route::put('/{id}', [ReglementFournisseurController::class, 'update']);
+        Route::post('/{id}/mark-paid', [ReglementFournisseurController::class, 'markAsPaid']);
+        Route::post('/{id}/mark-postponed', [ReglementFournisseurController::class, 'markAsPostponed']);
+        Route::delete('/{id}', [ReglementFournisseurController::class, 'destroy']);
     });
 
     // Paramètres (Settings)
