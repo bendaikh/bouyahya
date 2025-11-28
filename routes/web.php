@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
     })->name('achats.historique');
     
     Route::get('/releve-compte-fournisseurs', function () {
-        return view('achats.releve-compte-fournisseurs', ['page_title' => 'Relevé compte fournisseurs']);
+        return view('achats.releve-compte-fournisseurs', ['page_title' => 'Relevé compte fournisseurs', 'vue_component' => 'ReleveCompteFournisseurs']);
     })->name('achats.releve-compte-fournisseurs');
     
     Route::get('/echeancier-fournisseurs', function () {
@@ -199,6 +199,7 @@ Route::middleware('auth')->group(function () {
     // API Routes for Bon d'achat Fournisseur
     Route::prefix('api/bon-achat-fournisseur')->group(function () {
         Route::get('/', [BonAchatFournisseurController::class, 'index']);
+        Route::get('/historique', [BonAchatFournisseurController::class, 'historique']);
         Route::post('/', [BonAchatFournisseurController::class, 'store']);
         Route::get('/next-numero', [BonAchatFournisseurController::class, 'nextNumeroBon']);
         Route::get('/{id}', [BonAchatFournisseurController::class, 'show']);

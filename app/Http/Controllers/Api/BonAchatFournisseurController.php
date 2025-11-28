@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BonAchatFournisseur;
 use App\Models\BonAchatArticle;
 use App\Models\Fournisseur;
+use App\Models\ReglementFournisseurLigne;
 use Illuminate\Support\Facades\DB;
 
 class BonAchatFournisseurController extends Controller
@@ -19,6 +20,42 @@ class BonAchatFournisseurController extends Controller
         $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        return response()->json($bons);
+    }
+    
+    /**
+     * Get historique data with payment information
+     */
+    public function historique(Request $request)
+    {
+        $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
+            ->where('statut', 'valide')
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($bon) {
+                // Calculate amount paid from reglements
+                $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
+                    ->whereHas('reglement', function ($query) {
+                        $query->where('statut', 'paye');
+                    })
+                    ->sum('montant_regle');
+                
+                // Calculate solde (unpaid balance)
+                $solde = floatval($bon->total_ttc) - floatval($montantPaye);
+                
+                // For reliquat, you can customize this based on your business logic
+                // Here we use the same as solde, but you might want to track 
+                // items not yet delivered separately
+                $reliquat = $solde > 0 ? $solde : 0;
+                
+                $bon->montant_paye = floatval($montantPaye);
+                $bon->solde = $solde;
+                $bon->reliquat = $reliquat;
+                
+                return $bon;
+            });
         
         return response()->json($bons);
     }

@@ -17,6 +17,8 @@ import FournisseursList from './components/fournisseurs/FournisseursList.vue';
 import Settings from './components/Settings.vue';
 import BonAchatFournisseur from './components/achats/BonAchatFournisseur.vue';
 import ReglementsFournisseurs from './components/achats/ReglementsFournisseurs.vue';
+import HistoriqueAchats from './components/achats/HistoriqueAchats.vue';
+import ReleveCompteFournisseurs from './components/achats/ReleveCompteFournisseurs.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -36,6 +38,8 @@ app.component('FournisseursList', FournisseursList);
 app.component('Settings', Settings);
 app.component('BonAchatFournisseur', BonAchatFournisseur);
 app.component('ReglementsFournisseurs', ReglementsFournisseurs);
+app.component('HistoriqueAchats', HistoriqueAchats);
+app.component('ReleveCompteFournisseurs', ReleveCompteFournisseurs);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {
