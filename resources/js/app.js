@@ -15,10 +15,14 @@ import ClientsList from './components/clients/ClientsList.vue';
 import CreateFournisseur from './components/fournisseurs/CreateFournisseur.vue';
 import FournisseursList from './components/fournisseurs/FournisseursList.vue';
 import Settings from './components/Settings.vue';
+import SettingsApplication from './components/SettingsApplication.vue';
+import SettingsVilles from './components/SettingsVilles.vue';
+import SettingsArticles from './components/SettingsArticles.vue';
 import BonAchatFournisseur from './components/achats/BonAchatFournisseur.vue';
 import ReglementsFournisseurs from './components/achats/ReglementsFournisseurs.vue';
 import HistoriqueAchats from './components/achats/HistoriqueAchats.vue';
 import ReleveCompteFournisseurs from './components/achats/ReleveCompteFournisseurs.vue';
+import ArticlesList from './components/stock/ArticlesList.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -36,10 +40,14 @@ app.component('ClientsList', ClientsList);
 app.component('CreateFournisseur', CreateFournisseur);
 app.component('FournisseursList', FournisseursList);
 app.component('Settings', Settings);
+app.component('SettingsApplication', SettingsApplication);
+app.component('SettingsVilles', SettingsVilles);
+app.component('SettingsArticles', SettingsArticles);
 app.component('BonAchatFournisseur', BonAchatFournisseur);
 app.component('ReglementsFournisseurs', ReglementsFournisseurs);
 app.component('HistoriqueAchats', HistoriqueAchats);
 app.component('ReleveCompteFournisseurs', ReleveCompteFournisseurs);
+app.component('ArticlesList', ArticlesList);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {

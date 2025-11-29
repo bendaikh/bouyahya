@@ -1,13 +1,13 @@
 <template>
     <aside 
         :class="[
-            'fixed inset-y-0 left-0 z-50 bg-slate-100 dark:bg-slate-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out shadow-lg',
+            'fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-100 dark:bg-slate-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out shadow-lg',
             isCollapsed ? 'w-20' : 'w-64',
             isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         ]"
     >
         <!-- Sidebar Header -->
-        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800">
+        <div class="flex-shrink-0 flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800">
             <div v-if="!isCollapsed" class="flex items-center space-x-2">
                 <div class="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="flex-1 overflow-y-auto py-4 px-2">
+        <nav class="flex-1 min-h-0 overflow-y-auto py-4 px-2">
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <MenuItem 
@@ -95,10 +95,11 @@
                 />
 
                 <!-- Paramètres -->
-                <MenuItem 
+                <CollapsibleMenuItem 
                     :item="menuItems.parametres" 
                     :is-collapsed="isCollapsed"
-                    :is-active="currentRoute === menuItems.parametres.route"
+                    :is-open="openMenus.parametres"
+                    @toggle="toggleMenu('parametres')"
                 />
             </div>
         </nav>
@@ -137,7 +138,8 @@ const openMenus = ref({
     clients: false,
     fournisseurs: false,
     stock: false,
-    tresorerie: false
+    tresorerie: false,
+    parametres: false
 })
 
 const currentRoute = ref(window.location.pathname || '/')
@@ -159,7 +161,11 @@ const menuItems = {
     parametres: {
         title: 'Paramètres',
         icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
-        route: '/parametres'
+        children: [
+            { title: 'Application', route: '/parametres/application', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+            { title: 'Villes', route: '/parametres/villes', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
+            { title: 'Articles', route: '/parametres/articles', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' }
+        ]
     },
     achats: {
         title: 'La gestion des achats',
@@ -273,6 +279,8 @@ onMounted(() => {
         openMenus.value.stock = true
     } else if (currentPath.startsWith('/tresorerie')) {
         openMenus.value.tresorerie = true
+    } else if (currentPath.startsWith('/parametres')) {
+        openMenus.value.parametres = true
     }
 })
 

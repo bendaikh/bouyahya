@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\FournisseurController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\BonAchatFournisseurController;
 use App\Http\Controllers\Api\ReglementFournisseurController;
+use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\BonCommandeClientController;
 use App\Http\Controllers\BonCommandeFournisseurController;
 
@@ -99,7 +100,7 @@ Route::middleware('auth')->group(function () {
     // La gestion du stock
     Route::prefix('stock')->group(function () {
         Route::get('/articles', function () {
-            return view('stock.articles', ['page_title' => 'Articles']);
+            return view('stock.articles', ['page_title' => 'Articles', 'vue_component' => 'ArticlesList']);
         })->name('stock.articles');
         
         Route::get('/familles', function () {
@@ -223,9 +224,24 @@ Route::middleware('auth')->group(function () {
     });
 
     // Paramètres (Settings)
-    Route::get('/parametres', function () {
-        return view('parametres', ['page_title' => 'Paramètres']);
-    })->name('parametres');
+    Route::prefix('parametres')->group(function () {
+        // Redirect /parametres to /parametres/application
+        Route::get('/', function () {
+            return redirect()->route('parametres.application');
+        })->name('parametres');
+        
+        Route::get('/application', function () {
+            return view('parametres.application', ['page_title' => 'Paramètres Application']);
+        })->name('parametres.application');
+        
+        Route::get('/villes', function () {
+            return view('parametres.villes', ['page_title' => 'Paramètres Villes']);
+        })->name('parametres.villes');
+        
+        Route::get('/articles', function () {
+            return view('parametres.articles', ['page_title' => 'Paramètres Articles']);
+        })->name('parametres.articles');
+    });
 
     // API Routes for Settings
     Route::prefix('api/settings')->group(function () {
@@ -236,6 +252,35 @@ Route::middleware('auth')->group(function () {
         Route::post('/cities', [SettingsController::class, 'updateCities']);
         Route::post('/cities/add', [SettingsController::class, 'addCity']);
         Route::post('/cities/remove', [SettingsController::class, 'removeCity']);
+        
+        // Familles Article
+        Route::get('/familles-article', [SettingsController::class, 'getFamillesArticle']);
+        Route::post('/familles-article/add', [SettingsController::class, 'addFamilleArticle']);
+        Route::post('/familles-article/update', [SettingsController::class, 'updateFamilleArticle']);
+        Route::post('/familles-article/remove', [SettingsController::class, 'removeFamilleArticle']);
+        
+        // Sous-Familles Article
+        Route::get('/sous-familles-article', [SettingsController::class, 'getSousFamillesArticle']);
+        Route::post('/sous-familles-article/add', [SettingsController::class, 'addSousFamilleArticle']);
+        Route::post('/sous-familles-article/update', [SettingsController::class, 'updateSousFamilleArticle']);
+        Route::post('/sous-familles-article/remove', [SettingsController::class, 'removeSousFamilleArticle']);
+        
+        // Unités de Mesure
+        Route::get('/unites-mesure', [SettingsController::class, 'getUnitesMesure']);
+        Route::post('/unites-mesure/add', [SettingsController::class, 'addUniteMesure']);
+        Route::post('/unites-mesure/update', [SettingsController::class, 'updateUniteMesure']);
+        Route::post('/unites-mesure/remove', [SettingsController::class, 'removeUniteMesure']);
+    });
+
+    // API Routes for Articles
+    Route::prefix('api/articles')->group(function () {
+        Route::get('/', [ArticleController::class, 'index']);
+        Route::post('/', [ArticleController::class, 'store']);
+        Route::get('/next-reference', [ArticleController::class, 'nextReference']);
+        Route::get('/reference-data', [ArticleController::class, 'getReferenceData']);
+        Route::get('/{id}', [ArticleController::class, 'show']);
+        Route::put('/{id}', [ArticleController::class, 'update']);
+        Route::delete('/{id}', [ArticleController::class, 'destroy']);
     });
 
     // Old routes (kept for backward compatibility)
