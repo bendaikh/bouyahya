@@ -206,24 +206,24 @@
                     />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code Fournisseur</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fournisseur</label>
                     <select 
                         v-model="form.fournisseur_id" 
                         @change="onFournisseurChange"
                         :disabled="formMode === 'view'"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                     >
-                        <option value="">Sélectionner le code</option>
-                        <option v-for="f in fournisseurs" :key="f.id" :value="f.id">{{ f.code_fournisseur }}</option>
+                        <option value="">Sélectionner un fournisseur</option>
+                        <option v-for="f in fournisseurs" :key="f.id" :value="f.id">{{ f.nom_fournisseur }}</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom Fournisseur</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code Fournisseur</label>
                     <input 
                         type="text" 
-                        v-model="selectedFournisseurName" 
+                        v-model="selectedFournisseurCode" 
                         readonly
-                        placeholder="Nom s'affichera ici"
+                        placeholder="Code s'affichera ici"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                     />
                 </div>
@@ -455,6 +455,12 @@ const selectedFournisseurName = computed(() => {
     if (!form.value.fournisseur_id) return ''
     const fournisseur = fournisseurs.value.find(f => f.id === form.value.fournisseur_id)
     return fournisseur ? fournisseur.nom_fournisseur : ''
+})
+
+const selectedFournisseurCode = computed(() => {
+    if (!form.value.fournisseur_id) return ''
+    const fournisseur = fournisseurs.value.find(f => f.id === form.value.fournisseur_id)
+    return fournisseur ? fournisseur.code_fournisseur : ''
 })
 
 // Load data
