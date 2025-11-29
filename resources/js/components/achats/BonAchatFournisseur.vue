@@ -20,6 +20,32 @@
 
         <!-- List View -->
         <div v-if="!showForm">
+            <!-- Search Filter -->
+            <div class="mb-4">
+                <div class="relative max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        v-model="searchQuery"
+                        placeholder="Rechercher par nom ou code fournisseur..."
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                    <button 
+                        v-if="searchQuery"
+                        @click="searchQuery = ''"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
             <!-- Export Buttons -->
             <div class="mb-4 flex justify-end space-x-2">
                 <button 
@@ -62,12 +88,17 @@
                             Chargement...
                         </td>
                     </tr>
+                    <tr v-else-if="filteredBonAchats.length === 0 && searchQuery">
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            Aucun bon d'achat trouvé pour "{{ searchQuery }}"
+                        </td>
+                    </tr>
                     <tr v-else-if="bonAchats.length === 0">
                         <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Aucun bon d'achat trouvé
                         </td>
                     </tr>
-                    <tr v-else v-for="bon in bonAchats" :key="bon.id">
+                    <tr v-else v-for="bon in filteredBonAchats" :key="bon.id">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.numero_bon }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(bon.date) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.fournisseur?.nom_fournisseur || 'N/A' }}</td>
@@ -392,6 +423,19 @@ const loading = ref(false)
 const showForm = ref(false)
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingBonId = ref(null)
+const searchQuery = ref('')
+
+const filteredBonAchats = computed(() => {
+    if (!searchQuery.value.trim()) {
+        return bonAchats.value
+    }
+    const query = searchQuery.value.toLowerCase().trim()
+    return bonAchats.value.filter(bon => {
+        const fournisseurNom = (bon.fournisseur?.nom_fournisseur || '').toLowerCase()
+        const fournisseurCode = (bon.fournisseur?.code_fournisseur || '').toLowerCase()
+        return fournisseurNom.includes(query) || fournisseurCode.includes(query)
+    })
+})
 
 const form = ref({
     numero_bon: '',

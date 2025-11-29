@@ -171,43 +171,58 @@
         this.formData.fournisseurId = '';
         this.formData.date = new Date().toISOString().split('T')[0];
         this.fetchNextNumero();
+    },
+    searchQuery: '',
+    isVisible(fournisseurNom, fournisseurCode) {
+        if (!this.searchQuery.trim()) {
+            return true;
+        }
+        const query = this.searchQuery.toLowerCase().trim();
+        return fournisseurNom.toLowerCase().includes(query) || fournisseurCode.toLowerCase().includes(query);
+    },
+    hasVisibleRows() {
+        const rows = document.querySelectorAll('tbody tr[x-show]');
+        for (let row of rows) {
+            if (row.style.display !== 'none' && !row.hasAttribute('x-cloak')) {
+                return true;
+            }
+        }
+        return false;
+    },
+    editBonCommande(id) {
+        this.loadBonCommandeForEdit(id);
+    },
+    deleteBonCommande(id, numero) {
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer le bon de commande ${numero} ?`)) {
+            return;
+        }
+
+        fetch(`/achats/bon-commande/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            alert('Erreur: ' + error.message);
+        });
+    },
+    printBonCommande(id) {
+        window.open(`/achats/bon-commande/${id}/print`, '_blank');
     }
 }" class="space-y-6">
 
 <script>
-function editBonCommande(id) {
-    const component = Alpine.$data(document.querySelector('[x-data]'));
-    component.loadBonCommandeForEdit(id);
-}
-
-function deleteBonCommande(id, numero) {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le bon de commande ${numero} ?`)) {
-        return;
-    }
-
-    fetch(`/achats/bon-commande/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Erreur lors de la suppression');
-        }
-    })
-    .catch(error => {
-        alert('Erreur: ' + error.message);
-    });
-}
-
-function printBonCommande(id) {
-    window.open(`/achats/bon-commande/${id}/print`, '_blank');
-}
+// Keep for backward compatibility if needed
 </script>
 
     <!-- Form Section -->
@@ -359,7 +374,31 @@ function printBonCommande(id) {
         </div>
         
         <div class="space-y-4">
-            <div class="flex justify-end">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <!-- Search Filter -->
+                <div class="relative w-full md:w-80">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        x-model="searchQuery"
+                        placeholder="Rechercher par nom ou code fournisseur..."
+                        class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                    <button 
+                        x-show="searchQuery"
+                        @click="searchQuery = ''"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
                 <button @click="showForm = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     Nouveau bon de commande
                 </button>
@@ -379,9 +418,13 @@ function printBonCommande(id) {
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($bonCommandes as $bonCommande)
-                            <tr>
+                            @if($bonCommande->id && $bonCommande->numero_bon)
+                            <tr x-show="isVisible('{{ $bonCommande->fournisseur->nom_fournisseur ?? '' }}', '{{ $bonCommande->fournisseur->code_fournisseur ?? '' }}')" 
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->numero_bon }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->fournisseur->nom_fournisseur }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->fournisseur->nom_fournisseur ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->date->format('d/m/Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ number_format($bonCommande->total_general, 2, ',', ' ') }} DH</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -394,17 +437,17 @@ function printBonCommande(id) {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-3">
-                                        <button onclick="printBonCommande({{ $bonCommande->id }})" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="Imprimer">
+                                        <button onclick="window.open('/achats/bon-commande/{{ $bonCommande->id }}/print', '_blank')" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="Imprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="editBonCommande({{ $bonCommande->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200" title="Modifier">
+                                        <button @click="loadBonCommandeForEdit({{ $bonCommande->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200" title="Modifier">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="deleteBonCommande({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="Supprimer">
+                                        <button @click="deleteBonCommande({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="Supprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -412,11 +455,17 @@ function printBonCommande(id) {
                                     </div>
                                 </td>
                             </tr>
+                            @endif
                         @empty
                             <tr>
                                 <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Aucun bon de commande trouvé</td>
                             </tr>
                         @endforelse
+                        <tr x-show="searchQuery && !hasVisibleRows()">
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                Aucun bon de commande trouvé pour "<span x-text="searchQuery"></span>"
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
