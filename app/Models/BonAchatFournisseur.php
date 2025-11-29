@@ -23,6 +23,7 @@ class BonAchatFournisseur extends Model
         'total_qte',
         'total_ttc',
         'statut',
+        'bon_commande_id',
     ];
     
     protected $casts = [
@@ -40,5 +41,10 @@ class BonAchatFournisseur extends Model
     public function articles()
     {
         return $this->hasMany(BonAchatArticle::class, 'bon_achat_id');
+    }
+    
+    public function bonCommande()
+    {
+        return $this->belongsTo(BonCommandeFournisseur::class, 'bon_commande_id');
     }
 }

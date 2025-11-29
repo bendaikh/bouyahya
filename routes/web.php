@@ -44,6 +44,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/bon-commande/{id}', [BonCommandeFournisseurController::class, 'update'])->name('achats.bon-commande.update');
         Route::delete('/bon-commande/{id}', [BonCommandeFournisseurController::class, 'destroy'])->name('achats.bon-commande.destroy');
         Route::get('/bon-commande/{id}/print', [BonCommandeFournisseurController::class, 'print'])->name('achats.bon-commande.print');
+        Route::post('/bon-commande/{id}/validate', [BonCommandeFournisseurController::class, 'validate'])->name('achats.bon-commande.validate');
+        Route::post('/bon-commande/{id}/convert-to-bon-achat', [BonCommandeFournisseurController::class, 'convertToBonAchat'])->name('achats.bon-commande.convert');
     
     Route::get('/bon-reception', function () {
         return view('achats.bon-reception', ['page_title' => 'Bon de réception']);
@@ -102,18 +104,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/articles', function () {
             return view('stock.articles', ['page_title' => 'Articles', 'vue_component' => 'ArticlesList']);
         })->name('stock.articles');
-        
-        Route::get('/familles', function () {
-            return view('stock.familles', ['page_title' => 'Familles']);
-        })->name('stock.familles');
-        
-        Route::get('/sous-familles', function () {
-            return view('stock.sous-familles', ['page_title' => 'Sous-familles']);
-        })->name('stock.sous-familles');
-        
-        Route::get('/unites-mesure', function () {
-            return view('stock.unites-mesure', ['page_title' => 'Unités de mesure']);
-        })->name('stock.unites-mesure');
         
         Route::get('/mouvement', function () {
             return view('stock.mouvement', ['page_title' => 'Mouvement stock']);

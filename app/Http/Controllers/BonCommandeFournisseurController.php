@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BonCommandeFournisseur;
+use App\Models\BonAchatFournisseur;
+use App\Models\BonAchatArticle;
 use App\Models\Fournisseur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -187,6 +189,108 @@ class BonCommandeFournisseurController extends Controller
         return view('achats.bon-commande-print', [
             'bonCommande' => $bonCommande,
         ]);
+    }
+
+    /**
+     * Validate a Bon de commande
+     */
+    public function validate($id)
+    {
+        try {
+            $bonCommande = BonCommandeFournisseur::findOrFail($id);
+            
+            if ($bonCommande->statut === 'Validé') {
+                return response()->json(['message' => 'Ce bon de commande est déjà validé'], 400);
+            }
+            
+            if ($bonCommande->statut === 'Converti') {
+                return response()->json(['message' => 'Ce bon de commande a déjà été converti en bon d\'achat'], 400);
+            }
+            
+            $bonCommande->update(['statut' => 'Validé']);
+            
+            return response()->json([
+                'message' => 'Bon de commande validé avec succès',
+                'bonCommande' => $bonCommande->load('fournisseur', 'articles'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la validation: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Convert a validated Bon de commande to Bon d'achat Fournisseur
+     */
+    public function convertToBonAchat($id)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $bonCommande = BonCommandeFournisseur::with(['fournisseur', 'articles'])->findOrFail($id);
+            
+            if ($bonCommande->statut !== 'Validé') {
+                return response()->json(['error' => 'Seuls les bons de commande validés peuvent être convertis en bon d\'achat'], 400);
+            }
+            
+            // Generate next bon d'achat number
+            $year = date('Y');
+            $lastBon = BonAchatFournisseur::where('numero_bon', 'like', "BF-{$year}%")
+                ->orderBy('numero_bon', 'desc')
+                ->first();
+            
+            if ($lastBon) {
+                $lastNumber = intval(substr($lastBon->numero_bon, -3));
+                $nextNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            } else {
+                $nextNumber = '001';
+            }
+            $numeroBonAchat = "BF-{$year}{$nextNumber}";
+            
+            // Create the Bon d'achat
+            $bonAchat = BonAchatFournisseur::create([
+                'numero_bon' => $numeroBonAchat,
+                'date' => now(),
+                'fournisseur_id' => $bonCommande->fournisseur_id,
+                'type_paiement' => $bonCommande->mode_paiement,
+                'echeance' => $bonCommande->echeance,
+                'client_livre' => null,
+                'famille' => 'Général',
+                'ville' => $bonCommande->fournisseur->ville ?? null,
+                'chauffeur' => null,
+                'matricule' => null,
+                'sous_total_ttc' => $bonCommande->total_general,
+                'total_qte' => $bonCommande->total_quantites,
+                'total_ttc' => $bonCommande->total_general,
+                'statut' => 'brouillon',
+                'bon_commande_id' => $bonCommande->id,
+            ]);
+            
+            // Create articles for the Bon d'achat
+            foreach ($bonCommande->articles as $article) {
+                BonAchatArticle::create([
+                    'bon_achat_id' => $bonAchat->id,
+                    'ref_article' => $article->code_article,
+                    'designation_article' => $article->designation,
+                    'qte' => $article->quantite,
+                    'prix_unitaire_ttc' => $article->prix_unitaire,
+                    'total' => $article->sous_total,
+                ]);
+            }
+            
+            // Update bon de commande status to "Converti"
+            $bonCommande->update(['statut' => 'Converti']);
+            
+            DB::commit();
+            
+            return response()->json([
+                'message' => 'Bon de commande converti en bon d\'achat avec succès',
+                'bonAchat' => $bonAchat->load('fournisseur', 'articles'),
+                'bonCommande' => $bonCommande,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erreur lors de la conversion: ' . $e->getMessage()], 500);
+        }
     }
 }
 

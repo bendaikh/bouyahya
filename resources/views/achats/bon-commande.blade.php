@@ -218,6 +218,56 @@
     },
     printBonCommande(id) {
         window.open(`/achats/bon-commande/${id}/print`, '_blank');
+    },
+    validateBonCommande(id, numero) {
+        if (!confirm(`Êtes-vous sûr de vouloir valider le bon de commande ${numero} ?`)) {
+            return;
+        }
+
+        fetch(`/achats/bon-commande/${id}/validate`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            alert('Erreur: ' + error.message);
+        });
+    },
+    convertToBonAchat(id, numero) {
+        if (!confirm(`Êtes-vous sûr de vouloir convertir le bon de commande ${numero} en bon d'achat fournisseur ?`)) {
+            return;
+        }
+
+        fetch(`/achats/bon-commande/${id}/convert-to-bon-achat`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message + '\n\nNuméro du bon d\'achat: ' + data.bonAchat.numero_bon);
+                window.location.reload();
+            } else {
+                alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            alert('Erreur: ' + error.message);
+        });
     }
 }" class="space-y-6">
 
@@ -430,18 +480,34 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full 
                                         @if($bonCommande->statut === 'Validé') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                        @elseif($bonCommande->statut === 'Converti') bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200
                                         @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                                         @endif">
                                         {{ $bonCommande->statut }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-3">
+                                    <div class="flex items-center space-x-2">
                                         <button onclick="window.open('/achats/bon-commande/{{ $bonCommande->id }}/print', '_blank')" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="Imprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                                             </svg>
                                         </button>
+                                        @if($bonCommande->statut === 'En attente')
+                                        <button @click="validateBonCommande({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200" title="Valider">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </button>
+                                        @endif
+                                        @if($bonCommande->statut === 'Validé')
+                                        <button @click="convertToBonAchat({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-200" title="Convertir en Bon d'achat">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                            </svg>
+                                        </button>
+                                        @endif
+                                        @if($bonCommande->statut !== 'Converti')
                                         <button @click="loadBonCommandeForEdit({{ $bonCommande->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200" title="Modifier">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -452,6 +518,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
                                         </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
