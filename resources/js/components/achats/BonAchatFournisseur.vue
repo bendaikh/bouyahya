@@ -335,20 +335,90 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <tr v-for="(article, index) in form.articles" :key="index">
                                 <td class="px-4 py-2">
-                                    <input 
-                                        type="text" 
-                                        v-model="article.ref_article"
-                                        :disabled="formMode === 'view'"
-                                        class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                                    />
+                                    <div class="relative">
+                                        <input 
+                                            type="text" 
+                                            :value="article.ref_article"
+                                            @input="onArticleRefInput(index, $event)"
+                                            @focus="activeArticleIndex = index; activeFieldType = 'ref'; articleSearchQuery = article.ref_article; showArticleSuggestions = article.ref_article?.length > 0"
+                                            @blur="setTimeout(() => closeSuggestions(), 200)"
+                                            :disabled="formMode === 'view'"
+                                            placeholder="Tapez pour rechercher..."
+                                            class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                        />
+                                        <!-- Article Suggestions Dropdown - only show when ref field is active -->
+                                        <div 
+                                            v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'ref' && filteredArticles.length > 0"
+                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                        >
+                                            <div 
+                                                v-for="art in filteredArticles" 
+                                                :key="art.id"
+                                                @mousedown.prevent="selectArticle(art, index)"
+                                                class="px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                                            >
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <span class="font-medium text-blue-600 dark:text-blue-400 text-sm">{{ art.reference }}</span>
+                                                        <p class="text-gray-700 dark:text-gray-300 text-sm">{{ art.designation }}</p>
+                                                    </div>
+                                                    <span class="text-green-600 dark:text-green-400 font-medium text-sm">
+                                                        {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- No results message - only for ref field -->
+                                        <div 
+                                            v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'ref' && filteredArticles.length === 0 && articleSearchQuery.length > 0"
+                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
+                                        >
+                                            <p class="text-gray-500 dark:text-gray-400 text-sm text-center">Aucun article trouvé</p>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-2">
-                                    <input 
-                                        type="text" 
-                                        v-model="article.designation_article"
-                                        :disabled="formMode === 'view'"
-                                        class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                                    />
+                                    <div class="relative">
+                                        <input 
+                                            type="text" 
+                                            :value="article.designation_article"
+                                            @input="onArticleDesignationInput(index, $event)"
+                                            @focus="activeArticleIndex = index; activeFieldType = 'designation'; articleSearchQuery = article.designation_article; showArticleSuggestions = article.designation_article?.length > 0"
+                                            @blur="setTimeout(() => closeSuggestions(), 200)"
+                                            :disabled="formMode === 'view'"
+                                            placeholder="Tapez pour rechercher..."
+                                            class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                        />
+                                        <!-- Article Suggestions Dropdown - only show when designation field is active -->
+                                        <div 
+                                            v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'designation' && filteredArticles.length > 0"
+                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                        >
+                                            <div 
+                                                v-for="art in filteredArticles" 
+                                                :key="art.id"
+                                                @mousedown.prevent="selectArticle(art, index)"
+                                                class="px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                                            >
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <span class="font-medium text-blue-600 dark:text-blue-400 text-sm">{{ art.reference }}</span>
+                                                        <p class="text-gray-700 dark:text-gray-300 text-sm">{{ art.designation }}</p>
+                                                    </div>
+                                                    <span class="text-green-600 dark:text-green-400 font-medium text-sm">
+                                                        {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- No results message - only for designation field -->
+                                        <div 
+                                            v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'designation' && filteredArticles.length === 0 && articleSearchQuery.length > 0"
+                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
+                                        >
+                                            <p class="text-gray-500 dark:text-gray-400 text-sm text-center">Aucun article trouvé</p>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-2">
                                     <input 
@@ -413,17 +483,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const bonAchats = ref([])
 const fournisseurs = ref([])
 const clients = ref([])
 const cities = ref([])
+const allArticles = ref([]) // All articles from database
 const loading = ref(false)
 const showForm = ref(false)
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingBonId = ref(null)
 const searchQuery = ref('')
+
+// Article autocomplete state
+const activeArticleIndex = ref(null) // Which article row is being searched
+const activeFieldType = ref(null) // 'ref' or 'designation' - which field is active
+const articleSearchQuery = ref('')
+const showArticleSuggestions = ref(false)
 
 const filteredBonAchats = computed(() => {
     if (!searchQuery.value.trim()) {
@@ -510,6 +587,70 @@ const loadCities = async () => {
     } catch (error) {
         console.error('Erreur lors du chargement des villes:', error)
     }
+}
+
+// Load all articles for autocomplete
+const loadAllArticles = async () => {
+    try {
+        const response = await fetch('/api/articles')
+        if (response.ok) {
+            const data = await response.json()
+            allArticles.value = data.articles || []
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des articles:', error)
+    }
+}
+
+// Filtered articles based on search query
+const filteredArticles = computed(() => {
+    if (!articleSearchQuery.value || articleSearchQuery.value.length < 1) {
+        return []
+    }
+    const query = articleSearchQuery.value.toLowerCase()
+    return allArticles.value.filter(article => 
+        article.reference.toLowerCase().includes(query) ||
+        article.designation.toLowerCase().includes(query)
+    ).slice(0, 10) // Limit to 10 suggestions
+})
+
+// Handle article reference input
+const onArticleRefInput = (index, event) => {
+    const value = event.target.value
+    form.value.articles[index].ref_article = value
+    articleSearchQuery.value = value
+    activeArticleIndex.value = index
+    activeFieldType.value = 'ref'
+    showArticleSuggestions.value = value.length > 0
+}
+
+// Handle article designation input (also search by designation)
+const onArticleDesignationInput = (index, event) => {
+    const value = event.target.value
+    form.value.articles[index].designation_article = value
+    articleSearchQuery.value = value
+    activeArticleIndex.value = index
+    activeFieldType.value = 'designation'
+    showArticleSuggestions.value = value.length > 0
+}
+
+// Select article from suggestions
+const selectArticle = (article, index) => {
+    form.value.articles[index].ref_article = article.reference
+    form.value.articles[index].designation_article = article.designation
+    // Use prix_achat if available, otherwise use prix_vente or 0
+    form.value.articles[index].prix_unitaire_ttc = article.prix_achat || article.prix_vente || 0
+    showArticleSuggestions.value = false
+    activeArticleIndex.value = null
+    activeFieldType.value = null
+    articleSearchQuery.value = ''
+}
+
+// Close suggestions when clicking outside
+const closeSuggestions = () => {
+    showArticleSuggestions.value = false
+    activeArticleIndex.value = null
+    activeFieldType.value = null
 }
 
 const getNextNumeroBon = async () => {
@@ -1228,6 +1369,7 @@ onMounted(() => {
     loadFournisseurs()
     loadClients()
     loadCities()
+    loadAllArticles()
 })
 </script>
 
