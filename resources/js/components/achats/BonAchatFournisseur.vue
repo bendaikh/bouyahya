@@ -255,18 +255,73 @@
                         <option value="90 jours">90 jours</option>
                     </select>
                 </div>
-                <div>
+                <div class="relative">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client livré</label>
-                    <select 
-                        v-model="form.client_livre"
-                        :disabled="formMode === 'view'"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                    >
-                        <option value="">Sélectionner un client</option>
-                        <option v-for="client in clients" :key="client.id" :value="client.raison_sociale">
-                            {{ client.code_client }} - {{ client.raison_sociale }}
-                        </option>
-                    </select>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            v-model="clientSearchQuery"
+                            @focus="showClientDropdown = true; formMode !== 'view'"
+                            @blur="setTimeout(() => showClientDropdown = false, 200)"
+                            @input="onClientSearchInput"
+                            :disabled="formMode === 'view'"
+                            :placeholder="form.client_livre || 'Rechercher un client...'"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm pr-8"
+                        />
+                        <!-- Clear button -->
+                        <button 
+                            v-if="form.client_livre && formMode !== 'view'"
+                            @mousedown.prevent="clearClientSelection"
+                            type="button"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <!-- Dropdown arrow when no selection -->
+                        <div 
+                            v-if="!form.client_livre && formMode !== 'view'"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        
+                        <!-- Client suggestions dropdown -->
+                        <div 
+                            v-if="showClientDropdown && formMode !== 'view' && filteredClients.length > 0"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        >
+                            <div 
+                                v-for="client in filteredClients" 
+                                :key="client.id"
+                                @mousedown.prevent="selectClient(client)"
+                                class="px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                            >
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="font-medium text-blue-600 dark:text-blue-400 text-sm">{{ client.code_client }}</span>
+                                        <span class="text-gray-600 dark:text-gray-400 text-sm mx-1">-</span>
+                                        <span class="text-gray-900 dark:text-white text-sm">{{ client.raison_sociale }}</span>
+                                    </div>
+                                    <span v-if="client.ville" class="text-gray-500 dark:text-gray-400 text-xs">{{ client.ville }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- No results message -->
+                        <div 
+                            v-if="showClientDropdown && formMode !== 'view' && filteredClients.length === 0 && clientSearchQuery.length > 0"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
+                        >
+                            <p class="text-gray-500 dark:text-gray-400 text-sm text-center">Aucun client trouvé</p>
+                        </div>
+                    </div>
+                    <!-- Selected client display -->
+                    <div v-if="form.client_livre && formMode === 'view'" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {{ form.client_livre }}
+                    </div>
                 </div>
 
                 <!-- Row 3 -->
@@ -502,6 +557,10 @@ const activeFieldType = ref(null) // 'ref' or 'designation' - which field is act
 const articleSearchQuery = ref('')
 const showArticleSuggestions = ref(false)
 
+// Client search/filter state
+const clientSearchQuery = ref('')
+const showClientDropdown = ref(false)
+
 const filteredBonAchats = computed(() => {
     if (!searchQuery.value.trim()) {
         return bonAchats.value
@@ -538,6 +597,20 @@ const selectedFournisseurCode = computed(() => {
     if (!form.value.fournisseur_id) return ''
     const fournisseur = fournisseurs.value.find(f => f.id === form.value.fournisseur_id)
     return fournisseur ? fournisseur.code_fournisseur : ''
+})
+
+// Filtered clients based on search query
+const filteredClients = computed(() => {
+    if (!clientSearchQuery.value || clientSearchQuery.value.length === 0) {
+        // If no search query, show all clients (limited to first 50)
+        return clients.value.slice(0, 50)
+    }
+    const query = clientSearchQuery.value.toLowerCase()
+    return clients.value.filter(client => 
+        (client.code_client?.toLowerCase() || '').includes(query) ||
+        (client.raison_sociale?.toLowerCase() || '').includes(query) ||
+        (client.ville?.toLowerCase() || '').includes(query)
+    ).slice(0, 50) // Limit to 50 suggestions
 })
 
 // Load data
@@ -653,6 +726,27 @@ const closeSuggestions = () => {
     activeFieldType.value = null
 }
 
+// Client selection methods
+const onClientSearchInput = () => {
+    showClientDropdown.value = true
+}
+
+const selectClient = (client) => {
+    form.value.client_livre = client.raison_sociale
+    clientSearchQuery.value = ''
+    showClientDropdown.value = false
+    
+    // Optionally auto-fill ville from client if not already set
+    if (!form.value.ville && client.ville) {
+        form.value.ville = client.ville
+    }
+}
+
+const clearClientSelection = () => {
+    form.value.client_livre = ''
+    clientSearchQuery.value = ''
+}
+
 const getNextNumeroBon = async () => {
     try {
         const response = await fetch('/api/bon-achat-fournisseur/next-numero')
@@ -755,6 +849,8 @@ const resetForm = () => {
         articles: []
     }
     editingBonId.value = null
+    clientSearchQuery.value = ''
+    showClientDropdown.value = false
 }
 
 // Articles management
