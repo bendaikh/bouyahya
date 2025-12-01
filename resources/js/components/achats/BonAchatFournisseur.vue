@@ -332,11 +332,10 @@
                         :disabled="formMode === 'view'"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                     >
-                        <option value="Electronique">Electronique</option>
-                        <option value="Informatique">Informatique</option>
-                        <option value="Alimentation">Alimentation</option>
-                        <option value="Mobilier">Mobilier</option>
-                        <option value="Autre">Autre</option>
+                        <option value="REV">REV</option>
+                        <option value="ENTR">ENTR</option>
+                        <option value="PROMO">PROMO</option>
+                        <option value="AUTRE">AUTRE</option>
                     </select>
                 </div>
                 <div>
@@ -375,8 +374,8 @@
             </div>
 
             <!-- Articles Table -->
-            <div class="mt-6">
-                <div class="overflow-x-auto">
+            <div class="mt-6 overflow-visible">
+                <div class="overflow-visible">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
@@ -404,7 +403,7 @@
                                         <!-- Article Suggestions Dropdown - only show when ref field is active -->
                                         <div 
                                             v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'ref' && filteredArticles.length > 0"
-                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                            class="absolute z-50 w-[450px] mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                         >
                                             <div 
                                                 v-for="art in filteredArticles" 
@@ -426,7 +425,7 @@
                                         <!-- No results message - only for ref field -->
                                         <div 
                                             v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'ref' && filteredArticles.length === 0 && articleSearchQuery.length > 0"
-                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
+                                            class="absolute z-50 w-[450px] mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
                                         >
                                             <p class="text-gray-500 dark:text-gray-400 text-sm text-center">Aucun article trouvé</p>
                                         </div>
@@ -447,7 +446,7 @@
                                         <!-- Article Suggestions Dropdown - only show when designation field is active -->
                                         <div 
                                             v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'designation' && filteredArticles.length > 0"
-                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                            class="absolute z-50 w-[450px] mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                         >
                                             <div 
                                                 v-for="art in filteredArticles" 
@@ -469,7 +468,7 @@
                                         <!-- No results message - only for designation field -->
                                         <div 
                                             v-if="showArticleSuggestions && activeArticleIndex === index && activeFieldType === 'designation' && filteredArticles.length === 0 && articleSearchQuery.length > 0"
-                                            class="absolute z-50 w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
+                                            class="absolute z-50 w-[450px] mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3"
                                         >
                                             <p class="text-gray-500 dark:text-gray-400 text-sm text-center">Aucun article trouvé</p>
                                         </div>
@@ -580,7 +579,7 @@ const form = ref({
     type_paiement: 'Chèque',
     echeance: '30 jours',
     client_livre: '',
-    famille: 'Electronique',
+    famille: 'REV',
     ville: '',
     chauffeur: '',
     matricule: '',
@@ -842,7 +841,7 @@ const resetForm = () => {
         type_paiement: 'Chèque',
         echeance: '30 jours',
         client_livre: '',
-        famille: 'Electronique',
+        famille: 'REV',
         ville: '',
         chauffeur: '',
         matricule: '',
