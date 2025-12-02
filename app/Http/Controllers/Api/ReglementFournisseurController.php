@@ -38,6 +38,7 @@ class ReglementFournisseurController extends Controller
             'montant' => 'required|numeric|min:0',
             'date_encaissement' => 'nullable|date',
             'observation' => 'nullable|string',
+            'statut' => 'nullable|string|in:instance,paye,reporte,cour,impaye,devalide',
             'lignes' => 'nullable|array',
             'lignes.*.bon_achat_id' => 'required_with:lignes|exists:bon_achat_fournisseur,id',
             'lignes.*.montant_regle' => 'required_with:lignes|numeric|min:0',
@@ -61,7 +62,7 @@ class ReglementFournisseurController extends Controller
                 'montant' => $validated['montant'],
                 'date_encaissement' => $validated['date_encaissement'] ?? null,
                 'observation' => $validated['observation'] ?? null,
-                'statut' => 'impaye',
+                'statut' => $validated['statut'] ?? 'impaye',
             ]);
 
             // Créer les lignes de ventilation
@@ -129,6 +130,7 @@ class ReglementFournisseurController extends Controller
             'montant' => 'required|numeric|min:0',
             'date_encaissement' => 'nullable|date',
             'observation' => 'nullable|string',
+            'statut' => 'nullable|string|in:instance,paye,reporte,cour,impaye,devalide',
             'lignes' => 'nullable|array',
             'lignes.*.bon_achat_id' => 'required_with:lignes|exists:bon_achat_fournisseur,id',
             'lignes.*.montant_regle' => 'required_with:lignes|numeric|min:0',
@@ -146,6 +148,7 @@ class ReglementFournisseurController extends Controller
                 'montant' => $validated['montant'],
                 'date_encaissement' => $validated['date_encaissement'] ?? null,
                 'observation' => $validated['observation'] ?? null,
+                'statut' => $validated['statut'] ?? $reglement->statut,
             ]);
 
             // Supprimer les anciennes lignes et recréer

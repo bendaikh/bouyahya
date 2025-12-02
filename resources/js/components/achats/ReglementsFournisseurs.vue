@@ -122,6 +122,75 @@
                 </h3>
             </div>
 
+            <!-- État Règlement Legend - Clickable -->
+            <div class="bg-slate-800 dark:bg-slate-900 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <span class="text-white font-semibold text-sm">État Règlement</span>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <button 
+                            type="button"
+                            @click="setStatut('instance')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'instance' ? 'bg-gray-600 ring-2 ring-gray-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Instance</span>
+                            <span class="w-3 h-3 rounded-full bg-gray-400 border border-gray-300"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setStatut('paye')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'paye' ? 'bg-green-900/50 ring-2 ring-green-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Payé</span>
+                            <span class="w-3 h-3 rounded-full bg-green-500 border border-green-400"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setStatut('reporte')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'reporte' ? 'bg-orange-900/50 ring-2 ring-orange-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Reporté</span>
+                            <span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-400"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setStatut('cour')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'cour' ? 'bg-blue-900/50 ring-2 ring-blue-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Cour</span>
+                            <span class="w-3 h-3 rounded-full bg-blue-500 border border-blue-400"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setStatut('impaye')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'impaye' ? 'bg-red-900/50 ring-2 ring-red-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Impayé</span>
+                            <span class="w-3 h-3 rounded-full bg-red-500 border border-red-400"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setStatut('devalide')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.statut === 'devalide' ? 'bg-purple-900/50 ring-2 ring-purple-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Dévalidé</span>
+                            <span class="w-3 h-3 rounded-full bg-purple-500 border border-purple-400"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Détails du règlement -->
             <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
                 <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-4">Détails du règlement</h4>
@@ -284,19 +353,27 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-100 dark:bg-gray-800">
                             <tr>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">SÉLECTION</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">N° BON</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">DATE COMMANDE</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">CLIENT LIVRÉ</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">MONTANT COMMANDE</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">MONTANT PAYÉ</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">RESTE</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">RESTE À IMPUTER</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">SÉLECTION</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <tr v-for="bon in bonsAchatFournisseur" :key="bon.id" 
                                 :class="{'bg-blue-50 dark:bg-blue-900/20': bon.selected}">
+                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="bon.selected"
+                                        @change="onBonSelectionChange(bon)"
+                                        :disabled="formMode === 'view'"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
                                     {{ bon.numero_bon }}
                                 </td>
@@ -309,41 +386,20 @@
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-white">
                                     {{ formatCurrencySimple(bon.total_ttc) }}
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-600 dark:text-gray-400">
-                                    {{ formatCurrencySimple(bon.montant_regle) }}
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold"
+                                    :class="getMontantPayeClass(bon)">
+                                    {{ formatCurrencySimple(getMontantPaye(bon)) }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold"
-                                    :class="bon.solde_restant > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
-                                    {{ formatCurrencySimple(bon.solde_restant) }}
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-right">
-                                    <input 
-                                        type="number" 
-                                        v-model.number="bon.montant_a_imputer"
-                                        @input="onMontantImputerChange(bon)"
-                                        :disabled="formMode === 'view' || !bon.selected"
-                                        step="0.01"
-                                        min="0"
-                                        :max="bon.solde_restant"
-                                        class="w-28 px-2 py-1 text-right border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        :class="{'bg-gray-100 dark:bg-gray-800 cursor-not-allowed': !bon.selected}"
-                                    />
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-center">
-                                    <input 
-                                        type="checkbox" 
-                                        v-model="bon.selected"
-                                        @change="onBonSelectionChange(bon)"
-                                        :disabled="formMode === 'view'"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
+                                    :class="getResteClass(bon)">
+                                    {{ formatCurrencySimple(getReste(bon)) }}
                                 </td>
                             </tr>
                         </tbody>
                         <!-- Footer with totals -->
                         <tfoot class="bg-gray-100 dark:bg-gray-800">
                             <tr>
-                                <td colspan="5"></td>
+                                <td colspan="4"></td>
                                 <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     TOTAL IMPUTÉ
                                 </td>
@@ -353,7 +409,7 @@
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="5"></td>
+                                <td colspan="4"></td>
                                 <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     RESTE À IMPUTER
                                 </td>
@@ -364,7 +420,7 @@
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="5"></td>
+                                <td colspan="4"></td>
                                 <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     DIFFÉRENCE
                                 </td>
@@ -456,6 +512,7 @@ const form = ref({
     montant: 0,
     date_encaissement: '',
     observation: '',
+    statut: 'impaye',
     lignes: []
 })
 
@@ -571,10 +628,18 @@ const resetForm = () => {
         montant: 0,
         date_encaissement: '',
         observation: '',
+        statut: 'impaye',
         lignes: []
     }
     bonsAchatFournisseur.value = []
     editingReglementId.value = null
+}
+
+// Set the status of the reglement
+const setStatut = (statut) => {
+    if (formMode.value !== 'view') {
+        form.value.statut = statut
+    }
 }
 
 const cancelForm = () => {
@@ -612,6 +677,42 @@ const onMontantImputerChange = (bon) => {
     if (bon.montant_a_imputer < 0) {
         bon.montant_a_imputer = 0
     }
+}
+
+// Compute MONTANT PAYÉ dynamically (original paid + current imputation)
+const getMontantPaye = (bon) => {
+    const originalMontantRegle = parseFloat(bon.montant_regle) || 0
+    const currentImputation = bon.selected ? (parseFloat(bon.montant_a_imputer) || 0) : 0
+    return originalMontantRegle + currentImputation
+}
+
+// Compute RESTE dynamically (solde_restant - current imputation)
+const getReste = (bon) => {
+    const soldeRestant = parseFloat(bon.solde_restant) || 0
+    const currentImputation = bon.selected ? (parseFloat(bon.montant_a_imputer) || 0) : 0
+    return soldeRestant - currentImputation
+}
+
+// Get class for MONTANT PAYÉ column
+const getMontantPayeClass = (bon) => {
+    const montantPaye = getMontantPaye(bon)
+    const totalTtc = parseFloat(bon.total_ttc) || 0
+    
+    if (montantPaye >= totalTtc && totalTtc > 0) {
+        return 'text-green-600 dark:text-green-400'
+    } else if (montantPaye > 0) {
+        return 'text-blue-600 dark:text-blue-400'
+    }
+    return 'text-gray-600 dark:text-gray-400'
+}
+
+// Get class for RESTE column
+const getResteClass = (bon) => {
+    const reste = getReste(bon)
+    if (reste <= 0) {
+        return 'text-green-600 dark:text-green-400'
+    }
+    return 'text-red-600 dark:text-red-400'
 }
 
 const distributePayment = () => {
@@ -709,6 +810,7 @@ const viewReglement = async (reglement) => {
                 montant: parseFloat(data.montant),
                 date_encaissement: data.date_encaissement || '',
                 observation: data.observation || '',
+                statut: data.statut || 'impaye',
                 lignes: data.lignes?.map(l => ({
                     bon_achat_id: l.bon_achat_id,
                     montant_regle: parseFloat(l.montant_regle)
@@ -838,6 +940,12 @@ const getStatusClass = (statut) => {
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
         case 'reporte':
             return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+        case 'instance':
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+        case 'cour':
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+        case 'devalide':
+            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
         default:
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     }
@@ -851,6 +959,12 @@ const getStatusText = (statut) => {
             return 'Impayé'
         case 'reporte':
             return 'Reporté'
+        case 'instance':
+            return 'Instance'
+        case 'cour':
+            return 'Cour'
+        case 'devalide':
+            return 'Dévalidé'
         default:
             return statut || 'N/A'
     }
