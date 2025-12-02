@@ -102,6 +102,8 @@
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">N° BON</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">CODE FOURNISSEUR</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">NOM FOURNISSEUR</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">CLIENT LIVRÉ</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">VILLE</th>
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">QTE</th>
@@ -113,7 +115,7 @@
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 <svg class="animate-spin h-6 w-6 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -122,7 +124,7 @@
                             </td>
                         </tr>
                         <tr v-else-if="filteredBons.length === 0">
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 Aucun bon d'achat trouvé
                             </td>
                         </tr>
@@ -135,6 +137,12 @@
                                 >
                                     {{ bon.numero_bon }}
                                 </a>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                {{ bon.fournisseur?.code_fournisseur || '-' }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                {{ bon.fournisseur?.nom_fournisseur || '-' }}
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                 {{ bon.client_livre || '-' }}
@@ -475,6 +483,8 @@ const imprimer = () => {
                 <thead>
                     <tr>
                         <th>N° BON</th>
+                        <th>CODE FOURNISSEUR</th>
+                        <th>NOM FOURNISSEUR</th>
                         <th>CLIENT LIVRÉ</th>
                         <th>VILLE</th>
                         <th class="text-center">QTE</th>
@@ -488,6 +498,8 @@ const imprimer = () => {
                     ${filteredBons.value.map(bon => `
                         <tr>
                             <td>${bon.numero_bon}</td>
+                            <td>${bon.fournisseur?.code_fournisseur || '-'}</td>
+                            <td>${bon.fournisseur?.nom_fournisseur || '-'}</td>
                             <td>${bon.client_livre || '-'}</td>
                             <td>${bon.ville || '-'}</td>
                             <td class="text-center">${bon.total_qte}</td>

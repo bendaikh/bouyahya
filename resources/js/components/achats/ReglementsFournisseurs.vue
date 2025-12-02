@@ -120,24 +120,6 @@
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
                     {{ formMode === 'create' ? 'Nouveau règlement fournisseur' : (formMode === 'edit' ? 'Modifier le règlement' : 'Détails du règlement') }}
                 </h3>
-                <div class="flex space-x-2">
-                    <button 
-                        @click="cancelForm" 
-                        class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors text-sm"
-                    >
-                        Annuler
-                    </button>
-                    <button 
-                        v-if="formMode !== 'view'"
-                        @click="saveReglement" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Enregistrer
-                    </button>
-                </div>
             </div>
 
             <!-- Détails du règlement -->
@@ -246,6 +228,7 @@
                         <input 
                             type="number" 
                             v-model.number="form.montant"
+                            @input="distributePayment"
                             :disabled="formMode === 'view'"
                             step="0.01"
                             min="0"
@@ -262,35 +245,159 @@
                         />
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reste à ventiler</label>
-                        <div class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold"
-                             :class="resteAVentiler < 0 ? 'text-red-600 dark:text-red-400' : (resteAVentiler === 0 ? 'text-green-600 dark:text-green-400' : '')">
-                            {{ formatCurrency(resteAVentiler) }}
-                        </div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observation</label>
+                        <input 
+                            type="text" 
+                            v-model="form.observation"
+                            :disabled="formMode === 'view'"
+                            placeholder="Remarques..."
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                        />
                     </div>
                 </div>
+            </div>
+
+            <!-- Bons d'achat impayés - Table -->
+            <div v-if="form.fournisseur_id" class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300">
+                        Commandes en attente de paiement pour {{ selectedFournisseurName }}
+                    </h4>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                        Sélectionnez les commandes et imputez le montant du règlement
+                    </span>
+                </div>
+
+                <div v-if="loadingBonsAchat" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p class="mt-2 text-gray-500 dark:text-gray-400">Chargement des bons d'achat...</p>
+                </div>
+
+                <div v-else-if="bonsAchatFournisseur.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p>Aucun bon d'achat impayé pour ce fournisseur</p>
+                </div>
+
+                <div v-else class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-100 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">N° BON</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">DATE COMMANDE</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">CLIENT LIVRÉ</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">MONTANT COMMANDE</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">MONTANT PAYÉ</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">RESTE</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">RESTE À IMPUTER</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">SÉLECTION</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr v-for="bon in bonsAchatFournisseur" :key="bon.id" 
+                                :class="{'bg-blue-50 dark:bg-blue-900/20': bon.selected}">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                                    {{ bon.numero_bon }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    {{ formatDate(bon.date) }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    {{ bon.client_livre || '-' }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-white">
+                                    {{ formatCurrencySimple(bon.total_ttc) }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-600 dark:text-gray-400">
+                                    {{ formatCurrencySimple(bon.montant_regle) }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold"
+                                    :class="bon.solde_restant > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+                                    {{ formatCurrencySimple(bon.solde_restant) }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-right">
+                                    <input 
+                                        type="number" 
+                                        v-model.number="bon.montant_a_imputer"
+                                        @input="onMontantImputerChange(bon)"
+                                        :disabled="formMode === 'view' || !bon.selected"
+                                        step="0.01"
+                                        min="0"
+                                        :max="bon.solde_restant"
+                                        class="w-28 px-2 py-1 text-right border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        :class="{'bg-gray-100 dark:bg-gray-800 cursor-not-allowed': !bon.selected}"
+                                    />
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="bon.selected"
+                                        @change="onBonSelectionChange(bon)"
+                                        :disabled="formMode === 'view'"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                        <!-- Footer with totals -->
+                        <tfoot class="bg-gray-100 dark:bg-gray-800">
+                            <tr>
+                                <td colspan="5"></td>
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    TOTAL IMPUTÉ
+                                </td>
+                                <td class="px-4 py-3 text-right text-sm font-bold text-blue-600 dark:text-blue-400">
+                                    {{ formatCurrencySimple(totalImpute) }}
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5"></td>
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    RESTE À IMPUTER
+                                </td>
+                                <td class="px-4 py-3 text-right text-sm font-bold"
+                                    :class="resteAImputer > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'">
+                                    {{ formatCurrencySimple(resteAImputer) }}
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5"></td>
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    DIFFÉRENCE
+                                </td>
+                                <td class="px-4 py-3 text-right text-sm font-bold"
+                                    :class="difference === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                    {{ formatCurrencySimple(difference) }}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- No fournisseur selected message -->
+            <div v-else class="bg-gray-50 dark:bg-gray-900 rounded-lg p-8 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <h4 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Sélectionnez un fournisseur</h4>
+                <p class="text-gray-500 dark:text-gray-400">Les bons d'achat impayés du fournisseur s'afficheront ici</p>
             </div>
 
             <!-- Action Buttons at bottom -->
             <div class="flex justify-center space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button 
-                    @click="openCreateForm" 
-                    class="px-6 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-sm flex items-center"
+                    @click="cancelForm" 
+                    class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
                 >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Ajouter
-                </button>
-                <button 
-                    v-if="formMode === 'view' && editingReglementId"
-                    @click="formMode = 'edit'" 
-                    class="px-6 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-sm flex items-center"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Modifier
+                    Quitter
                 </button>
                 <button 
                     v-if="formMode !== 'view'"
@@ -303,13 +410,23 @@
                     Valider
                 </button>
                 <button 
-                    @click="cancelForm" 
-                    class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
+                    @click="openCreateForm" 
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center"
                 >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    Annuler
+                    Ajouter
+                </button>
+                <button 
+                    v-if="formMode === 'view' && editingReglementId"
+                    @click="formMode = 'edit'" 
+                    class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Modifier
                 </button>
             </div>
         </div>
@@ -321,7 +438,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 
 const reglements = ref([])
 const fournisseurs = ref([])
+const bonsAchatFournisseur = ref([])
 const loading = ref(false)
+const loadingBonsAchat = ref(false)
 const showForm = ref(false)
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingReglementId = ref(null)
@@ -347,12 +466,19 @@ const selectedFournisseurName = computed(() => {
     return fournisseur ? fournisseur.nom_fournisseur : ''
 })
 
-const totalVentile = computed(() => {
-    return form.value.lignes.reduce((sum, ligne) => sum + (parseFloat(ligne.montant_regle) || 0), 0)
+const totalImpute = computed(() => {
+    return bonsAchatFournisseur.value
+        .filter(bon => bon.selected)
+        .reduce((sum, bon) => sum + (parseFloat(bon.montant_a_imputer) || 0), 0)
 })
 
-const resteAVentiler = computed(() => {
-    return (parseFloat(form.value.montant) || 0) - totalVentile.value
+const resteAImputer = computed(() => {
+    return (parseFloat(form.value.montant) || 0) - totalImpute.value
+})
+
+const difference = computed(() => {
+    // Difference between what should be distributed and what is
+    return Math.abs(resteAImputer.value)
 })
 
 // Load data functions
@@ -378,6 +504,38 @@ const loadFournisseurs = async () => {
         }
     } catch (error) {
         console.error('Erreur lors du chargement des fournisseurs:', error)
+    }
+}
+
+const loadBonsAchatFournisseur = async (fournisseurId, excludeReglementId = null) => {
+    if (!fournisseurId) {
+        bonsAchatFournisseur.value = []
+        return
+    }
+    
+    loadingBonsAchat.value = true
+    try {
+        let url = `/api/reglements-fournisseurs/bons-achat/${fournisseurId}`
+        if (excludeReglementId) {
+            url += `?exclude_reglement_id=${excludeReglementId}`
+        }
+        
+        const response = await fetch(url)
+        if (response.ok) {
+            const data = await response.json()
+            // Add selection and imputation fields
+            bonsAchatFournisseur.value = data
+                .filter(bon => bon.solde_restant > 0) // Only show unpaid bons
+                .map(bon => ({
+                    ...bon,
+                    selected: false,
+                    montant_a_imputer: 0
+                }))
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des bons d\'achat:', error)
+    } finally {
+        loadingBonsAchat.value = false
     }
 }
 
@@ -415,6 +573,7 @@ const resetForm = () => {
         observation: '',
         lignes: []
     }
+    bonsAchatFournisseur.value = []
     editingReglementId.value = null
 }
 
@@ -424,12 +583,51 @@ const cancelForm = () => {
 }
 
 const onFournisseurChange = () => {
-    form.value.lignes = []
     if (form.value.fournisseur_id) {
         // Auto-fill nom_beneficiaire
         const fournisseur = fournisseurs.value.find(f => f.id === form.value.fournisseur_id)
         if (fournisseur) {
             form.value.nom_beneficiaire = fournisseur.nom_fournisseur
+        }
+        loadBonsAchatFournisseur(form.value.fournisseur_id)
+    } else {
+        bonsAchatFournisseur.value = []
+    }
+}
+
+const onBonSelectionChange = (bon) => {
+    if (!bon.selected) {
+        bon.montant_a_imputer = 0
+    } else {
+        // Auto-distribute remaining payment to this bon
+        distributePayment()
+    }
+}
+
+const onMontantImputerChange = (bon) => {
+    // Ensure montant_a_imputer doesn't exceed solde_restant
+    if (bon.montant_a_imputer > bon.solde_restant) {
+        bon.montant_a_imputer = bon.solde_restant
+    }
+    if (bon.montant_a_imputer < 0) {
+        bon.montant_a_imputer = 0
+    }
+}
+
+const distributePayment = () => {
+    // Get the payment amount
+    let remainingAmount = parseFloat(form.value.montant) || 0
+    
+    // Distribute to selected bons in order
+    const selectedBons = bonsAchatFournisseur.value.filter(bon => bon.selected)
+    
+    for (const bon of selectedBons) {
+        if (remainingAmount <= 0) {
+            bon.montant_a_imputer = 0
+        } else {
+            const amountForThisBon = Math.min(remainingAmount, bon.solde_restant)
+            bon.montant_a_imputer = amountForThisBon
+            remainingAmount -= amountForThisBon
         }
     }
 }
@@ -447,6 +645,20 @@ const saveReglement = async () => {
         return
     }
     
+    // Prepare lignes from selected bons
+    const lignes = bonsAchatFournisseur.value
+        .filter(bon => bon.selected && bon.montant_a_imputer > 0)
+        .map(bon => ({
+            bon_achat_id: bon.id,
+            montant_regle: bon.montant_a_imputer
+        }))
+    
+    // Check if total imputé matches montant
+    if (totalImpute.value > form.value.montant) {
+        alert('Le total imputé ne peut pas dépasser le montant du règlement')
+        return
+    }
+    
     try {
         const url = formMode.value === 'edit' 
             ? `/api/reglements-fournisseurs/${editingReglementId.value}`
@@ -460,7 +672,10 @@ const saveReglement = async () => {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify(form.value)
+            body: JSON.stringify({
+                ...form.value,
+                lignes
+            })
         })
         
         if (response.ok) {
@@ -500,6 +715,38 @@ const viewReglement = async (reglement) => {
                 })) || []
             }
             editingReglementId.value = data.id
+            
+            // Load bons d'achat for this fournisseur (exclude current reglement to get correct remaining amounts)
+            await loadBonsAchatFournisseur(data.fournisseur_id, data.id)
+            
+            // Mark bons that were part of this reglement and add any bons that were paid
+            if (data.lignes) {
+                for (const ligne of data.lignes) {
+                    let bon = bonsAchatFournisseur.value.find(b => b.id === ligne.bon_achat_id)
+                    
+                    // If the bon is not in the list (fully paid by this reglement), we need to add it
+                    if (!bon && ligne.bon_achat) {
+                        bon = {
+                            ...ligne.bon_achat,
+                            montant_regle: parseFloat(ligne.bon_achat.montant_regle || 0),
+                            solde_restant: parseFloat(ligne.montant_regle), // The amount from this reglement becomes available again
+                            selected: false,
+                            montant_a_imputer: 0
+                        }
+                        bonsAchatFournisseur.value.push(bon)
+                    }
+                    
+                    if (bon) {
+                        bon.selected = true
+                        bon.montant_a_imputer = parseFloat(ligne.montant_regle)
+                        // Add back the amount from this reglement to solde_restant for display
+                        bon.solde_restant = (parseFloat(bon.solde_restant) || 0) + parseFloat(ligne.montant_regle)
+                    }
+                }
+            }
+            
+            // Sort bons by date
+            bonsAchatFournisseur.value.sort((a, b) => new Date(a.date) - new Date(b.date))
             
             formMode.value = 'view'
             showForm.value = true
@@ -569,6 +816,13 @@ const formatCurrency = (value) => {
         style: 'currency',
         currency: 'MAD'
     }).format(value || 0)
+}
+
+const formatCurrencySimple = (value) => {
+    return new Intl.NumberFormat('fr-MA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value || 0) + ' MAD'
 }
 
 const formatDate = (date) => {
@@ -908,4 +1162,3 @@ onMounted(() => {
     loadFournisseurs()
 })
 </script>
-

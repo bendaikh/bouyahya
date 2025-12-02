@@ -92,6 +92,19 @@ class ReglementFournisseurController extends Controller
         $reglement = ReglementFournisseur::with(['fournisseur', 'lignes.bonAchat'])
             ->findOrFail($id);
         
+        // Add calculated fields for each bon_achat in lignes
+        $reglement->lignes->each(function ($ligne) use ($id) {
+            if ($ligne->bonAchat) {
+                // Calculate total paid for this bon (excluding current reglement)
+                $montantRegleAutres = ReglementFournisseurLigne::where('bon_achat_id', $ligne->bon_achat_id)
+                    ->where('reglement_id', '!=', $id)
+                    ->sum('montant_regle');
+                
+                $ligne->bonAchat->montant_regle = floatval($montantRegleAutres);
+                $ligne->bonAchat->solde_restant = floatval($ligne->bonAchat->total_ttc) - floatval($montantRegleAutres);
+            }
+        });
+        
         return response()->json($reglement);
     }
 
@@ -220,20 +233,26 @@ class ReglementFournisseurController extends Controller
     /**
      * Obtenir les bons d'achat d'un fournisseur pour ventilation
      */
-    public function getBonsAchatFournisseur($fournisseurId)
+    public function getBonsAchatFournisseur($fournisseurId, Request $request)
     {
+        // Get the reglement ID if we're editing an existing reglement
+        $excludeReglementId = $request->query('exclude_reglement_id');
+        
         // Récupérer les bons d'achat validés du fournisseur avec les montants déjà réglés
         $bonsAchat = BonAchatFournisseur::where('fournisseur_id', $fournisseurId)
             ->where('statut', 'valide')
             ->with(['fournisseur'])
+            ->orderBy('date', 'asc')
             ->get()
-            ->map(function ($bon) {
-                // Calculer le montant déjà réglé pour ce bon
-                $montantRegle = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
-                    ->whereHas('reglement', function ($query) {
-                        $query->whereIn('statut', ['brouillon', 'valide']);
-                    })
-                    ->sum('montant_regle');
+            ->map(function ($bon) use ($excludeReglementId) {
+                // Calculer le montant déjà réglé pour ce bon (excluding current reglement if editing)
+                $query = ReglementFournisseurLigne::where('bon_achat_id', $bon->id);
+                
+                if ($excludeReglementId) {
+                    $query->where('reglement_id', '!=', $excludeReglementId);
+                }
+                
+                $montantRegle = $query->sum('montant_regle');
                 
                 $bon->montant_regle = floatval($montantRegle);
                 $bon->solde_restant = floatval($bon->total_ttc) - floatval($montantRegle);
