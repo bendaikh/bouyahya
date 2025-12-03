@@ -3,23 +3,96 @@
         <!-- Header -->
         <div class="mb-6 flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Règlements fournisseurs</h2>
-                <p class="text-gray-600 dark:text-gray-400">Gérer les règlements des fournisseurs</p>
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                    consultation règlements des fournisseurs
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">
+                    consultation règlements des fournisseurs
+                </p>
             </div>
-            <button 
-                v-if="!showForm"
-                @click="openCreateForm" 
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nouveau règlement
-            </button>
+
+            <!-- Global actions (form + list) -->
+            <div class="flex flex-wrap justify-end gap-2">
+                <!-- List view: create button -->
+                <button 
+                    v-if="!showForm"
+                    @click="openCreateForm" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nouveau règlement
+                </button>
+
+                <!-- Form view: main actions moved from bottom -->
+                <template v-else>
+                    <button 
+                        @click="cancelForm" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Quitter
+                    </button>
+                    <button 
+                        v-if="formMode !== 'view'"
+                        @click="saveReglement" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Valider
+                    </button>
+                    <button 
+                        @click="openCreateForm" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Ajouter
+                    </button>
+                    <button 
+                        v-if="formMode === 'view' && editingReglementId"
+                        @click="formMode = 'edit'" 
+                        class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Modifier
+                    </button>
+                </template>
+            </div>
         </div>
 
         <!-- List View -->
         <div v-if="!showForm">
+            <!-- Stat blocks -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
+                    <div class="text-sm font-semibold">Total Règlements Fournisseurs</div>
+                    <div class="mt-1 text-xl font-bold">
+                        {{ formatCurrencySimple(totalReglements) }}
+                    </div>
+                </div>
+                <div class="rounded-lg px-4 py-3 bg-green-600 text-white shadow">
+                    <div class="text-sm font-semibold">Total Décaissé</div>
+                    <div class="mt-1 text-xl font-bold">
+                        {{ formatCurrencySimple(totalDecaisse) }}
+                    </div>
+                </div>
+                <div class="rounded-lg px-4 py-3 bg-red-600 text-white shadow">
+                    <div class="text-sm font-semibold">Total Impayé</div>
+                    <div class="mt-1 text-xl font-bold">
+                        {{ formatCurrencySimple(totalImpaye) }}
+                    </div>
+                </div>
+            </div>
+
             <!-- Export Buttons -->
             <div class="mb-4 flex justify-end space-x-2">
                 <button 
@@ -43,7 +116,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
                 <!-- État Règlement -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
@@ -85,22 +158,24 @@
 
                 <!-- Montant -->
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Montant (min / max)</label>
-                    <div class="flex space-x-2">
-                        <input 
-                            type="number"
-                            v-model.number="filterMontantMin"
-                            placeholder="Min"
-                            class="w-1/2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                        />
-                        <input 
-                            type="number"
-                            v-model.number="filterMontantMax"
-                            placeholder="Max"
-                            class="w-1/2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                        />
-                    </div>
-            </div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Montant</label>
+                    <input 
+                        type="number"
+                        v-model.number="filterMontant"
+                        placeholder="Filtrer par montant..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+
+                <!-- Date encaissement -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date encaissement</label>
+                    <input 
+                        type="date"
+                        v-model="filterDateEncaissement"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
             </div>
             
             <div class="overflow-x-auto">
@@ -111,9 +186,12 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fournisseur</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N° pièce</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date encaissement</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -137,6 +215,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_reglement) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.fournisseur?.nom_fournisseur || 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.type_reglement }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.numero_piece || '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_encaissement) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">{{ formatCurrency(reglement.montant) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="getStatusClass(reglement.statut)" class="px-2 py-1 text-xs font-semibold rounded-full">
@@ -156,7 +237,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                         </svg>
                                     </button>
-                                    <button v-if="reglement.statut !== 'paye'" @click="editReglement(reglement)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
+                                    <button @click="editReglement(reglement)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -181,8 +262,8 @@
 
         <!-- Form View -->
         <div v-if="showForm" class="space-y-6">
-            <!-- Header with buttons -->
-            <div class="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+            <!-- Header -->
+            <div class="pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
                     {{ formMode === 'create' ? 'Nouveau règlement fournisseur' : (formMode === 'edit' ? 'Modifier le règlement' : 'Détails du règlement') }}
                 </h3>
@@ -509,48 +590,6 @@
                 <h4 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Sélectionnez un fournisseur</h4>
                 <p class="text-gray-500 dark:text-gray-400">Les bons d'achat impayés du fournisseur s'afficheront ici</p>
             </div>
-
-            <!-- Action Buttons at bottom -->
-            <div class="flex justify-center space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                    @click="cancelForm" 
-                    class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Quitter
-                </button>
-                <button 
-                    v-if="formMode !== 'view'"
-                    @click="saveReglement" 
-                    class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Valider
-                </button>
-                <button 
-                    @click="openCreateForm" 
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Ajouter
-                </button>
-                <button 
-                    v-if="formMode === 'view' && editingReglementId"
-                    @click="formMode = 'edit'" 
-                    class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Modifier
-                </button>
-            </div>
         </div>
     </div>
 </template>
@@ -571,8 +610,8 @@ const editingReglementId = ref(null)
 const filterEtat = ref('')
 const filterNumeroPiece = ref('')
 const filterBanque = ref('')
-const filterMontantMin = ref(null)
-const filterMontantMax = ref(null)
+const filterMontant = ref(null)
+const filterDateEncaissement = ref('')
 
 const form = ref({
     code_reglement: '',
@@ -614,22 +653,35 @@ const filteredReglements = computed(() => {
         list = list.filter(r => (r.banque || '').toLowerCase().includes(query))
     }
 
-    const min = filterMontantMin.value != null && filterMontantMin.value !== '' 
-        ? parseFloat(filterMontantMin.value) 
-        : null
-    const max = filterMontantMax.value != null && filterMontantMax.value !== '' 
-        ? parseFloat(filterMontantMax.value) 
-        : null
-
-    if (min !== null && !isNaN(min)) {
-        list = list.filter(r => parseFloat(r.montant) >= min)
+    if (filterMontant.value != null && filterMontant.value !== '') {
+        const montant = parseFloat(filterMontant.value)
+        if (!isNaN(montant)) {
+            list = list.filter(r => parseFloat(r.montant) >= montant)
+        }
     }
 
-    if (max !== null && !isNaN(max)) {
-        list = list.filter(r => parseFloat(r.montant) <= max)
+    if (filterDateEncaissement.value) {
+        list = list.filter(r => (r.date_encaissement || '').startsWith(filterDateEncaissement.value))
     }
 
     return list
+})
+
+// Totals for stat blocks
+const totalReglements = computed(() => {
+    return reglements.value.reduce((sum, r) => sum + (parseFloat(r.montant) || 0), 0)
+})
+
+const totalDecaisse = computed(() => {
+    return reglements.value
+        .filter(r => r.statut === 'paye')
+        .reduce((sum, r) => sum + (parseFloat(r.montant) || 0), 0)
+})
+
+const totalImpaye = computed(() => {
+    return reglements.value
+        .filter(r => r.statut === 'impaye')
+        .reduce((sum, r) => sum + (parseFloat(r.montant) || 0), 0)
 })
 
 const totalImpute = computed(() => {

@@ -128,7 +128,7 @@
                                 Aucun bon d'achat trouvé
                             </td>
                         </tr>
-                        <tr v-else v-for="bon in paginatedBons" :key="bon.id" class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <tr v-else v-for="bon in paginatedBons" :key="bon.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <a 
                                     href="#" 
