@@ -882,9 +882,13 @@ const viewBon = async (bon) => {
         const response = await fetch(`/api/bon-achat-fournisseur/${bon.id}`)
         if (response.ok) {
             const data = await response.json()
+            // Normalize date for HTML date input (expects YYYY-MM-DD)
+            const normalizedDate = data.date 
+                ? new Date(data.date).toISOString().split('T')[0] 
+                : new Date().toISOString().split('T')[0]
             form.value = {
                 numero_bon: data.numero_bon,
-                date: data.date,
+                date: normalizedDate,
                 fournisseur_id: data.fournisseur_id,
                 type_paiement: data.type_paiement,
                 echeance: data.echeance,

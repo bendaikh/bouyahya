@@ -41,6 +41,67 @@
                     Exporter PDF
                 </button>
             </div>
+
+            <!-- Filters -->
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- État Règlement -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
+                    <select 
+                        v-model="filterEtat"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    >
+                        <option value="">Tous</option>
+                        <option value="paye">Payé</option>
+                        <option value="impaye">Impayé</option>
+                        <option value="reporte">Reporté</option>
+                        <option value="instance">Instance</option>
+                        <option value="cour">Cour</option>
+                        <option value="devalide">Dévalidé</option>
+                    </select>
+                </div>
+
+                <!-- N° pièce -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° pièce</label>
+                    <input 
+                        type="text"
+                        v-model="filterNumeroPiece"
+                        placeholder="Filtrer par N° pièce..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+
+                <!-- Banque -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banque</label>
+                    <input 
+                        type="text"
+                        v-model="filterBanque"
+                        placeholder="Filtrer par banque..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+
+                <!-- Montant -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Montant (min / max)</label>
+                    <div class="flex space-x-2">
+                        <input 
+                            type="number"
+                            v-model.number="filterMontantMin"
+                            placeholder="Min"
+                            class="w-1/2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                        />
+                        <input 
+                            type="number"
+                            v-model.number="filterMontantMax"
+                            placeholder="Max"
+                            class="w-1/2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                        />
+                    </div>
+            </div>
+            </div>
             
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -66,7 +127,12 @@
                                 Aucun règlement trouvé
                             </td>
                         </tr>
-                        <tr v-else v-for="reglement in reglements" :key="reglement.id">
+                        <tr v-else-if="filteredReglements.length === 0">
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                Aucun règlement ne correspond aux filtres
+                            </td>
+                        </tr>
+                        <tr v-else v-for="reglement in filteredReglements" :key="reglement.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">{{ reglement.code_reglement }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_reglement) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.fournisseur?.nom_fournisseur || 'N/A' }}</td>
@@ -501,6 +567,13 @@ const showForm = ref(false)
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingReglementId = ref(null)
 
+// List filters
+const filterEtat = ref('')
+const filterNumeroPiece = ref('')
+const filterBanque = ref('')
+const filterMontantMin = ref(null)
+const filterMontantMax = ref(null)
+
 const form = ref({
     code_reglement: '',
     date_reglement: new Date().toISOString().split('T')[0],
@@ -521,6 +594,42 @@ const selectedFournisseurName = computed(() => {
     if (!form.value.fournisseur_id) return ''
     const fournisseur = fournisseurs.value.find(f => f.id === form.value.fournisseur_id)
     return fournisseur ? fournisseur.nom_fournisseur : ''
+})
+
+// Filtered list of règlements for display & export
+const filteredReglements = computed(() => {
+    let list = reglements.value
+
+    if (filterEtat.value) {
+        list = list.filter(r => r.statut === filterEtat.value)
+    }
+
+    if (filterNumeroPiece.value) {
+        const query = filterNumeroPiece.value.toLowerCase()
+        list = list.filter(r => (r.numero_piece || '').toLowerCase().includes(query))
+    }
+
+    if (filterBanque.value) {
+        const query = filterBanque.value.toLowerCase()
+        list = list.filter(r => (r.banque || '').toLowerCase().includes(query))
+    }
+
+    const min = filterMontantMin.value != null && filterMontantMin.value !== '' 
+        ? parseFloat(filterMontantMin.value) 
+        : null
+    const max = filterMontantMax.value != null && filterMontantMax.value !== '' 
+        ? parseFloat(filterMontantMax.value) 
+        : null
+
+    if (min !== null && !isNaN(min)) {
+        list = list.filter(r => parseFloat(r.montant) >= min)
+    }
+
+    if (max !== null && !isNaN(max)) {
+        list = list.filter(r => parseFloat(r.montant) <= max)
+    }
+
+    return list
 })
 
 const totalImpute = computed(() => {
@@ -972,12 +1081,12 @@ const getStatusText = (statut) => {
 
 // Export functions
 const exportToExcel = () => {
-    if (reglements.value.length === 0) {
+    if (filteredReglements.value.length === 0) {
         alert('Aucune donnée à exporter')
         return
     }
     
-    const data = reglements.value.map(reg => ({
+    const data = filteredReglements.value.map(reg => ({
         'Code': reg.code_reglement,
         'Date': formatDate(reg.date_reglement),
         'Fournisseur': reg.fournisseur?.nom_fournisseur || 'N/A',
@@ -1007,7 +1116,7 @@ const exportToExcel = () => {
 }
 
 const exportToPDF = () => {
-    if (reglements.value.length === 0) {
+    if (filteredReglements.value.length === 0) {
         alert('Aucune donnée à exporter')
         return
     }
@@ -1049,7 +1158,7 @@ const exportToPDF = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    ${reglements.value.map(reg => `
+                    ${filteredReglements.value.map(reg => `
                         <tr>
                             <td>${reg.code_reglement}</td>
                             <td>${formatDate(reg.date_reglement)}</td>
