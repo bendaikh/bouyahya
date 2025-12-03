@@ -160,12 +160,12 @@
                                 {{ formatNumber(bon.montant_paye) }} MAD
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold"
-                                :class="getSoldeClass(bon.solde)">
-                                {{ formatNumber(bon.solde) }}
+                                :class="getSoldeClass(getSolde(bon))">
+                                {{ formatNumber(getSolde(bon)) }}
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold"
-                                :class="getReliquatClass(bon.reliquat)">
-                                {{ formatNumber(bon.reliquat) }}
+                                :class="getReliquatClass(getReliquat(bon))">
+                                {{ formatNumber(getReliquat(bon)) }}
                             </td>
                         </tr>
                     </tbody>
@@ -296,7 +296,7 @@
                             </div>
                             <div class="flex justify-between text-sm border-t pt-2">
                                 <span class="text-gray-600 dark:text-gray-400">Solde:</span>
-                                <span class="font-bold" :class="getSoldeClass(selectedBon.solde)">{{ formatNumber(selectedBon.solde) }} MAD</span>
+                                <span class="font-bold" :class="getSoldeClass(getSolde(selectedBon))">{{ formatNumber(getSolde(selectedBon)) }} MAD</span>
                             </div>
                         </div>
                     </div>
@@ -369,9 +369,9 @@ const filteredBons = computed(() => {
         )
     }
 
-    // Filter by reliquat only
+    // Filter by reliquat only (computed from montant payé vs TTC)
     if (showReliquatOnly.value) {
-        result = result.filter(bon => parseFloat(bon.reliquat) > 0)
+        result = result.filter(bon => getReliquat(bon) > 0)
     }
 
     return result
@@ -416,8 +416,8 @@ const visiblePages = computed(() => {
 const totaux = computed(() => {
     return filteredBons.value.reduce((acc, bon) => {
         acc.montantTTC += parseFloat(bon.total_ttc) || 0
-        acc.solde += parseFloat(bon.solde) || 0
-        acc.reliquat += parseFloat(bon.reliquat) || 0
+        acc.solde += getSolde(bon)
+        acc.reliquat += getReliquat(bon)
         return acc
     }, { montantTTC: 0, solde: 0, reliquat: 0 })
 })
@@ -505,8 +505,8 @@ const imprimer = () => {
                             <td class="text-center">${bon.total_qte}</td>
                             <td class="text-right">${formatNumber(bon.total_ttc)} MAD</td>
                             <td class="text-right">${formatNumber(bon.montant_paye)} MAD</td>
-                            <td class="text-right ${parseFloat(bon.solde) > 0 ? 'text-red' : 'text-green'}">${formatNumber(bon.solde)}</td>
-                            <td class="text-right ${parseFloat(bon.reliquat) > 0 ? 'text-blue' : 'text-green'}">${formatNumber(bon.reliquat)}</td>
+                            <td class="text-right ${getSolde(bon) > 0 ? 'text-red' : 'text-green'}">${formatNumber(getSolde(bon))}</td>
+                            <td class="text-right ${getReliquat(bon) > 0 ? 'text-blue' : 'text-green'}">${formatNumber(getReliquat(bon))}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -534,6 +534,23 @@ const exporterPDF = () => {
 }
 
 // Formatting
+// Compute SOLDE and RELIQUAT based on Montant TTC and Montant Payé
+// SOLDE: amount still not paid (TTC - payé, min 0)
+// RELIQUAT: amount overpaid (payé - TTC, min 0)
+const getSolde = (bon) => {
+    if (!bon) return 0
+    const ttc = parseFloat(bon.total_ttc) || 0
+    const paye = parseFloat(bon.montant_paye) || 0
+    return Math.max(ttc - paye, 0)
+}
+
+const getReliquat = (bon) => {
+    if (!bon) return 0
+    const ttc = parseFloat(bon.total_ttc) || 0
+    const paye = parseFloat(bon.montant_paye) || 0
+    return Math.max(paye - ttc, 0)
+}
+
 const formatNumber = (value) => {
     const num = parseFloat(value) || 0
     return new Intl.NumberFormat('fr-FR', {
