@@ -39,6 +39,7 @@ class ReglementFournisseurController extends Controller
             'date_encaissement' => 'nullable|date',
             'observation' => 'nullable|string',
             'statut' => 'nullable|string|in:instance,paye,reporte,cour,impaye,devalide',
+            'etat_remboursement' => 'nullable|string|in:devalide,impaye',
             'lignes' => 'nullable|array',
             'lignes.*.bon_achat_id' => 'required_with:lignes|exists:bon_achat_fournisseur,id',
             'lignes.*.montant_regle' => 'required_with:lignes|numeric|min:0',
@@ -63,6 +64,7 @@ class ReglementFournisseurController extends Controller
                 'date_encaissement' => $validated['date_encaissement'] ?? null,
                 'observation' => $validated['observation'] ?? null,
                 'statut' => $validated['statut'] ?? 'impaye',
+                'etat_remboursement' => $validated['etat_remboursement'] ?? null,
             ]);
 
             // Créer les lignes de ventilation
@@ -127,6 +129,7 @@ class ReglementFournisseurController extends Controller
             'date_encaissement' => 'nullable|date',
             'observation' => 'nullable|string',
             'statut' => 'nullable|string|in:instance,paye,reporte,cour,impaye,devalide',
+            'etat_remboursement' => 'nullable|string|in:devalide,impaye',
             'lignes' => 'nullable|array',
             'lignes.*.bon_achat_id' => 'required_with:lignes|exists:bon_achat_fournisseur,id',
             'lignes.*.montant_regle' => 'required_with:lignes|numeric|min:0',
@@ -145,6 +148,7 @@ class ReglementFournisseurController extends Controller
                 'date_encaissement' => $validated['date_encaissement'] ?? null,
                 'observation' => $validated['observation'] ?? null,
                 'statut' => $validated['statut'] ?? $reglement->statut,
+                'etat_remboursement' => $validated['etat_remboursement'] ?? $reglement->etat_remboursement,
             ]);
 
             // Supprimer les anciennes lignes et recréer
@@ -236,14 +240,17 @@ class ReglementFournisseurController extends Controller
     {
         // Get the reglement ID if we're editing an existing reglement
         $excludeReglementId = $request->query('exclude_reglement_id');
+        $etatRemboursement = $request->query('etat_remboursement'); // 'devalide' or 'impaye'
         
         // Récupérer les bons d'achat validés du fournisseur avec les montants déjà réglés
-        $bonsAchat = BonAchatFournisseur::where('fournisseur_id', $fournisseurId)
-            ->where('statut', 'valide')
-            ->with(['fournisseur'])
+        $query = BonAchatFournisseur::where('fournisseur_id', $fournisseurId)
+            ->where('statut', 'valide');
+        
+        // Get all bons d'achat for the fournisseur
+        $bonsAchat = $query->with(['fournisseur'])
             ->orderBy('date', 'asc')
             ->get()
-            ->map(function ($bon) use ($excludeReglementId) {
+            ->map(function ($bon) use ($excludeReglementId, $etatRemboursement) {
                 // Calculer le montant déjà réglé pour ce bon (excluding current reglement if editing)
                 $query = ReglementFournisseurLigne::where('bon_achat_id', $bon->id);
                 
@@ -256,8 +263,27 @@ class ReglementFournisseurController extends Controller
                 $bon->montant_regle = floatval($montantRegle);
                 $bon->solde_restant = floatval($bon->total_ttc) - floatval($montantRegle);
                 
+                // If filtering by remboursement status, mark if this bon is linked to a reglement with that statut
+                if ($etatRemboursement) {
+                    $statutFilter = $etatRemboursement;
+                    $isLinkedToStatut = ReglementFournisseurLigne::join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
+                        ->where('reglement_fournisseur_lignes.bon_achat_id', $bon->id)
+                        ->where('reglements_fournisseurs.statut', $statutFilter)
+                        ->when($excludeReglementId, function ($q) use ($excludeReglementId) {
+                            $q->where('reglements_fournisseurs.id', '!=', $excludeReglementId);
+                        })
+                        ->exists();
+                    
+                    $bon->linked_to_remboursement_statut = $isLinkedToStatut;
+                } else {
+                    $bon->linked_to_remboursement_statut = false;
+                }
+                
                 return $bon;
             });
+        
+        // If filtering by remboursement status, prioritize/show those linked to the statut, but also show all others
+        // We'll filter in Vue component to show all, but can highlight the linked ones
         
         return response()->json($bonsAchat);
     }

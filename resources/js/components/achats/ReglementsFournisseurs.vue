@@ -269,11 +269,14 @@
                 </h3>
             </div>
 
-            <!-- État Règlement Legend - Clickable -->
-            <div class="bg-slate-800 dark:bg-slate-900 rounded-lg p-4 mb-6">
-                <div class="flex items-center justify-between">
-                    <span class="text-white font-semibold text-sm">État Règlement</span>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <!-- État Règlement & État Remboursement - Side by Side -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- État Règlement Legend - Clickable -->
+                <div class="bg-slate-800 dark:bg-slate-900 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white font-semibold text-sm">État Règlement</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
                         <button 
                             type="button"
                             @click="setStatut('instance')"
@@ -333,6 +336,35 @@
                         >
                             <span class="text-gray-300 text-sm">Dévalidé</span>
                             <span class="w-3 h-3 rounded-full bg-purple-500 border border-purple-400"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- État Remboursement Legend - Clickable -->
+                <div class="bg-slate-800 dark:bg-slate-900 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white font-semibold text-sm">État Remboursement</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <button 
+                            type="button"
+                            @click="setEtatRemboursement('devalide')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.etat_remboursement === 'devalide' ? 'bg-purple-900/50 ring-2 ring-purple-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Remboursement Dévalidé</span>
+                            <span class="w-3 h-3 rounded-full bg-purple-500 border border-purple-400"></span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="setEtatRemboursement('impaye')"
+                            :disabled="formMode === 'view'"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
+                            :class="form.etat_remboursement === 'impaye' ? 'bg-red-900/50 ring-2 ring-red-400' : 'hover:bg-slate-700'"
+                        >
+                            <span class="text-gray-300 text-sm">Remboursement Impayé</span>
+                            <span class="w-3 h-3 rounded-full bg-red-500 border border-red-400"></span>
                         </button>
                     </div>
                 </div>
@@ -625,6 +657,7 @@ const form = ref({
     date_encaissement: '',
     observation: '',
     statut: 'impaye',
+    etat_remboursement: null,
     lignes: []
 })
 
@@ -734,16 +767,40 @@ const loadBonsAchatFournisseur = async (fournisseurId, excludeReglementId = null
     loadingBonsAchat.value = true
     try {
         let url = `/api/reglements-fournisseurs/bons-achat/${fournisseurId}`
+        const queryParams = []
+        
         if (excludeReglementId) {
-            url += `?exclude_reglement_id=${excludeReglementId}`
+            queryParams.push(`exclude_reglement_id=${excludeReglementId}`)
+        }
+        
+        if (form.value.etat_remboursement) {
+            queryParams.push(`etat_remboursement=${form.value.etat_remboursement}`)
+        }
+        
+        if (queryParams.length > 0) {
+            url += `?${queryParams.join('&')}`
         }
         
         const response = await fetch(url)
         if (response.ok) {
             const data = await response.json()
             // Add selection and imputation fields
+            // When filtering by remboursement status:
+            //   - Show bons linked to règlements with that statut
+            //   - PLUS show all other available bons (with remaining balance)
+            // Otherwise, only show unpaid bons
             bonsAchatFournisseur.value = data
-                .filter(bon => bon.solde_restant > 0) // Only show unpaid bons
+                .filter(bon => {
+                    if (form.value.etat_remboursement) {
+                        // When filtering by remboursement status:
+                        // Show ONLY bons linked to règlements with that statut
+                        // If no règlements exist with that statut, table will be empty
+                        return bon.linked_to_remboursement_statut === true
+                    } else {
+                        // Default: only show unpaid bons
+                        return bon.solde_restant > 0
+                    }
+                })
                 .map(bon => ({
                     ...bon,
                     selected: false,
@@ -790,6 +847,7 @@ const resetForm = () => {
         date_encaissement: '',
         observation: '',
         statut: 'impaye',
+        etat_remboursement: null,
         lignes: []
     }
     bonsAchatFournisseur.value = []
@@ -800,6 +858,18 @@ const resetForm = () => {
 const setStatut = (statut) => {
     if (formMode.value !== 'view') {
         form.value.statut = statut
+    }
+}
+
+// Set the remboursement status and reload bons d'achat
+const setEtatRemboursement = (etat) => {
+    if (formMode.value !== 'view') {
+        // Toggle: if already selected, unselect; otherwise select
+        form.value.etat_remboursement = form.value.etat_remboursement === etat ? null : etat
+        // Reload bons d'achat with the new filter
+        if (form.value.fournisseur_id) {
+            loadBonsAchatFournisseur(form.value.fournisseur_id, editingReglementId.value)
+        }
     }
 }
 
@@ -972,6 +1042,7 @@ const viewReglement = async (reglement) => {
                 date_encaissement: data.date_encaissement || '',
                 observation: data.observation || '',
                 statut: data.statut || 'impaye',
+                etat_remboursement: data.etat_remboursement || null,
                 lignes: data.lignes?.map(l => ({
                     bon_achat_id: l.bon_achat_id,
                     montant_regle: parseFloat(l.montant_regle)

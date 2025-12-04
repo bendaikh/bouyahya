@@ -19,6 +19,7 @@ class ReglementFournisseur extends Model
         'montant',
         'date_encaissement',
         'statut',
+        'etat_remboursement',
         'observation',
     ];
     

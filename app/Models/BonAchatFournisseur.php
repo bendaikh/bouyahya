@@ -47,4 +47,9 @@ class BonAchatFournisseur extends Model
     {
         return $this->belongsTo(BonCommandeFournisseur::class, 'bon_commande_id');
     }
+    
+    public function reglementLignes()
+    {
+        return $this->hasMany(ReglementFournisseurLigne::class, 'bon_achat_id');
+    }
 }
