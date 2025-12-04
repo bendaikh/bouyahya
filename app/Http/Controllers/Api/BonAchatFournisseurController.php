@@ -35,11 +35,8 @@ class BonAchatFournisseurController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($bon) {
-                // Calculate amount paid from reglements
+                // Calculate amount paid from reglements (count all reglements regardless of status)
                 $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
-                    ->whereHas('reglement', function ($query) {
-                        $query->where('statut', 'paye');
-                    })
                     ->sum('montant_regle');
                 
                 // Calculate solde (unpaid balance)

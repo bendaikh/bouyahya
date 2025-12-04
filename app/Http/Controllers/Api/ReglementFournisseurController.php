@@ -115,10 +115,6 @@ class ReglementFournisseurController extends Controller
     public function update(Request $request, $id)
     {
         $reglement = ReglementFournisseur::findOrFail($id);
-        
-        if ($reglement->statut === 'paye') {
-            return response()->json(['message' => 'Impossible de modifier un règlement déjà payé'], 403);
-        }
 
         $validated = $request->validate([
             'date_reglement' => 'required|date',
