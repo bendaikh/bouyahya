@@ -35,11 +35,12 @@ class BonAchatFournisseurController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($bon) {
-                // Calculate amount paid from reglements (only count règlements with status 'paye')
+                // Calculate amount paid from reglements
+                // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
                 // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
                 $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
                     ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-                    ->where('reglements_fournisseurs.statut', 'paye')
+                    ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
                     ->sum('reglement_fournisseur_lignes.montant_regle');
                 
                 // Calculate solde (unpaid balance)

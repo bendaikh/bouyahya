@@ -99,10 +99,11 @@ class ReglementFournisseurController extends Controller
         $reglement->lignes->each(function ($ligne) use ($id) {
             if ($ligne->bonAchat) {
                 // Calculate total paid for this bon (excluding current reglement)
-                // Only count règlements with status 'paye' - exclude 'devalide', 'impaye', 'reporte'
+                // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
+                // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
                 $montantRegleAutres = ReglementFournisseurLigne::where('bon_achat_id', $ligne->bon_achat_id)
                     ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-                    ->where('reglements_fournisseurs.statut', 'paye')
+                    ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
                     ->where('reglement_fournisseur_lignes.reglement_id', '!=', $id)
                     ->sum('reglement_fournisseur_lignes.montant_regle');
                 
@@ -255,10 +256,11 @@ class ReglementFournisseurController extends Controller
             ->get()
             ->map(function ($bon) use ($excludeReglementId, $etatRemboursement) {
                 // Calculer le montant déjà réglé pour ce bon (excluding current reglement if editing)
-                // Only count règlements with status 'paye' - exclude 'devalide', 'impaye', 'reporte'
+                // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
+                // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
                 $query = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
                     ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-                    ->where('reglements_fournisseurs.statut', 'paye');
+                    ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance']);
                 
                 if ($excludeReglementId) {
                     $query->where('reglement_fournisseur_lignes.reglement_id', '!=', $excludeReglementId);

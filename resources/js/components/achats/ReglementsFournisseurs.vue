@@ -129,7 +129,7 @@
                         <option value="impaye">Impayé</option>
                         <option value="reporte">Reporté</option>
                         <option value="instance">Instance</option>
-                        <option value="cour">Cour</option>
+                        <option value="cour">En cour</option>
                         <option value="devalide">Dévalidé</option>
                     </select>
                 </div>
@@ -314,7 +314,7 @@
                             class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200"
                             :class="form.statut === 'cour' ? 'bg-blue-900/50 ring-2 ring-blue-400' : 'hover:bg-slate-700'"
                         >
-                            <span class="text-gray-300 text-sm">Cour</span>
+                            <span class="text-gray-300 text-sm">En cour</span>
                             <span class="w-3 h-3 rounded-full bg-blue-500 border border-blue-400"></span>
                         </button>
                         <button 
@@ -1194,7 +1194,7 @@ const getStatusText = (statut) => {
         case 'instance':
             return 'Instance'
         case 'cour':
-            return 'Cour'
+            return 'En cour'
         case 'devalide':
             return 'Dévalidé'
         default:
