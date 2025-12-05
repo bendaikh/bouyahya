@@ -99,9 +99,12 @@ class ReglementFournisseurController extends Controller
         $reglement->lignes->each(function ($ligne) use ($id) {
             if ($ligne->bonAchat) {
                 // Calculate total paid for this bon (excluding current reglement)
+                // Only count règlements with status 'paye' - exclude 'devalide', 'impaye', 'reporte'
                 $montantRegleAutres = ReglementFournisseurLigne::where('bon_achat_id', $ligne->bon_achat_id)
-                    ->where('reglement_id', '!=', $id)
-                    ->sum('montant_regle');
+                    ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
+                    ->where('reglements_fournisseurs.statut', 'paye')
+                    ->where('reglement_fournisseur_lignes.reglement_id', '!=', $id)
+                    ->sum('reglement_fournisseur_lignes.montant_regle');
                 
                 $ligne->bonAchat->montant_regle = floatval($montantRegleAutres);
                 $ligne->bonAchat->solde_restant = floatval($ligne->bonAchat->total_ttc) - floatval($montantRegleAutres);
@@ -252,13 +255,16 @@ class ReglementFournisseurController extends Controller
             ->get()
             ->map(function ($bon) use ($excludeReglementId, $etatRemboursement) {
                 // Calculer le montant déjà réglé pour ce bon (excluding current reglement if editing)
-                $query = ReglementFournisseurLigne::where('bon_achat_id', $bon->id);
+                // Only count règlements with status 'paye' - exclude 'devalide', 'impaye', 'reporte'
+                $query = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
+                    ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
+                    ->where('reglements_fournisseurs.statut', 'paye');
                 
                 if ($excludeReglementId) {
-                    $query->where('reglement_id', '!=', $excludeReglementId);
+                    $query->where('reglement_fournisseur_lignes.reglement_id', '!=', $excludeReglementId);
                 }
                 
-                $montantRegle = $query->sum('montant_regle');
+                $montantRegle = $query->sum('reglement_fournisseur_lignes.montant_regle');
                 
                 $bon->montant_regle = floatval($montantRegle);
                 $bon->solde_restant = floatval($bon->total_ttc) - floatval($montantRegle);
