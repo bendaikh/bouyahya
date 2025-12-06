@@ -383,6 +383,7 @@
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">DÉSIGNATION ARTICLE</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">QTÉ</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">PRIX U TTC</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">SOUS-TOTAL</th>
                                 <th v-if="formMode !== 'view'" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"></th>
                             </tr>
                         </thead>
@@ -492,6 +493,11 @@
                                         min="0"
                                         class="w-28 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                                     />
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <span class="font-medium text-gray-900 dark:text-white">
+                                        {{ formatCurrency((article.qte || 0) * (article.prix_unitaire_ttc || 0)) }}
+                                    </span>
                                 </td>
                                 <td v-if="formMode !== 'view'" class="px-4 py-2">
                                     <button @click="removeArticle(index)" class="text-red-600 hover:text-red-900">
