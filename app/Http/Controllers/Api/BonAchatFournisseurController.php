@@ -36,22 +36,24 @@ class BonAchatFournisseurController extends Controller
             ->get()
             ->map(function ($bon) {
                 // Calculate amount paid from reglements
+                // Use the actual règlement montant (not the allocated montant_regle)
                 // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
                 // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
                 $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
                     ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
                     ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
-                    ->sum('reglement_fournisseur_lignes.montant_regle');
+                    ->sum('reglements_fournisseurs.montant');
                 
-                // Calculate solde (unpaid balance)
-                $solde = floatval($bon->total_ttc) - floatval($montantPaye);
+                $ttc = floatval($bon->total_ttc);
+                $paye = floatval($montantPaye);
                 
-                // For reliquat, you can customize this based on your business logic
-                // Here we use the same as solde, but you might want to track 
-                // items not yet delivered separately
-                $reliquat = $solde > 0 ? $solde : 0;
+                // SOLDE: montant restant à payer (TTC > payé) - ce que le client doit encore
+                $solde = max($ttc - $paye, 0);
                 
-                $bon->montant_paye = floatval($montantPaye);
+                // RELIQUAT: trop-perçu (payé > TTC) - excédent de paiement
+                $reliquat = max($paye - $ttc, 0);
+                
+                $bon->montant_paye = $paye;
                 $bon->solde = $solde;
                 $bon->reliquat = $reliquat;
                 

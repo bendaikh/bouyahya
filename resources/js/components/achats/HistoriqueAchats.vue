@@ -535,8 +535,8 @@ const exporterPDF = () => {
 
 // Formatting
 // Compute SOLDE and RELIQUAT based on Montant TTC and Montant Payé
-// SOLDE: amount still not paid (TTC - payé, min 0)
-// RELIQUAT: amount overpaid (payé - TTC, min 0)
+// SOLDE: montant restant à payer (TTC > payé) - ce que le client doit encore
+// RELIQUAT: trop-perçu (payé > TTC) - excédent de paiement
 const getSolde = (bon) => {
     if (!bon) return 0
     const ttc = parseFloat(bon.total_ttc) || 0
