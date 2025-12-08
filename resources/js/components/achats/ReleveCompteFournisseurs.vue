@@ -358,6 +358,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 const loading = ref(false)
 const fournisseurs = ref([])
 const bonsAchat = ref([])
+const bonsHistorique = ref([]) // Data from historique API with pre-calculated solde/reliquat
 const reglements = ref([])
 const clientsLivres = ref([])
 const currentPage = ref(1)
@@ -400,6 +401,8 @@ const combinedData = computed(() => {
             echeance: bon.echeance,
             banque: '',
             paye: 0,
+            cour: 0,
+            instance: 0,
             devalide: 0,
             impaye: 0,
             reporte: 0,
@@ -408,8 +411,10 @@ const combinedData = computed(() => {
     })
     
     // Add règlements (as debit entries)
+    // Only règlements with status 'paye', 'cour', 'instance' count as effective payments (same as historique)
     reglements.value.forEach(reg => {
         const montant = parseFloat(reg.montant) || 0
+        const isEffectivePayment = ['paye', 'cour', 'instance'].includes(reg.statut)
         data.push({
             type: 'reglement',
             date: reg.date_reglement,
@@ -417,12 +422,14 @@ const combinedData = computed(() => {
             client_livre: '-',
             ville: '-',
             quantite: 0,
-            debit: montant,
+            debit: isEffectivePayment ? montant : 0, // Only effective payments reduce the balance
             credit: 0,
             type_reglement: reg.type_reglement,
             echeance: reg.date_encaissement,
             banque: reg.banque,
             paye: reg.statut === 'paye' ? montant : 0,
+            cour: reg.statut === 'cour' ? montant : 0,
+            instance: reg.statut === 'instance' ? montant : 0,
             devalide: reg.statut === 'devalide' ? montant : 0,
             impaye: reg.statut === 'impaye' ? montant : 0,
             reporte: reg.statut === 'reporte' ? montant : 0,
@@ -467,19 +474,39 @@ const filteredData = computed(() => {
 const totals = computed(() => {
     const data = filteredData.value
     
+    const credit = data.reduce((sum, row) => sum + (row.credit || 0), 0)
+    const debit = data.reduce((sum, row) => sum + (row.debit || 0), 0)
     const paye = data.reduce((sum, row) => sum + (row.paye || 0), 0)
+    const cour = data.reduce((sum, row) => sum + (row.cour || 0), 0)
+    const instance = data.reduce((sum, row) => sum + (row.instance || 0), 0)
     const devalide = data.reduce((sum, row) => sum + (row.devalide || 0), 0)
     const impaye = data.reduce((sum, row) => sum + (row.impaye || 0), 0)
     const reporte = data.reduce((sum, row) => sum + (row.reporte || 0), 0)
     
-    // Total Solde = Dévalidé + Impayé + Reporté - Payé
-    const solde = devalide + impaye + reporte - paye
+    // Use the pre-calculated solde from historique API (same as Historique achats page)
+    // This sums individual bon soldes where solde = max(TTC - montant_paye, 0)
+    // Filter by client_livre if selected
+    let historiqueFiltered = bonsHistorique.value
+    if (filters.value.clientLivre) {
+        historiqueFiltered = historiqueFiltered.filter(bon => bon.client_livre === filters.value.clientLivre)
+    }
+    // Filter by date range
+    if (filters.value.dateDebut) {
+        historiqueFiltered = historiqueFiltered.filter(bon => bon.date >= filters.value.dateDebut)
+    }
+    if (filters.value.dateFin) {
+        historiqueFiltered = historiqueFiltered.filter(bon => bon.date <= filters.value.dateFin)
+    }
+    
+    const solde = historiqueFiltered.reduce((sum, bon) => sum + (parseFloat(bon.solde) || 0), 0)
+    const reliquat = historiqueFiltered.reduce((sum, bon) => sum + (parseFloat(bon.reliquat) || 0), 0)
     
     return {
         quantite: data.reduce((sum, row) => sum + (row.quantite || 0), 0),
-        debit: data.reduce((sum, row) => sum + (row.debit || 0), 0),
-        credit: data.reduce((sum, row) => sum + (row.credit || 0), 0),
+        debit: debit,
+        credit: credit,
         solde: solde,
+        reliquat: reliquat,
         paye: paye,
         devalide: devalide,
         impaye: impaye,
@@ -543,6 +570,7 @@ const loadFournisseurs = async () => {
 const loadDataForFournisseur = async () => {
     if (!filters.value.fournisseurId) {
         bonsAchat.value = []
+        bonsHistorique.value = []
         reglements.value = []
         clientsLivres.value = []
         return
@@ -562,6 +590,14 @@ const loadDataForFournisseur = async () => {
                 if (bon.client_livre) clients.add(bon.client_livre)
             })
             clientsLivres.value = Array.from(clients).sort()
+        }
+        
+        // Load historique data (with pre-calculated solde/reliquat/montant_paye)
+        const historiqueResponse = await fetch('/api/bon-achat-fournisseur/historique')
+        if (historiqueResponse.ok) {
+            const historiqueData = await historiqueResponse.json()
+            // Filter by fournisseur
+            bonsHistorique.value = historiqueData.filter(bon => bon.fournisseur_id == filters.value.fournisseurId)
         }
         
         // Load règlements
@@ -594,6 +630,7 @@ const resetFilters = () => {
     }
     currentPage.value = 1
     bonsAchat.value = []
+    bonsHistorique.value = []
     reglements.value = []
     clientsLivres.value = []
 }
@@ -794,6 +831,7 @@ const closeReleve = () => {
     filters.value.dateFin = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0]
     filters.value.periodePredefinee = ''
     bonsAchat.value = []
+    bonsHistorique.value = []
     reglements.value = []
 }
 

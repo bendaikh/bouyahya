@@ -36,13 +36,14 @@ class BonAchatFournisseurController extends Controller
             ->get()
             ->map(function ($bon) {
                 // Calculate amount paid from reglements
-                // Use the allocated montant_regle per bon, not the total règlement montant
+                // Use the total règlement montant (not the allocated montant_regle per bon)
+                // This shows the full payment amount for règlements that touched this bon
                 // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
                 // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
                 $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
                     ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
                     ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
-                    ->sum('reglement_fournisseur_lignes.montant_regle');
+                    ->sum('reglements_fournisseurs.montant');
                 
                 $ttc = floatval($bon->total_ttc);
                 $paye = floatval($montantPaye);
