@@ -1,73 +1,230 @@
 <template>
-    <div class="space-y-6">
-        <!-- Filter Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Filtrer et Générer un Relevé</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                <!-- Date du -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date du</label>
-                    <input 
-                        type="date" 
-                        v-model="filters.dateFrom"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+    <div class="space-y-4">
+        <!-- Top Section: Filters + Summary Cards + Action Buttons -->
+        <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg p-4">
+            <div class="flex flex-wrap gap-4 items-start">
+                <!-- Left: Filters -->
+                <div class="flex flex-wrap gap-3 items-end flex-1">
+                    <!-- Date Début -->
+                    <div class="min-w-[140px]">
+                        <label class="block text-xs text-gray-400 mb-1">Date Début</label>
+                        <div class="relative">
+                            <input 
+                                type="date" 
+                                v-model="filters.dateDebut"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+                    
+                    <!-- Date Fin -->
+                    <div class="min-w-[140px]">
+                        <label class="block text-xs text-gray-400 mb-1">Date Fin</label>
+                        <div class="relative">
+                            <input 
+                                type="date" 
+                                v-model="filters.dateFin"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Période Prédéfinie -->
+                    <div class="min-w-[140px]">
+                        <label class="block text-xs text-gray-400 mb-1">Période Prédéfinie</label>
+                        <select 
+                            v-model="filters.periodePredefinee"
+                            @change="applyPredefinedPeriod"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Sélectionner...</option>
+                            <option value="today">Aujourd'hui</option>
+                            <option value="week">Cette semaine</option>
+                            <option value="month">Ce mois</option>
+                            <option value="quarter">Ce trimestre</option>
+                            <option value="year">Cette année</option>
+                            <option value="all">Tout</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Separator -->
+                    <div class="h-10 w-px bg-gray-600 hidden md:block"></div>
+                    
+                    <!-- Code Fournisseur -->
+                    <div class="min-w-[120px]">
+                        <label class="block text-xs text-gray-400 mb-1">Code</label>
+                        <div class="relative">
+                            <select 
+                                v-model="filters.fournisseurId"
+                                @change="onFournisseurChange"
+                                class="w-full px-3 py-2 pr-8 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Tous</option>
+                                <option v-for="f in fournisseurs" :key="f.id" :value="f.id">{{ f.code_fournisseur }}</option>
+                            </select>
+                            <span class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Nom Fournisseur -->
+                    <div class="min-w-[150px]">
+                        <label class="block text-xs text-gray-400 mb-1">Nom Fournisseur</label>
+                        <input 
+                            type="text" 
+                            :value="selectedFournisseurName"
+                            readonly
+                            placeholder="Sélectionner un code"
+                            class="w-full px-3 py-2 bg-gray-600 border border-gray-600 rounded text-gray-300 text-sm"
+                        />
+                    </div>
+                    
+                    <!-- Client Livré -->
+                    <div class="min-w-[150px]">
+                        <label class="block text-xs text-gray-400 mb-1">Client Livré</label>
+                        <select 
+                            v-model="filters.clientLivre"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Tous</option>
+                            <option v-for="client in clientsLivres" :key="client" :value="client">{{ client }}</option>
+                        </select>
+                    </div>
                 </div>
                 
-                <!-- Date au -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date au</label>
-                    <input 
-                        type="date" 
-                        v-model="filters.dateTo"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                <!-- Center: Summary Cards -->
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <!-- Yellow Cards Group -->
+                    <div class="flex flex-col gap-2">
+                        <!-- Total Quantité -->
+                        <div class="bg-yellow-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-yellow-900">Total Quantité</p>
+                                <p class="text-xl font-bold text-yellow-900">{{ formatNumber(totals.quantite) }}</p>
+                            </div>
+                            <div class="text-yellow-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Total Solde -->
+                        <div class="bg-yellow-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-yellow-900">Total Solde</p>
+                                <p class="text-xl font-bold text-yellow-900">{{ formatCurrency(totals.solde) }}</p>
+                            </div>
+                            <div class="text-yellow-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Red Cards Group -->
+                    <div class="flex flex-col gap-2">
+                        <!-- Total Débit -->
+                        <div class="bg-red-500 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-white">Total Débit</p>
+                                <p class="text-xl font-bold text-white">{{ formatCurrency(totals.debit) }}</p>
+                            </div>
+                            <div class="text-red-200">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Total Impayé -->
+                        <div class="bg-red-500 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-white">Total Impayé</p>
+                                <p class="text-xl font-bold text-white">{{ formatCurrency(totals.impaye) }}</p>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="bg-red-800 text-red-100 text-[10px] font-bold px-2 py-0.5 rounded">IMPAYÉ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cyan Cards Group -->
+                    <div class="flex flex-col gap-2">
+                        <!-- Total Crédit -->
+                        <div class="bg-cyan-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-cyan-900">Total Crédit</p>
+                                <p class="text-xl font-bold text-cyan-900">{{ formatCurrency(totals.credit) }}</p>
+                            </div>
+                            <div class="text-cyan-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Total Dévalidé -->
+                        <div class="bg-cyan-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-cyan-900">Total Dévalidé</p>
+                                <p class="text-xl font-bold text-cyan-900">{{ formatCurrency(totals.devalide) }}</p>
+                            </div>
+                            <div class="flex flex-col items-center text-cyan-700">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Code fournisseur -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code fournisseur</label>
-                    <input 
-                        type="text" 
-                        v-model="filters.codeFournisseur"
-                        placeholder="Entrer le code"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                
-                <!-- Nom fournisseur -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom fournisseur</label>
-                    <input 
-                        type="text" 
-                        v-model="filters.nomFournisseur"
-                        placeholder="Entrer le nom"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-                
-                <!-- Generate Button -->
-                <div>
+                <!-- Right: Action Buttons -->
+                <div class="flex flex-col gap-2">
                     <button 
-                        @click="generateReleve"
-                        class="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        @click="sendPDF"
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
                     >
-                        Générer
+                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8Zm4,18H6V4h7V9h5Zm-6-2H8V14h4Zm2-4H8V10h6Z"/>
+                        </svg>
+                        Envoyer
+                    </button>
+                    <button 
+                        @click="printReleve"
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Imprimer
+                    </button>
+                    <button 
+                        @click="closeReleve"
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
+                    >
+                        Fermer
+                        <span class="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">FERMÉ</span>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Results Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg p-4">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Résultats du Relevé</h3>
+                <h3 class="text-lg font-semibold text-white">Résultats du Relevé</h3>
                 
                 <div class="flex space-x-2">
                     <button 
                         @click="printReleve"
-                        class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center text-sm"
+                        class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -76,7 +233,7 @@
                     </button>
                     <button 
                         @click="exportPDF"
-                        class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center text-sm"
+                        class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -88,24 +245,32 @@
 
             <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-700">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code Règlement</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type Règlement</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N° Règlement</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant Règlement</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code Fournisseur</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Fournisseur</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Encaissement</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pièce</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">N° de Bon</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client Livré</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ville Livraison</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Quantité</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Débit</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Crédit</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Solde</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Règlement</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Echéance</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Banque</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Payé</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-red-400 uppercase tracking-wider">Dévalidé</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-red-400 uppercase tracking-wider">Impayé</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Reporté</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="divide-y divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
                                 <div class="flex justify-center items-center">
-                                    <svg class="animate-spin h-6 w-6 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg class="animate-spin h-6 w-6 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
@@ -113,56 +278,84 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr v-else-if="paginatedReglements.length === 0">
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                Aucun règlement trouvé. Veuillez générer un relevé.
+                        <tr v-else-if="!filters.fournisseurId">
+                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <p>Veuillez sélectionner un fournisseur pour afficher le relevé</p>
                             </td>
                         </tr>
-                        <tr v-else v-for="reglement in paginatedReglements" :key="reglement.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">{{ reglement.code_reglement }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                <span :class="getTypeClass(reglement.type_reglement)" class="px-2 py-1 rounded-full text-xs font-medium">
-                                    {{ reglement.type_reglement }}
-                                </span>
+                        <tr v-else-if="filteredData.length === 0">
+                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                                Aucune donnée trouvée pour les filtres sélectionnés.
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.numero_piece || '-' }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">{{ formatCurrency(reglement.montant) }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ reglement.fournisseur?.code_fournisseur || '-' }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.fournisseur?.nom_fournisseur || '-' }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ reglement.banque || '-' }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_encaissement) }}</td>
                         </tr>
+                        <template v-else>
+                            <tr v-for="(row, index) in paginatedData" :key="index" 
+                                :class="[
+                                    'hover:bg-gray-700/50 transition-colors',
+                                    row.type === 'achat' ? 'bg-gray-800' : 'bg-gray-750'
+                                ]"
+                            >
+                                <!-- Pièce -->
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <span :class="[
+                                        'px-2 py-1 rounded text-xs font-semibold',
+                                        row.type === 'achat' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-gray-200'
+                                    ]">
+                                        {{ row.type === 'achat' ? 'Achat' : 'Rég' }}
+                                    </span>
+                                </td>
+                                <!-- Date -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ formatDate(row.date) }}</td>
+                                <!-- N° de Bon -->
+                                <td class="px-3 py-2 whitespace-nowrap text-blue-400 font-medium">{{ row.numero || '-' }}</td>
+                                <!-- Client Livré -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.client_livre || '-' }}</td>
+                                <!-- Ville Livraison -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.ville || '-' }}</td>
+                                <!-- Quantité -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.quantite ? formatNumber(row.quantite) : '' }}</td>
+                                <!-- Débit -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.debit ? formatCurrency(row.debit) : '' }}</td>
+                                <!-- Crédit -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.credit ? formatCurrency(row.credit) : '' }}</td>
+                                <!-- Solde -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right font-medium" :class="getSoldeClass(row.solde_cumule)">
+                                    {{ formatCurrency(row.solde_cumule) }}
+                                </td>
+                                <!-- Règlement -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type_reglement || '' }}</td>
+                                <!-- Echéance -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.echeance ? formatDate(row.echeance) : '' }}</td>
+                                <!-- Banque -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.banque || '' }}</td>
+                                <!-- Payé -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.paye ? formatCurrency(row.paye) : '' }}</td>
+                                <!-- Dévalidé -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-red-400 font-medium">{{ row.devalide ? formatCurrency(row.devalide) : '' }}</td>
+                                <!-- Impayé -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-red-400 font-medium">{{ row.impaye ? formatCurrency(row.impaye) : '' }}</td>
+                                <!-- Reporté -->
+                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.reporte ? formatCurrency(row.reporte) : '' }}</td>
+                            </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
-                    <p class="text-sm text-amber-600 dark:text-amber-400 font-medium mb-1">Montant CHQ TTC</p>
-                    <p class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ formatCurrency(montantCHQ) }}</p>
-                </div>
-                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-                    <p class="text-sm text-purple-600 dark:text-purple-400 font-medium mb-1">Montant Traite TTC</p>
-                    <p class="text-2xl font-bold text-purple-700 dark:text-purple-300">{{ formatCurrency(montantTraite) }}</p>
-                </div>
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                    <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">Montant Virement TTC</p>
-                    <p class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ formatCurrency(montantVirement) }}</p>
-                </div>
-            </div>
-
             <!-- Pagination -->
-            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredReglements.length }}
+            <div v-if="filteredData.length > 0" class="flex justify-between items-center mt-4 pt-4 border-t border-gray-700">
+                <p class="text-sm text-gray-400">
+                    Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredData.length }} entrées
                 </p>
                 
                 <div class="flex items-center space-x-1">
                     <button 
                         @click="previousPage"
                         :disabled="currentPage === 1"
-                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -177,7 +370,7 @@
                             'px-3 py-1 border rounded transition-colors',
                             page === currentPage 
                                 ? 'bg-blue-600 border-blue-600 text-white' 
-                                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                : 'border-gray-600 text-gray-300 hover:bg-gray-700'
                         ]"
                     >
                         {{ page }}
@@ -186,7 +379,7 @@
                     <button 
                         @click="nextPage"
                         :disabled="currentPage === totalPages"
-                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -199,68 +392,142 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 // State
-const reglements = ref([])
 const loading = ref(false)
+const fournisseurs = ref([])
+const bonsAchat = ref([])
+const reglements = ref([])
+const clientsLivres = ref([])
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(15)
 
 // Filters
 const filters = ref({
-    dateFrom: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // Start of year
-    dateTo: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // End of year
-    codeFournisseur: '',
-    nomFournisseur: ''
+    dateDebut: '',
+    dateFin: '',
+    periodePredefinee: '',
+    fournisseurId: '',
+    clientLivre: ''
 })
 
-// Computed properties
-const filteredReglements = computed(() => {
-    let filtered = reglements.value
+// Computed: Selected Fournisseur Name
+const selectedFournisseurName = computed(() => {
+    if (!filters.value.fournisseurId) return ''
+    const f = fournisseurs.value.find(f => f.id == filters.value.fournisseurId)
+    return f ? f.nom_fournisseur : ''
+})
 
-    // Filter by date range
-    if (filters.value.dateFrom) {
-        filtered = filtered.filter(r => {
-            const date = r.date_encaissement || r.date_reglement
-            return date >= filters.value.dateFrom
+// Computed: Combined and sorted data
+const combinedData = computed(() => {
+    if (!filters.value.fournisseurId) return []
+    
+    let data = []
+    
+    // Add bons d'achat (as credit entries)
+    bonsAchat.value.forEach(bon => {
+        data.push({
+            type: 'achat',
+            date: bon.date,
+            numero: bon.numero_bon,
+            client_livre: bon.client_livre,
+            ville: bon.ville,
+            quantite: parseFloat(bon.total_qte) || 0,
+            debit: 0,
+            credit: parseFloat(bon.total_ttc) || 0,
+            type_reglement: '',
+            echeance: bon.echeance,
+            banque: '',
+            paye: 0,
+            devalide: 0,
+            impaye: 0,
+            reporte: 0,
+            raw: bon
         })
+    })
+    
+    // Add règlements (as debit entries)
+    reglements.value.forEach(reg => {
+        const montant = parseFloat(reg.montant) || 0
+        data.push({
+            type: 'reglement',
+            date: reg.date_reglement,
+            numero: reg.code_reglement,
+            client_livre: '',
+            ville: '',
+            quantite: 0,
+            debit: montant,
+            credit: 0,
+            type_reglement: reg.type_reglement,
+            echeance: reg.date_encaissement,
+            banque: reg.banque,
+            paye: reg.statut === 'paye' ? montant : 0,
+            devalide: reg.statut === 'devalide' ? montant : 0,
+            impaye: reg.statut === 'impaye' ? montant : 0,
+            reporte: reg.statut === 'reporte' ? montant : 0,
+            raw: reg
+        })
+    })
+    
+    // Sort by date
+    data.sort((a, b) => new Date(a.date) - new Date(b.date))
+    
+    // Calculate cumulative solde
+    let solde = 0
+    data.forEach(row => {
+        solde = solde + row.credit - row.debit
+        row.solde_cumule = solde
+    })
+    
+    return data
+})
+
+// Computed: Filtered data
+const filteredData = computed(() => {
+    let data = combinedData.value
+    
+    // Filter by date range
+    if (filters.value.dateDebut) {
+        data = data.filter(row => row.date >= filters.value.dateDebut)
+    }
+    if (filters.value.dateFin) {
+        data = data.filter(row => row.date <= filters.value.dateFin)
     }
     
-    if (filters.value.dateTo) {
-        filtered = filtered.filter(r => {
-            const date = r.date_encaissement || r.date_reglement
-            return date <= filters.value.dateTo
-        })
+    // Filter by client livré
+    if (filters.value.clientLivre) {
+        data = data.filter(row => row.client_livre === filters.value.clientLivre || row.type === 'reglement')
     }
-
-    // Filter by supplier code
-    if (filters.value.codeFournisseur) {
-        const code = filters.value.codeFournisseur.toLowerCase()
-        filtered = filtered.filter(r => 
-            r.fournisseur?.code_fournisseur?.toLowerCase().includes(code)
-        )
-    }
-
-    // Filter by supplier name
-    if (filters.value.nomFournisseur) {
-        const nom = filters.value.nomFournisseur.toLowerCase()
-        filtered = filtered.filter(r => 
-            r.fournisseur?.nom_fournisseur?.toLowerCase().includes(nom)
-        )
-    }
-
-    return filtered
+    
+    return data
 })
 
-const paginatedReglements = computed(() => {
+// Computed: Totals
+const totals = computed(() => {
+    const data = filteredData.value
+    
+    return {
+        quantite: data.reduce((sum, row) => sum + (row.quantite || 0), 0),
+        debit: data.reduce((sum, row) => sum + (row.debit || 0), 0),
+        credit: data.reduce((sum, row) => sum + (row.credit || 0), 0),
+        solde: data.length > 0 ? data[data.length - 1].solde_cumule : 0,
+        paye: data.reduce((sum, row) => sum + (row.paye || 0), 0),
+        devalide: data.reduce((sum, row) => sum + (row.devalide || 0), 0),
+        impaye: data.reduce((sum, row) => sum + (row.impaye || 0), 0),
+        reporte: data.reduce((sum, row) => sum + (row.reporte || 0), 0)
+    }
+})
+
+// Pagination
+const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
-    return filteredReglements.value.slice(start, end)
+    return filteredData.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
-    return Math.ceil(filteredReglements.value.length / itemsPerPage.value) || 1
+    return Math.ceil(filteredData.value.length / itemsPerPage.value) || 1
 })
 
 const displayedPages = computed(() => {
@@ -272,11 +539,11 @@ const displayedPages = computed(() => {
         for (let i = 1; i <= total; i++) pages.push(i)
     } else {
         if (current <= 3) {
-            pages.push(1, 2, 3)
+            pages.push(1, 2, 3, 4, 5)
         } else if (current >= total - 2) {
-            pages.push(total - 2, total - 1, total)
+            pages.push(total - 4, total - 3, total - 2, total - 1, total)
         } else {
-            pages.push(current - 1, current, current + 1)
+            pages.push(current - 2, current - 1, current, current + 1, current + 2)
         }
     }
     
@@ -284,52 +551,103 @@ const displayedPages = computed(() => {
 })
 
 const paginationStart = computed(() => {
-    if (filteredReglements.value.length === 0) return 0
+    if (filteredData.value.length === 0) return 0
     return (currentPage.value - 1) * itemsPerPage.value + 1
 })
 
 const paginationEnd = computed(() => {
     const end = currentPage.value * itemsPerPage.value
-    return Math.min(end, filteredReglements.value.length)
-})
-
-// Summary calculations
-const montantCHQ = computed(() => {
-    return filteredReglements.value
-        .filter(r => r.type_reglement === 'Chèque')
-        .reduce((sum, r) => sum + parseFloat(r.montant || 0), 0)
-})
-
-const montantTraite = computed(() => {
-    return filteredReglements.value
-        .filter(r => r.type_reglement === 'Traite')
-        .reduce((sum, r) => sum + parseFloat(r.montant || 0), 0)
-})
-
-const montantVirement = computed(() => {
-    return filteredReglements.value
-        .filter(r => r.type_reglement === 'Virement')
-        .reduce((sum, r) => sum + parseFloat(r.montant || 0), 0)
+    return Math.min(end, filteredData.value.length)
 })
 
 // Methods
-const loadReglements = async () => {
-    loading.value = true
+const loadFournisseurs = async () => {
     try {
-        const response = await fetch('/api/reglements-fournisseurs')
+        const response = await fetch('/api/fournisseurs')
         if (response.ok) {
-            reglements.value = await response.json()
+            fournisseurs.value = await response.json()
         }
     } catch (error) {
-        console.error('Erreur lors du chargement:', error)
+        console.error('Erreur lors du chargement des fournisseurs:', error)
+    }
+}
+
+const loadDataForFournisseur = async () => {
+    if (!filters.value.fournisseurId) {
+        bonsAchat.value = []
+        reglements.value = []
+        clientsLivres.value = []
+        return
+    }
+    
+    loading.value = true
+    try {
+        // Load bons d'achat
+        const bonsResponse = await fetch(`/api/bon-achat-fournisseur?fournisseur_id=${filters.value.fournisseurId}`)
+        if (bonsResponse.ok) {
+            const bonsData = await bonsResponse.json()
+            bonsAchat.value = bonsData.filter(bon => bon.statut === 'valide')
+            
+            // Extract unique clients livrés
+            const clients = new Set()
+            bonsAchat.value.forEach(bon => {
+                if (bon.client_livre) clients.add(bon.client_livre)
+            })
+            clientsLivres.value = Array.from(clients).sort()
+        }
+        
+        // Load règlements
+        const reglementsResponse = await fetch('/api/reglements-fournisseurs')
+        if (reglementsResponse.ok) {
+            const reglementsData = await reglementsResponse.json()
+            reglements.value = reglementsData.filter(reg => reg.fournisseur_id == filters.value.fournisseurId)
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des données:', error)
     } finally {
         loading.value = false
     }
 }
 
-const generateReleve = () => {
+const onFournisseurChange = () => {
     currentPage.value = 1
-    // The filtering is done in computed, so just reset the page
+    filters.value.clientLivre = ''
+    loadDataForFournisseur()
+}
+
+const applyPredefinedPeriod = () => {
+    const today = new Date()
+    const period = filters.value.periodePredefinee
+    
+    switch (period) {
+        case 'today':
+            filters.value.dateDebut = today.toISOString().split('T')[0]
+            filters.value.dateFin = today.toISOString().split('T')[0]
+            break
+        case 'week':
+            const weekStart = new Date(today)
+            weekStart.setDate(today.getDate() - today.getDay())
+            filters.value.dateDebut = weekStart.toISOString().split('T')[0]
+            filters.value.dateFin = today.toISOString().split('T')[0]
+            break
+        case 'month':
+            filters.value.dateDebut = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
+            filters.value.dateFin = today.toISOString().split('T')[0]
+            break
+        case 'quarter':
+            const quarter = Math.floor(today.getMonth() / 3)
+            filters.value.dateDebut = new Date(today.getFullYear(), quarter * 3, 1).toISOString().split('T')[0]
+            filters.value.dateFin = today.toISOString().split('T')[0]
+            break
+        case 'year':
+            filters.value.dateDebut = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
+            filters.value.dateFin = today.toISOString().split('T')[0]
+            break
+        case 'all':
+            filters.value.dateDebut = ''
+            filters.value.dateFin = ''
+            break
+    }
 }
 
 const goToPage = (page) => {
@@ -337,132 +655,137 @@ const goToPage = (page) => {
 }
 
 const previousPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value--
-    }
+    if (currentPage.value > 1) currentPage.value--
 }
 
 const nextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value++
-    }
+    if (currentPage.value < totalPages.value) currentPage.value++
 }
 
+// Formatting
 const formatCurrency = (value) => {
+    if (value === null || value === undefined) return ''
     return new Intl.NumberFormat('fr-MA', {
-        style: 'decimal',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    }).format(value || 0) + ' DH'
+    }).format(value)
+}
+
+const formatNumber = (value) => {
+    if (value === null || value === undefined) return ''
+    return new Intl.NumberFormat('fr-MA').format(value)
 }
 
 const formatDate = (date) => {
-    if (!date) return '-'
-    return new Date(date).toLocaleDateString('fr-FR')
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toLocaleDateString('fr-FR')
 }
 
-const getTypeClass = (type) => {
-    switch (type) {
-        case 'Virement':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
-        case 'Chèque':
-            return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'
-        case 'Traite':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
-        case 'Carte Bancaire':
-            return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-        case 'Espèces':
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-        default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-    }
+const getSoldeClass = (solde) => {
+    if (solde > 0) return 'text-green-400'
+    if (solde < 0) return 'text-red-400'
+    return 'text-gray-300'
 }
 
+// Print & Export
 const printReleve = () => {
     const printWindow = window.open('', '_blank')
+    
+    const fournisseur = fournisseurs.value.find(f => f.id == filters.value.fournisseurId)
+    const fournisseurName = fournisseur ? fournisseur.nom_fournisseur : 'N/A'
     
     const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Relevé Compte Fournisseurs</title>
+            <title>Relevé Compte Fournisseur - ${fournisseurName}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
-                h1 { text-align: center; color: #1e40af; margin-bottom: 20px; }
-                .filters { margin-bottom: 20px; padding: 10px; background: #f3f4f6; border-radius: 8px; }
-                .filters p { margin: 5px 0; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-                th { background-color: #1e40af; color: white; font-size: 11px; }
+                body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; }
+                h1 { text-align: center; color: #1e40af; margin-bottom: 10px; font-size: 18px; }
+                .info { margin-bottom: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; }
+                .info p { margin: 3px 0; }
+                .summary { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+                .summary-card { padding: 10px 15px; border-radius: 6px; text-align: center; min-width: 100px; }
+                .summary-card.yellow { background: #fef08a; }
+                .summary-card.red { background: #fecaca; }
+                .summary-card.cyan { background: #a5f3fc; }
+                .summary-card h4 { margin: 0 0 5px 0; font-size: 10px; }
+                .summary-card p { margin: 0; font-size: 14px; font-weight: bold; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                th, td { border: 1px solid #d1d5db; padding: 4px 6px; text-align: left; font-size: 10px; }
+                th { background-color: #374151; color: white; }
                 tr:nth-child(even) { background-color: #f9fafb; }
-                .summary { display: flex; gap: 20px; margin-top: 20px; }
-                .summary-card { flex: 1; padding: 15px; border-radius: 8px; text-align: center; }
-                .summary-chq { background: #fef3c7; border: 1px solid #f59e0b; }
-                .summary-traite { background: #f3e8ff; border: 1px solid #9333ea; }
-                .summary-virement { background: #dbeafe; border: 1px solid #2563eb; }
-                .summary-card h3 { margin: 0 0 5px 0; font-size: 12px; }
-                .summary-card p { margin: 0; font-size: 18px; font-weight: bold; }
-                @media print { 
-                    button { display: none; } 
-                    .summary { flex-wrap: wrap; }
-                    .summary-card { min-width: 150px; }
-                }
+                .achat { background-color: #dbeafe !important; }
+                .text-right { text-align: right; }
+                .text-red { color: #dc2626; }
+                .text-green { color: #16a34a; }
+                @media print { button { display: none; } }
             </style>
         </head>
         <body>
-            <h1>Relevé Compte Fournisseurs</h1>
+            <h1>Relevé Compte Fournisseur</h1>
             
-            <div class="filters">
-                <p><strong>Période:</strong> Du ${formatDate(filters.value.dateFrom)} au ${formatDate(filters.value.dateTo)}</p>
-                ${filters.value.codeFournisseur ? `<p><strong>Code fournisseur:</strong> ${filters.value.codeFournisseur}</p>` : ''}
-                ${filters.value.nomFournisseur ? `<p><strong>Nom fournisseur:</strong> ${filters.value.nomFournisseur}</p>` : ''}
+            <div class="info">
+                <p><strong>Fournisseur:</strong> ${fournisseurName}</p>
+                <p><strong>Période:</strong> ${filters.value.dateDebut ? formatDate(filters.value.dateDebut) : 'Début'} - ${filters.value.dateFin ? formatDate(filters.value.dateFin) : 'Fin'}</p>
+                ${filters.value.clientLivre ? `<p><strong>Client Livré:</strong> ${filters.value.clientLivre}</p>` : ''}
+            </div>
+            
+            <div class="summary">
+                <div class="summary-card yellow"><h4>Total Quantité</h4><p>${formatNumber(totals.value.quantite)}</p></div>
+                <div class="summary-card yellow"><h4>Total Solde</h4><p>${formatCurrency(totals.value.solde)}</p></div>
+                <div class="summary-card red"><h4>Total Débit</h4><p>${formatCurrency(totals.value.debit)}</p></div>
+                <div class="summary-card red"><h4>Total Impayé</h4><p>${formatCurrency(totals.value.impaye)}</p></div>
+                <div class="summary-card cyan"><h4>Total Crédit</h4><p>${formatCurrency(totals.value.credit)}</p></div>
+                <div class="summary-card cyan"><h4>Total Dévalidé</h4><p>${formatCurrency(totals.value.devalide)}</p></div>
             </div>
             
             <table>
                 <thead>
                     <tr>
-                        <th>Code Règlement</th>
-                        <th>Type</th>
-                        <th>N° Règlement</th>
-                        <th>Montant</th>
-                        <th>Code Fournisseur</th>
-                        <th>Nom Fournisseur</th>
+                        <th>Pièce</th>
+                        <th>Date</th>
+                        <th>N° Bon</th>
+                        <th>Client</th>
+                        <th>Ville</th>
+                        <th class="text-right">Qté</th>
+                        <th class="text-right">Débit</th>
+                        <th class="text-right">Crédit</th>
+                        <th class="text-right">Solde</th>
+                        <th>Règlement</th>
+                        <th>Echéance</th>
                         <th>Banque</th>
-                        <th>Date Encaissement</th>
+                        <th class="text-right">Payé</th>
+                        <th class="text-right">Dévalidé</th>
+                        <th class="text-right">Impayé</th>
+                        <th class="text-right">Reporté</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${filteredReglements.value.map(r => `
-                        <tr>
-                            <td>${r.code_reglement}</td>
-                            <td>${r.type_reglement}</td>
-                            <td>${r.numero_piece || '-'}</td>
-                            <td>${formatCurrency(r.montant)}</td>
-                            <td>${r.fournisseur?.code_fournisseur || '-'}</td>
-                            <td>${r.fournisseur?.nom_fournisseur || '-'}</td>
-                            <td>${r.banque || '-'}</td>
-                            <td>${formatDate(r.date_encaissement)}</td>
+                    ${filteredData.value.map(row => `
+                        <tr class="${row.type === 'achat' ? 'achat' : ''}">
+                            <td>${row.type === 'achat' ? 'Achat' : 'Rég'}</td>
+                            <td>${formatDate(row.date)}</td>
+                            <td>${row.numero || '-'}</td>
+                            <td>${row.client_livre || '-'}</td>
+                            <td>${row.ville || '-'}</td>
+                            <td class="text-right">${row.quantite ? formatNumber(row.quantite) : ''}</td>
+                            <td class="text-right">${row.debit ? formatCurrency(row.debit) : ''}</td>
+                            <td class="text-right">${row.credit ? formatCurrency(row.credit) : ''}</td>
+                            <td class="text-right ${row.solde_cumule >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(row.solde_cumule)}</td>
+                            <td>${row.type_reglement || ''}</td>
+                            <td>${row.echeance ? formatDate(row.echeance) : ''}</td>
+                            <td>${row.banque || ''}</td>
+                            <td class="text-right">${row.paye ? formatCurrency(row.paye) : ''}</td>
+                            <td class="text-right text-red">${row.devalide ? formatCurrency(row.devalide) : ''}</td>
+                            <td class="text-right text-red">${row.impaye ? formatCurrency(row.impaye) : ''}</td>
+                            <td class="text-right">${row.reporte ? formatCurrency(row.reporte) : ''}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
             
-            <div class="summary">
-                <div class="summary-card summary-chq">
-                    <h3>Montant CHQ TTC</h3>
-                    <p>${formatCurrency(montantCHQ.value)}</p>
-                </div>
-                <div class="summary-card summary-traite">
-                    <h3>Montant Traite TTC</h3>
-                    <p>${formatCurrency(montantTraite.value)}</p>
-                </div>
-                <div class="summary-card summary-virement">
-                    <h3>Montant Virement TTC</h3>
-                    <p>${formatCurrency(montantVirement.value)}</p>
-                </div>
-            </div>
-            
-            <br><br>
             <button onclick="window.print()" style="padding: 10px 20px; background-color: #1e40af; color: white; border: none; cursor: pointer; border-radius: 6px;">
                 Imprimer
             </button>
@@ -478,9 +801,33 @@ const exportPDF = () => {
     printReleve()
 }
 
+const sendPDF = () => {
+    alert('Fonctionnalité d\'envoi PDF en cours de développement')
+}
+
+const closeReleve = () => {
+    filters.value.fournisseurId = ''
+    filters.value.clientLivre = ''
+    filters.value.dateDebut = ''
+    filters.value.dateFin = ''
+    filters.value.periodePredefinee = ''
+    bonsAchat.value = []
+    reglements.value = []
+}
+
+// Watch for filter changes
+watch(() => filters.value.dateDebut, () => { currentPage.value = 1 })
+watch(() => filters.value.dateFin, () => { currentPage.value = 1 })
+watch(() => filters.value.clientLivre, () => { currentPage.value = 1 })
+
 // Initialize
 onMounted(() => {
-    loadReglements()
+    loadFournisseurs()
 })
 </script>
 
+<style scoped>
+.bg-gray-750 {
+    background-color: #2d3748;
+}
+</style>

@@ -3,5 +3,5 @@
 @section('title', 'Relevé compte fournisseurs - Bouyahya')
 
 @section('content')
-<!-- Vue component will be rendered here -->
+<!-- Vue component ReleveCompteFournisseurs will be rendered here -->
 @endsection
