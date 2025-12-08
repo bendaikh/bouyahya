@@ -89,22 +89,36 @@
                     </select>
                 </div>
                 
+                <!-- Reset Button -->
+                <div class="flex items-end">
+                    <button 
+                        @click="resetFilters"
+                        class="px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors flex items-center gap-2"
+                        title="Réinitialiser les filtres"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="text-xs">Réinitialiser</span>
+                    </button>
+                </div>
+                
                 <!-- Small Summary Cards -->
                 <div class="flex gap-2 ml-auto">
                     <!-- Imp (Impayé) -->
-                    <div class="bg-red-600 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                    <div class="bg-red-600 rounded-lg px-4 py-2 min-w-[130px] text-center">
                         <p class="text-xs font-bold text-white">Imp</p>
-                        <p class="text-lg font-bold text-white">{{ formatCurrency(totals.impaye) }}</p>
+                        <p class="text-xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.impaye) }}</p>
                     </div>
                     <!-- Déva (Dévalidé) -->
-                    <div class="bg-fuchsia-600 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                    <div class="bg-fuchsia-600 rounded-lg px-4 py-2 min-w-[130px] text-center">
                         <p class="text-xs font-bold text-white">Déva</p>
-                        <p class="text-lg font-bold text-white">{{ formatCurrency(totals.devalide) }}</p>
+                        <p class="text-xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.devalide) }}</p>
                     </div>
                     <!-- Repo (Reporté) -->
-                    <div class="bg-yellow-400 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                    <div class="bg-yellow-400 rounded-lg px-4 py-2 min-w-[130px] text-center">
                         <p class="text-xs font-bold text-gray-900">Repo</p>
-                        <p class="text-lg font-bold text-gray-900">{{ formatCurrency(totals.reporte) }}</p>
+                        <p class="text-xl font-bold text-gray-900 whitespace-nowrap">{{ formatCurrency(totals.reporte) }}</p>
                     </div>
                 </div>
                 
@@ -142,27 +156,27 @@
         <!-- Large Summary Cards Row -->
         <div class="flex flex-wrap gap-4 items-center">
             <!-- Crédit (Green) -->
-            <div class="bg-green-600 rounded-lg px-6 py-3 min-w-[180px]">
+            <div class="bg-green-600 rounded-lg px-8 py-4 min-w-[240px]">
                 <p class="text-sm font-semibold text-green-100">Crédit</p>
-                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.credit) }}</p>
+                <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.credit) }}</p>
             </div>
             
             <!-- Débit (Blue) -->
-            <div class="bg-blue-600 rounded-lg px-6 py-3 min-w-[180px]">
+            <div class="bg-blue-600 rounded-lg px-8 py-4 min-w-[240px]">
                 <p class="text-sm font-semibold text-blue-100">Débit</p>
-                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.debit) }}</p>
+                <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.debit) }}</p>
             </div>
             
             <!-- Solde (Red) -->
-            <div class="bg-red-600 rounded-lg px-6 py-3 min-w-[180px]">
+            <div class="bg-red-600 rounded-lg px-8 py-4 min-w-[240px]">
                 <p class="text-sm font-semibold text-red-100">Solde</p>
-                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.solde) }}</p>
+                <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.solde) }}</p>
             </div>
             
             <!-- Quantité (Yellow) -->
-            <div class="bg-yellow-500 rounded-lg px-6 py-3 min-w-[180px]">
+            <div class="bg-yellow-500 rounded-lg px-8 py-4 min-w-[240px]">
                 <p class="text-sm font-semibold text-yellow-900">Quantité</p>
-                <p class="text-3xl font-bold text-yellow-900">{{ formatNumber(totals.quantite) }}</p>
+                <p class="text-4xl font-bold text-yellow-900 whitespace-nowrap">{{ formatNumber(totals.quantite) }}</p>
             </div>
             
             <!-- Spacer -->
@@ -567,6 +581,21 @@ const onFournisseurChange = () => {
     currentPage.value = 1
     filters.value.clientLivre = ''
     loadDataForFournisseur()
+}
+
+const resetFilters = () => {
+    const currentYear = new Date().getFullYear()
+    filters.value = {
+        dateDebut: new Date(currentYear, 0, 1).toISOString().split('T')[0],
+        dateFin: new Date(currentYear, 11, 31).toISOString().split('T')[0],
+        periodePredefinee: '',
+        fournisseurId: '',
+        clientLivre: ''
+    }
+    currentPage.value = 1
+    bonsAchat.value = []
+    reglements.value = []
+    clientsLivres.value = []
 }
 
 const applyPredefinedPeriod = () => {
