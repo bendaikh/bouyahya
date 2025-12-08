@@ -1,269 +1,218 @@
 <template>
     <div class="space-y-4">
-        <!-- Top Section: Filters + Summary Cards + Action Buttons -->
+        <!-- Top Filter Row -->
         <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg p-4">
-            <div class="flex flex-wrap gap-4 items-start">
-                <!-- Left: Filters -->
-                <div class="flex flex-wrap gap-3 items-end flex-1">
-                    <!-- Date Début -->
-                    <div class="min-w-[140px]">
-                        <label class="block text-xs text-gray-400 mb-1">Date Début</label>
-                        <div class="relative">
-                            <input 
-                                type="date" 
-                                v-model="filters.dateDebut"
-                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
-                    
-                    <!-- Date Fin -->
-                    <div class="min-w-[140px]">
-                        <label class="block text-xs text-gray-400 mb-1">Date Fin</label>
-                        <div class="relative">
-                            <input 
-                                type="date" 
-                                v-model="filters.dateFin"
-                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Période Prédéfinie -->
-                    <div class="min-w-[140px]">
-                        <label class="block text-xs text-gray-400 mb-1">Période Prédéfinie</label>
-                        <select 
-                            v-model="filters.periodePredefinee"
-                            @change="applyPredefinedPeriod"
-                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Sélectionner...</option>
-                            <option value="today">Aujourd'hui</option>
-                            <option value="week">Cette semaine</option>
-                            <option value="month">Ce mois</option>
-                            <option value="quarter">Ce trimestre</option>
-                            <option value="year">Cette année</option>
-                            <option value="all">Tout</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Separator -->
-                    <div class="h-10 w-px bg-gray-600 hidden md:block"></div>
-                    
-                    <!-- Code Fournisseur -->
-                    <div class="min-w-[120px]">
-                        <label class="block text-xs text-gray-400 mb-1">Code</label>
-                        <div class="relative">
-                            <select 
-                                v-model="filters.fournisseurId"
-                                @change="onFournisseurChange"
-                                class="w-full px-3 py-2 pr-8 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="">Tous</option>
-                                <option v-for="f in fournisseurs" :key="f.id" :value="f.id">{{ f.code_fournisseur }}</option>
-                            </select>
-                            <span class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Nom Fournisseur -->
-                    <div class="min-w-[150px]">
-                        <label class="block text-xs text-gray-400 mb-1">Nom Fournisseur</label>
+            <div class="flex flex-wrap items-end gap-3">
+                <!-- Date Début -->
+                <div class="min-w-[130px]">
+                    <label class="block text-xs text-gray-400 mb-1">Date Début</label>
+                    <div class="relative">
                         <input 
-                            type="text" 
-                            :value="selectedFournisseurName"
-                            readonly
-                            placeholder="Sélectionner un code"
-                            class="w-full px-3 py-2 bg-gray-600 border border-gray-600 rounded text-gray-300 text-sm"
+                            type="date" 
+                            v-model="filters.dateDebut"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
-                    
-                    <!-- Client Livré -->
-                    <div class="min-w-[150px]">
-                        <label class="block text-xs text-gray-400 mb-1">Client Livré</label>
-                        <select 
-                            v-model="filters.clientLivre"
+                </div>
+                
+                <!-- Date Fin -->
+                <div class="min-w-[130px]">
+                    <label class="block text-xs text-gray-400 mb-1">Date Fin</label>
+                    <div class="relative">
+                        <input 
+                            type="date" 
+                            v-model="filters.dateFin"
                             class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+                
+                <!-- Période Prédéfinie -->
+                <div class="min-w-[130px]">
+                    <label class="block text-xs text-gray-400 mb-1">Période Prédéfinie</label>
+                    <select 
+                        v-model="filters.periodePredefinee"
+                        @change="applyPredefinedPeriod"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Sélectionner...</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="quarter">Ce trimestre</option>
+                        <option value="year">Cette année</option>
+                        <option value="all">Tout</option>
+                    </select>
+                </div>
+                
+                <!-- Code Fournisseur -->
+                <div class="min-w-[120px]">
+                    <label class="block text-xs text-gray-400 mb-1">Code</label>
+                    <div class="relative">
+                        <select 
+                            v-model="filters.fournisseurId"
+                            @change="onFournisseurChange"
+                            class="w-full px-3 py-2 pr-8 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="">Tous</option>
-                            <option v-for="client in clientsLivres" :key="client" :value="client">{{ client }}</option>
+                            <option v-for="f in fournisseurs" :key="f.id" :value="f.id">{{ f.code_fournisseur }}</option>
                         </select>
+                        <span class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
                     </div>
                 </div>
                 
-                <!-- Center: Summary Cards -->
-                <div class="flex flex-wrap gap-2 justify-center">
-                    <!-- Yellow Cards Group -->
-                    <div class="flex flex-col gap-2">
-                        <!-- Total Quantité -->
-                        <div class="bg-yellow-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-yellow-900">Total Quantité</p>
-                                <p class="text-xl font-bold text-yellow-900">{{ formatNumber(totals.quantite) }}</p>
-                            </div>
-                            <div class="text-yellow-700">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                                </svg>
-                            </div>
-                        </div>
-                        <!-- Total Solde -->
-                        <div class="bg-yellow-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-yellow-900">Total Solde</p>
-                                <p class="text-xl font-bold text-yellow-900">{{ formatCurrency(totals.solde) }}</p>
-                            </div>
-                            <div class="text-yellow-700">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
+                <!-- Nom Fournisseur -->
+                <div class="min-w-[140px]">
+                    <label class="block text-xs text-gray-400 mb-1">Nom Fournisseur</label>
+                    <input 
+                        type="text" 
+                        :value="selectedFournisseurName"
+                        readonly
+                        placeholder="—"
+                        class="w-full px-3 py-2 bg-gray-600 border border-gray-600 rounded text-gray-300 text-sm"
+                    />
+                </div>
+                
+                <!-- Client Livré -->
+                <div class="min-w-[140px]">
+                    <label class="block text-xs text-gray-400 mb-1">Client Livré</label>
+                    <select 
+                        v-model="filters.clientLivre"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Tous</option>
+                        <option v-for="client in clientsLivres" :key="client" :value="client">{{ client }}</option>
+                    </select>
+                </div>
+                
+                <!-- Small Summary Cards -->
+                <div class="flex gap-2 ml-auto">
+                    <!-- Imp (Impayé) -->
+                    <div class="bg-red-600 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                        <p class="text-xs font-bold text-white">Imp</p>
+                        <p class="text-lg font-bold text-white">{{ formatCurrency(totals.impaye) }}</p>
                     </div>
-                    
-                    <!-- Red Cards Group -->
-                    <div class="flex flex-col gap-2">
-                        <!-- Total Débit -->
-                        <div class="bg-red-500 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-white">Total Débit</p>
-                                <p class="text-xl font-bold text-white">{{ formatCurrency(totals.debit) }}</p>
-                            </div>
-                            <div class="text-red-200">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <!-- Total Impayé -->
-                        <div class="bg-red-500 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-white">Total Impayé</p>
-                                <p class="text-xl font-bold text-white">{{ formatCurrency(totals.impaye) }}</p>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <span class="bg-red-800 text-red-100 text-[10px] font-bold px-2 py-0.5 rounded">IMPAYÉ</span>
-                            </div>
-                        </div>
+                    <!-- Déva (Dévalidé) -->
+                    <div class="bg-fuchsia-600 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                        <p class="text-xs font-bold text-white">Déva</p>
+                        <p class="text-lg font-bold text-white">{{ formatCurrency(totals.devalide) }}</p>
                     </div>
-                    
-                    <!-- Cyan Cards Group -->
-                    <div class="flex flex-col gap-2">
-                        <!-- Total Crédit -->
-                        <div class="bg-cyan-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-cyan-900">Total Crédit</p>
-                                <p class="text-xl font-bold text-cyan-900">{{ formatCurrency(totals.credit) }}</p>
-                            </div>
-                            <div class="text-cyan-700">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <!-- Total Dévalidé -->
-                        <div class="bg-cyan-400 rounded-lg px-4 py-2 min-w-[140px] flex items-center justify-between">
-                            <div>
-                                <p class="text-xs font-semibold text-cyan-900">Total Dévalidé</p>
-                                <p class="text-xl font-bold text-cyan-900">{{ formatCurrency(totals.devalide) }}</p>
-                            </div>
-                            <div class="flex flex-col items-center text-cyan-700">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </div>
-                        </div>
+                    <!-- Repo (Reporté) -->
+                    <div class="bg-yellow-400 rounded-lg px-3 py-1 min-w-[90px] text-center">
+                        <p class="text-xs font-bold text-gray-900">Repo</p>
+                        <p class="text-lg font-bold text-gray-900">{{ formatCurrency(totals.reporte) }}</p>
                     </div>
                 </div>
                 
-                <!-- Right: Action Buttons -->
-                <div class="flex flex-col gap-2">
+                <!-- Action Buttons -->
+                <div class="flex flex-col gap-1 ml-2">
                     <button 
                         @click="sendPDF"
-                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
+                        class="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
                     >
-                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8Zm4,18H6V4h7V9h5Zm-6-2H8V14h4Zm2-4H8V10h6Z"/>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                         Envoyer
                     </button>
                     <button 
                         @click="printReleve"
-                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
+                        class="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
                     >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Imprimer
                     </button>
                     <button 
                         @click="closeReleve"
-                        class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
+                        class="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded text-white text-sm transition-colors"
                     >
                         Fermer
-                        <span class="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">FERMÉ</span>
+                        <span class="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">FERMÉ</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Results Section -->
-        <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-white">Résultats du Relevé</h3>
-                
-                <div class="flex space-x-2">
-                    <button 
-                        @click="printReleve"
-                        class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        Imprimer
-                    </button>
-                    <button 
-                        @click="exportPDF"
-                        class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Exporter PDF
-                    </button>
-                </div>
+        <!-- Large Summary Cards Row -->
+        <div class="flex flex-wrap gap-4 items-center">
+            <!-- Crédit (Green) -->
+            <div class="bg-green-600 rounded-lg px-6 py-3 min-w-[180px]">
+                <p class="text-sm font-semibold text-green-100">Crédit</p>
+                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.credit) }}</p>
             </div>
+            
+            <!-- Débit (Blue) -->
+            <div class="bg-blue-600 rounded-lg px-6 py-3 min-w-[180px]">
+                <p class="text-sm font-semibold text-blue-100">Débit</p>
+                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.debit) }}</p>
+            </div>
+            
+            <!-- Solde (Red) -->
+            <div class="bg-red-600 rounded-lg px-6 py-3 min-w-[180px]">
+                <p class="text-sm font-semibold text-red-100">Solde</p>
+                <p class="text-3xl font-bold text-white">{{ formatCurrency(totals.solde) }}</p>
+            </div>
+            
+            <!-- Quantité (Yellow) -->
+            <div class="bg-yellow-500 rounded-lg px-6 py-3 min-w-[180px]">
+                <p class="text-sm font-semibold text-yellow-900">Quantité</p>
+                <p class="text-3xl font-bold text-yellow-900">{{ formatNumber(totals.quantite) }}</p>
+            </div>
+            
+            <!-- Spacer -->
+            <div class="flex-1"></div>
+            
+            <!-- Print/Export Buttons -->
+            <div class="flex gap-2">
+                <button 
+                    @click="printReleve"
+                    class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Imprimer
+                </button>
+                <button 
+                    @click="exportPDF"
+                    class="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm"
+                >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Exporter PDF
+                </button>
+            </div>
+        </div>
 
-            <!-- Table -->
+        <!-- Results Table -->
+        <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="bg-gray-700">
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pièce</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">N° de Bon</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Client Livré</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ville Livraison</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Quantité</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Débit</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Crédit</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Solde</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Règlement</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Echéance</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Banque</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Payé</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-red-400 uppercase tracking-wider">Dévalidé</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-red-400 uppercase tracking-wider">Impayé</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Reporté</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Pièce</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Date</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">N° de Bon</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Client Livré</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Ville Livraison</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Quantité</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Débit</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Crédit</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Solde</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Règlement</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Echéance</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Banque</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Payé</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-red-400 uppercase tracking-wider">Dévalidé</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-red-400 uppercase tracking-wider">Impayé</th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Reporté</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -293,10 +242,7 @@
                         </tr>
                         <template v-else>
                             <tr v-for="(row, index) in paginatedData" :key="index" 
-                                :class="[
-                                    'hover:bg-gray-700/50 transition-colors',
-                                    row.type === 'achat' ? 'bg-gray-800' : 'bg-gray-750'
-                                ]"
+                                class="hover:bg-gray-700/50 transition-colors"
                             >
                                 <!-- Pièce -->
                                 <td class="px-3 py-2 whitespace-nowrap">
@@ -321,14 +267,14 @@
                                 <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.debit ? formatCurrency(row.debit) : '' }}</td>
                                 <!-- Crédit -->
                                 <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.credit ? formatCurrency(row.credit) : '' }}</td>
-                                <!-- Solde -->
+                                <!-- Solde (cumulative) -->
                                 <td class="px-3 py-2 whitespace-nowrap text-right font-medium" :class="getSoldeClass(row.solde_cumule)">
                                     {{ formatCurrency(row.solde_cumule) }}
                                 </td>
                                 <!-- Règlement -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type_reglement || '' }}</td>
                                 <!-- Echéance -->
-                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.echeance ? formatDate(row.echeance) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.echeance ? formatDate(row.echeance) : (row.type === 'achat' ? 'Invalid Date' : '') }}</td>
                                 <!-- Banque -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.banque || '' }}</td>
                                 <!-- Payé -->
@@ -346,7 +292,7 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="filteredData.length > 0" class="flex justify-between items-center mt-4 pt-4 border-t border-gray-700">
+            <div v-if="filteredData.length > 0" class="flex justify-between items-center px-4 py-3 border-t border-gray-700">
                 <p class="text-sm text-gray-400">
                     Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredData.length }} entrées
                 </p>
@@ -369,7 +315,7 @@
                         :class="[
                             'px-3 py-1 border rounded transition-colors',
                             page === currentPage 
-                                ? 'bg-blue-600 border-blue-600 text-white' 
+                                ? 'bg-green-600 border-green-600 text-white' 
                                 : 'border-gray-600 text-gray-300 hover:bg-gray-700'
                         ]"
                     >
@@ -405,8 +351,8 @@ const itemsPerPage = ref(15)
 
 // Filters
 const filters = ref({
-    dateDebut: '',
-    dateFin: '',
+    dateDebut: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
+    dateFin: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
     periodePredefinee: '',
     fournisseurId: '',
     clientLivre: ''
@@ -454,8 +400,8 @@ const combinedData = computed(() => {
             type: 'reglement',
             date: reg.date_reglement,
             numero: reg.code_reglement,
-            client_livre: '',
-            ville: '',
+            client_livre: '-',
+            ville: '-',
             quantite: 0,
             debit: montant,
             credit: 0,
@@ -473,7 +419,7 @@ const combinedData = computed(() => {
     // Sort by date
     data.sort((a, b) => new Date(a.date) - new Date(b.date))
     
-    // Calculate cumulative solde
+    // Calculate cumulative solde (Credit - Debit)
     let solde = 0
     data.forEach(row => {
         solde = solde + row.credit - row.debit
@@ -507,15 +453,23 @@ const filteredData = computed(() => {
 const totals = computed(() => {
     const data = filteredData.value
     
+    const paye = data.reduce((sum, row) => sum + (row.paye || 0), 0)
+    const devalide = data.reduce((sum, row) => sum + (row.devalide || 0), 0)
+    const impaye = data.reduce((sum, row) => sum + (row.impaye || 0), 0)
+    const reporte = data.reduce((sum, row) => sum + (row.reporte || 0), 0)
+    
+    // Total Solde = Dévalidé + Impayé + Reporté - Payé
+    const solde = devalide + impaye + reporte - paye
+    
     return {
         quantite: data.reduce((sum, row) => sum + (row.quantite || 0), 0),
         debit: data.reduce((sum, row) => sum + (row.debit || 0), 0),
         credit: data.reduce((sum, row) => sum + (row.credit || 0), 0),
-        solde: data.length > 0 ? data[data.length - 1].solde_cumule : 0,
-        paye: data.reduce((sum, row) => sum + (row.paye || 0), 0),
-        devalide: data.reduce((sum, row) => sum + (row.devalide || 0), 0),
-        impaye: data.reduce((sum, row) => sum + (row.impaye || 0), 0),
-        reporte: data.reduce((sum, row) => sum + (row.reporte || 0), 0)
+        solde: solde,
+        paye: paye,
+        devalide: devalide,
+        impaye: impaye,
+        reporte: reporte
     }
 })
 
@@ -641,7 +595,7 @@ const applyPredefinedPeriod = () => {
             break
         case 'year':
             filters.value.dateDebut = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]
-            filters.value.dateFin = today.toISOString().split('T')[0]
+            filters.value.dateFin = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0]
             break
         case 'all':
             filters.value.dateDebut = ''
@@ -664,21 +618,22 @@ const nextPage = () => {
 
 // Formatting
 const formatCurrency = (value) => {
-    if (value === null || value === undefined) return ''
-    return new Intl.NumberFormat('fr-MA', {
+    if (value === null || value === undefined) return '00.00'
+    return new Intl.NumberFormat('fr-FR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(value)
 }
 
 const formatNumber = (value) => {
-    if (value === null || value === undefined) return ''
-    return new Intl.NumberFormat('fr-MA').format(value)
+    if (value === null || value === undefined) return '0'
+    return new Intl.NumberFormat('fr-FR').format(value)
 }
 
 const formatDate = (date) => {
     if (!date) return ''
     const d = new Date(date)
+    if (isNaN(d.getTime())) return 'Invalid Date'
     return d.toLocaleDateString('fr-FR')
 }
 
@@ -706,17 +661,17 @@ const printReleve = () => {
                 .info { margin-bottom: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; }
                 .info p { margin: 3px 0; }
                 .summary { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-                .summary-card { padding: 10px 15px; border-radius: 6px; text-align: center; min-width: 100px; }
-                .summary-card.yellow { background: #fef08a; }
-                .summary-card.red { background: #fecaca; }
-                .summary-card.cyan { background: #a5f3fc; }
+                .summary-card { padding: 10px 15px; border-radius: 6px; text-align: center; min-width: 100px; color: white; }
+                .summary-card.green { background: #16a34a; }
+                .summary-card.blue { background: #2563eb; }
+                .summary-card.red { background: #dc2626; }
+                .summary-card.yellow { background: #eab308; color: #1a1a1a; }
                 .summary-card h4 { margin: 0 0 5px 0; font-size: 10px; }
                 .summary-card p { margin: 0; font-size: 14px; font-weight: bold; }
                 table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
                 th, td { border: 1px solid #d1d5db; padding: 4px 6px; text-align: left; font-size: 10px; }
                 th { background-color: #374151; color: white; }
                 tr:nth-child(even) { background-color: #f9fafb; }
-                .achat { background-color: #dbeafe !important; }
                 .text-right { text-align: right; }
                 .text-red { color: #dc2626; }
                 .text-green { color: #16a34a; }
@@ -733,12 +688,10 @@ const printReleve = () => {
             </div>
             
             <div class="summary">
-                <div class="summary-card yellow"><h4>Total Quantité</h4><p>${formatNumber(totals.value.quantite)}</p></div>
-                <div class="summary-card yellow"><h4>Total Solde</h4><p>${formatCurrency(totals.value.solde)}</p></div>
-                <div class="summary-card red"><h4>Total Débit</h4><p>${formatCurrency(totals.value.debit)}</p></div>
-                <div class="summary-card red"><h4>Total Impayé</h4><p>${formatCurrency(totals.value.impaye)}</p></div>
-                <div class="summary-card cyan"><h4>Total Crédit</h4><p>${formatCurrency(totals.value.credit)}</p></div>
-                <div class="summary-card cyan"><h4>Total Dévalidé</h4><p>${formatCurrency(totals.value.devalide)}</p></div>
+                <div class="summary-card green"><h4>Crédit</h4><p>${formatCurrency(totals.value.credit)}</p></div>
+                <div class="summary-card blue"><h4>Débit</h4><p>${formatCurrency(totals.value.debit)}</p></div>
+                <div class="summary-card red"><h4>Solde</h4><p>${formatCurrency(totals.value.solde)}</p></div>
+                <div class="summary-card yellow"><h4>Quantité</h4><p>${formatNumber(totals.value.quantite)}</p></div>
             </div>
             
             <table>
@@ -764,7 +717,7 @@ const printReleve = () => {
                 </thead>
                 <tbody>
                     ${filteredData.value.map(row => `
-                        <tr class="${row.type === 'achat' ? 'achat' : ''}">
+                        <tr>
                             <td>${row.type === 'achat' ? 'Achat' : 'Rég'}</td>
                             <td>${formatDate(row.date)}</td>
                             <td>${row.numero || '-'}</td>
@@ -808,8 +761,8 @@ const sendPDF = () => {
 const closeReleve = () => {
     filters.value.fournisseurId = ''
     filters.value.clientLivre = ''
-    filters.value.dateDebut = ''
-    filters.value.dateFin = ''
+    filters.value.dateDebut = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]
+    filters.value.dateFin = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0]
     filters.value.periodePredefinee = ''
     bonsAchat.value = []
     reglements.value = []
@@ -825,9 +778,3 @@ onMounted(() => {
     loadFournisseurs()
 })
 </script>
-
-<style scoped>
-.bg-gray-750 {
-    background-color: #2d3748;
-}
-</style>
