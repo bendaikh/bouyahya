@@ -13,13 +13,18 @@ use Illuminate\Support\Facades\DB;
 class BonAchatFournisseurController extends Controller
 {
     /**
-     * Get all bon d'achat
+     * Get all bon d'achat (optionally filtered by fournisseur_id)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = BonAchatFournisseur::with(['fournisseur', 'articles']);
+        
+        // Filter by fournisseur_id if provided
+        if ($request->has('fournisseur_id') && $request->fournisseur_id) {
+            $query->where('fournisseur_id', $request->fournisseur_id);
+        }
+        
+        $bons = $query->orderBy('created_at', 'desc')->get();
         
         return response()->json($bons);
     }

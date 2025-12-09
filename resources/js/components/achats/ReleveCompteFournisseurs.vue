@@ -507,30 +507,14 @@ const totals = computed(() => {
     const impaye = data.reduce((sum, row) => sum + (row.impaye || 0), 0)
     const reporte = data.reduce((sum, row) => sum + (row.reporte || 0), 0)
     
-    // Use the pre-calculated solde from historique API (same as Historique achats page)
-    // This sums individual bon soldes where solde = max(TTC - montant_paye, 0)
-    // Filter by client_livre if selected
-    let historiqueFiltered = bonsHistorique.value
-    if (filters.value.clientLivre) {
-        historiqueFiltered = historiqueFiltered.filter(bon => bon.client_livre === filters.value.clientLivre)
-    }
-    // Filter by date range
-    if (filters.value.dateDebut) {
-        historiqueFiltered = historiqueFiltered.filter(bon => bon.date >= filters.value.dateDebut)
-    }
-    if (filters.value.dateFin) {
-        historiqueFiltered = historiqueFiltered.filter(bon => bon.date <= filters.value.dateFin)
-    }
-    
-    const solde = historiqueFiltered.reduce((sum, bon) => sum + (parseFloat(bon.solde) || 0), 0)
-    const reliquat = historiqueFiltered.reduce((sum, bon) => sum + (parseFloat(bon.reliquat) || 0), 0)
+    // Solde = Credit - Debit (simple balance calculation)
+    const solde = credit - debit
     
     return {
         quantite: data.reduce((sum, row) => sum + (row.quantite || 0), 0),
         debit: debit,
         credit: credit,
         solde: solde,
-        reliquat: reliquat,
         paye: paye,
         devalide: devalide,
         impaye: impaye,
