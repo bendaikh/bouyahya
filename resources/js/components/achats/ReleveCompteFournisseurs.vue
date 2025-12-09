@@ -415,6 +415,20 @@ const combinedData = computed(() => {
     reglements.value.forEach(reg => {
         const montant = parseFloat(reg.montant) || 0
         const isEffectivePayment = ['paye', 'cour', 'instance'].includes(reg.statut)
+        
+        // Extract client_livre values from linked bons
+        // API returns snake_case: bon_achat (Laravel default)
+        const linkedClients = new Set()
+        if (reg.lignes && reg.lignes.length > 0) {
+            reg.lignes.forEach(ligne => {
+                // Check both snake_case and camelCase for compatibility
+                const bonAchat = ligne.bon_achat || ligne.bonAchat
+                if (bonAchat && bonAchat.client_livre) {
+                    linkedClients.add(bonAchat.client_livre)
+                }
+            })
+        }
+        
         data.push({
             type: 'reglement',
             date: reg.date_reglement,
@@ -433,6 +447,7 @@ const combinedData = computed(() => {
             devalide: reg.statut === 'devalide' ? montant : 0,
             impaye: reg.statut === 'impaye' ? montant : 0,
             reporte: reg.statut === 'reporte' ? montant : 0,
+            linkedClients: Array.from(linkedClients), // Store linked clients for filtering
             raw: reg
         })
     })
@@ -464,7 +479,16 @@ const filteredData = computed(() => {
     
     // Filter by client livré
     if (filters.value.clientLivre) {
-        data = data.filter(row => row.client_livre === filters.value.clientLivre || row.type === 'reglement')
+        data = data.filter(row => {
+            if (row.type === 'achat') {
+                // For achats, filter by client_livre directly
+                return row.client_livre === filters.value.clientLivre
+            } else if (row.type === 'reglement') {
+                // For règlements, filter by linked bons' client_livre
+                return row.linkedClients && row.linkedClients.includes(filters.value.clientLivre)
+            }
+            return false
+        })
     }
     
     return data
