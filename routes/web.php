@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ReglementFournisseurController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\BonCommandeClientController;
 use App\Http\Controllers\BonCommandeFournisseurController;
+use App\Http\Controllers\BonLivraisonClientController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -70,6 +71,7 @@ Route::middleware('auth')->group(function () {
 
     // La gestion des ventes
     Route::prefix('ventes')->group(function () {
+        // Bon de Commande Client routes
         Route::get('/bon-commande', [BonCommandeClientController::class, 'index'])->name('ventes.bon-commande');
         Route::post('/bon-commande', [BonCommandeClientController::class, 'store'])->name('ventes.bon-commande.store');
         Route::get('/bon-commande/next-numero', [BonCommandeClientController::class, 'nextNumero'])->name('ventes.bon-commande.next-numero');
@@ -77,10 +79,20 @@ Route::middleware('auth')->group(function () {
         Route::put('/bon-commande/{id}', [BonCommandeClientController::class, 'update'])->name('ventes.bon-commande.update');
         Route::delete('/bon-commande/{id}', [BonCommandeClientController::class, 'destroy'])->name('ventes.bon-commande.destroy');
         Route::get('/bon-commande/{id}/print', [BonCommandeClientController::class, 'print'])->name('ventes.bon-commande.print');
+        Route::post('/bon-commande/{id}/validate', [BonCommandeClientController::class, 'validateBon'])->name('ventes.bon-commande.validate');
+        Route::post('/bon-commande/{id}/cancel', [BonCommandeClientController::class, 'cancel'])->name('ventes.bon-commande.cancel');
+        Route::post('/bon-commande/{id}/convert-to-bon-livraison', [BonCommandeClientController::class, 'convertToBonLivraison'])->name('ventes.bon-commande.convert');
         
-        Route::get('/bon-livraison', function () {
-            return view('ventes.bon-livraison', ['page_title' => 'Bon de livraison']);
-        })->name('ventes.bon-livraison');
+        // Bon de Livraison Client routes
+        Route::get('/bon-livraison', [BonLivraisonClientController::class, 'index'])->name('ventes.bon-livraison');
+        Route::post('/bon-livraison', [BonLivraisonClientController::class, 'store'])->name('ventes.bon-livraison.store');
+        Route::get('/bon-livraison/next-numero', [BonLivraisonClientController::class, 'nextNumero'])->name('ventes.bon-livraison.next-numero');
+        Route::get('/bon-livraison/{id}', [BonLivraisonClientController::class, 'show'])->name('ventes.bon-livraison.show');
+        Route::put('/bon-livraison/{id}', [BonLivraisonClientController::class, 'update'])->name('ventes.bon-livraison.update');
+        Route::delete('/bon-livraison/{id}', [BonLivraisonClientController::class, 'destroy'])->name('ventes.bon-livraison.destroy');
+        Route::get('/bon-livraison/{id}/print', [BonLivraisonClientController::class, 'print'])->name('ventes.bon-livraison.print');
+        Route::post('/bon-livraison/{id}/mark-delivered', [BonLivraisonClientController::class, 'markDelivered'])->name('ventes.bon-livraison.mark-delivered');
+        Route::post('/bon-livraison/{id}/cancel', [BonLivraisonClientController::class, 'cancel'])->name('ventes.bon-livraison.cancel');
         
         Route::get('/reglements-clients', function () {
             return view('ventes.reglements-clients', ['page_title' => 'Règlements clients']);

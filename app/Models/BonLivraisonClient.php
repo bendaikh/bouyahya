@@ -4,26 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BonCommandeClient extends Model
+class BonLivraisonClient extends Model
 {
-    protected $table = 'bon_commande_clients';
+    protected $table = 'bon_livraison_clients';
 
     protected $fillable = [
         'numero_bon',
         'date',
         'client_id',
-        'fournisseur_id',
+        'bon_commande_id',
         'mode_paiement',
         'echeance',
+        'date_echeance',
         'ville_livraison',
+        'chauffeur',
+        'matricule_vehicule',
+        'telephone_chauffeur',
+        'adresse_livraison',
+        'observations',
         'total_quantites',
         'total_general',
         'statut',
-        'motif_annulation',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'date_echeance' => 'date',
         'total_quantites' => 'integer',
         'total_general' => 'decimal:2',
     ];
@@ -33,19 +39,14 @@ class BonCommandeClient extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function fournisseur()
+    public function bonCommande()
     {
-        return $this->belongsTo(Fournisseur::class);
+        return $this->belongsTo(BonCommandeClient::class, 'bon_commande_id');
     }
 
     public function articles()
     {
-        return $this->hasMany(BonCommandeClientArticle::class, 'bon_commande_client_id');
-    }
-
-    public function bonLivraison()
-    {
-        return $this->hasOne(BonLivraisonClient::class, 'bon_commande_id');
+        return $this->hasMany(BonLivraisonClientArticle::class, 'bon_livraison_client_id');
     }
 }
 
