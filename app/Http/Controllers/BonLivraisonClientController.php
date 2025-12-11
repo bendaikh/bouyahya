@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BonLivraisonClient;
+use App\Models\BonCommandeClient;
+use App\Models\BonAchatFournisseur;
 use App\Models\Client;
 use App\Models\Article;
 use App\Models\Setting;
@@ -14,7 +16,7 @@ class BonLivraisonClientController extends Controller
 {
     public function index()
     {
-        $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande'])->orderBy('created_at', 'desc')->get();
+        $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])->orderBy('created_at', 'desc')->get();
         $clients = Client::orderBy('raison_sociale')->get();
         $articles = Article::where('actif', true)->orderBy('designation')->get();
         
@@ -36,14 +38,20 @@ class BonLivraisonClientController extends Controller
             'date' => 'required|date',
             'numero_bon' => 'required|string|unique:bon_livraison_clients,numero_bon',
             'client_id' => 'required|exists:clients,id',
+            'bon_commande_id' => 'nullable|exists:bon_commande_clients,id',
+            'bon_achat_fournisseur_id' => 'nullable|exists:bon_achat_fournisseur,id',
             'mode_paiement' => 'required|string',
+            'mode_reglement' => 'nullable|string',
+            'delai_reglement' => 'nullable|string',
+            'transporteur' => 'nullable|string',
+            'commercial' => 'nullable|string',
+            'situation' => 'nullable|string',
+            'vehicule' => 'nullable|string',
             'echeance' => 'nullable|string',
             'date_echeance' => 'nullable|date',
             'ville_livraison' => 'nullable|string',
             'chauffeur' => 'nullable|string',
             'matricule_vehicule' => 'nullable|string',
-            'telephone_chauffeur' => 'nullable|string',
-            'adresse_livraison' => 'nullable|string',
             'observations' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.code_article' => 'required|string',
@@ -67,14 +75,20 @@ class BonLivraisonClientController extends Controller
                 'numero_bon' => $request->numero_bon,
                 'date' => $request->date,
                 'client_id' => $request->client_id,
+                'bon_commande_id' => $request->bon_commande_id,
+                'bon_achat_fournisseur_id' => $request->bon_achat_fournisseur_id,
                 'mode_paiement' => $request->mode_paiement,
+                'mode_reglement' => $request->mode_reglement,
+                'delai_reglement' => $request->delai_reglement,
+                'transporteur' => $request->transporteur,
+                'commercial' => $request->commercial,
+                'situation' => $request->situation,
+                'vehicule' => $request->vehicule,
                 'echeance' => $request->echeance,
                 'date_echeance' => $request->date_echeance,
                 'ville_livraison' => $request->ville_livraison,
                 'chauffeur' => $request->chauffeur,
                 'matricule_vehicule' => $request->matricule_vehicule,
-                'telephone_chauffeur' => $request->telephone_chauffeur,
-                'adresse_livraison' => $request->adresse_livraison,
                 'observations' => $request->observations,
                 'total_quantites' => $totalQuantites,
                 'total_general' => $totalGeneral,
@@ -123,8 +137,87 @@ class BonLivraisonClientController extends Controller
 
     public function show($id)
     {
-        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande'])->findOrFail($id);
+        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande', 'bonAchatFournisseur'])->findOrFail($id);
         return response()->json($bonLivraison);
+    }
+
+    /**
+     * Get bon de commande clients for import
+     */
+    public function getBonCommandes()
+    {
+        $bonCommandes = BonCommandeClient::with(['client'])
+            ->where('statut', '!=', 'Annulé')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json($bonCommandes);
+    }
+
+    /**
+     * Get bon d'achat fournisseurs for import
+     */
+    public function getBonAchatFournisseurs()
+    {
+        $bonAchats = BonAchatFournisseur::with(['fournisseur'])
+            ->where('statut', '!=', 'annule')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json($bonAchats);
+    }
+
+    /**
+     * Import from bon de commande client
+     */
+    public function importFromBonCommande($id)
+    {
+        $bonCommande = BonCommandeClient::with(['client', 'articles'])->findOrFail($id);
+        
+        return response()->json([
+            'bon_commande_id' => $bonCommande->id,
+            'numero_bon_commande' => $bonCommande->numero_bon,
+            'client_id' => $bonCommande->client_id,
+            'mode_paiement' => $bonCommande->mode_paiement,
+            'echeance' => $bonCommande->echeance,
+            'ville_livraison' => $bonCommande->ville_livraison,
+            'items' => $bonCommande->articles->map(function($article) {
+                return [
+                    'code_article' => $article->code_article,
+                    'designation' => $article->designation,
+                    'quantite' => $article->quantite,
+                    'prix_unitaire' => $article->prix_unitaire,
+                    'sous_total' => $article->sous_total,
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Import from bon d'achat fournisseur
+     */
+    public function importFromBonAchatFournisseur($id)
+    {
+        $bonAchat = BonAchatFournisseur::with(['fournisseur', 'articles', 'bonCommande'])->findOrFail($id);
+        
+        return response()->json([
+            'bon_achat_fournisseur_id' => $bonAchat->id,
+            'numero_bon_achat' => $bonAchat->numero_bon,
+            'numero_bon_commande' => $bonAchat->bonCommande ? $bonAchat->bonCommande->numero_bon : null,
+            'client_id' => null, // Bon d'achat fournisseur doesn't have client_id
+            'mode_paiement' => $bonAchat->type_paiement,
+            'echeance' => $bonAchat->echeance,
+            'ville_livraison' => $bonAchat->ville,
+            'items' => $bonAchat->articles->map(function($article) {
+                return [
+                    'code_article' => $article->ref_article,
+                    'designation' => $article->designation_article,
+                    'quantite' => $article->qte,
+                    'prix_unitaire' => $article->prix_unitaire_ttc,
+                    'sous_total' => $article->total,
+                ];
+            })
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -133,14 +226,20 @@ class BonLivraisonClientController extends Controller
             'date' => 'required|date',
             'numero_bon' => 'required|string',
             'client_id' => 'required|exists:clients,id',
+            'bon_commande_id' => 'nullable|exists:bon_commande_clients,id',
+            'bon_achat_fournisseur_id' => 'nullable|exists:bon_achat_fournisseur,id',
             'mode_paiement' => 'required|string',
+            'mode_reglement' => 'nullable|string',
+            'delai_reglement' => 'nullable|string',
+            'transporteur' => 'nullable|string',
+            'commercial' => 'nullable|string',
+            'situation' => 'nullable|string',
+            'vehicule' => 'nullable|string',
             'echeance' => 'nullable|string',
             'date_echeance' => 'nullable|date',
             'ville_livraison' => 'nullable|string',
             'chauffeur' => 'nullable|string',
             'matricule_vehicule' => 'nullable|string',
-            'telephone_chauffeur' => 'nullable|string',
-            'adresse_livraison' => 'nullable|string',
             'observations' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.code_article' => 'required|string',
@@ -166,14 +265,20 @@ class BonLivraisonClientController extends Controller
                 'date' => $request->date,
                 'numero_bon' => $request->numero_bon,
                 'client_id' => $request->client_id,
+                'bon_commande_id' => $request->bon_commande_id,
+                'bon_achat_fournisseur_id' => $request->bon_achat_fournisseur_id,
                 'mode_paiement' => $request->mode_paiement,
+                'mode_reglement' => $request->mode_reglement,
+                'delai_reglement' => $request->delai_reglement,
+                'transporteur' => $request->transporteur,
+                'commercial' => $request->commercial,
+                'situation' => $request->situation,
+                'vehicule' => $request->vehicule,
                 'echeance' => $request->echeance,
                 'date_echeance' => $request->date_echeance,
                 'ville_livraison' => $request->ville_livraison,
                 'chauffeur' => $request->chauffeur,
                 'matricule_vehicule' => $request->matricule_vehicule,
-                'telephone_chauffeur' => $request->telephone_chauffeur,
-                'adresse_livraison' => $request->adresse_livraison,
                 'observations' => $request->observations,
                 'total_quantites' => $totalQuantites,
                 'total_general' => $totalGeneral,

@@ -87,6 +87,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/bon-livraison', [BonLivraisonClientController::class, 'index'])->name('ventes.bon-livraison');
         Route::post('/bon-livraison', [BonLivraisonClientController::class, 'store'])->name('ventes.bon-livraison.store');
         Route::get('/bon-livraison/next-numero', [BonLivraisonClientController::class, 'nextNumero'])->name('ventes.bon-livraison.next-numero');
+        Route::get('/bon-livraison/bon-commandes', [BonLivraisonClientController::class, 'getBonCommandes'])->name('ventes.bon-livraison.bon-commandes');
+        Route::get('/bon-livraison/bon-achat-fournisseurs', [BonLivraisonClientController::class, 'getBonAchatFournisseurs'])->name('ventes.bon-livraison.bon-achat-fournisseurs');
+        Route::get('/bon-livraison/import-bon-commande/{id}', [BonLivraisonClientController::class, 'importFromBonCommande'])->name('ventes.bon-livraison.import-bon-commande');
+        Route::get('/bon-livraison/import-bon-achat-fournisseur/{id}', [BonLivraisonClientController::class, 'importFromBonAchatFournisseur'])->name('ventes.bon-livraison.import-bon-achat-fournisseur');
         Route::get('/bon-livraison/{id}', [BonLivraisonClientController::class, 'show'])->name('ventes.bon-livraison.show');
         Route::put('/bon-livraison/{id}', [BonLivraisonClientController::class, 'update'])->name('ventes.bon-livraison.update');
         Route::delete('/bon-livraison/{id}', [BonLivraisonClientController::class, 'destroy'])->name('ventes.bon-livraison.destroy');
