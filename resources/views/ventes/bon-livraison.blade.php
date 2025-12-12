@@ -53,6 +53,7 @@ function bonLivraisonApp() {
         importType: '', // 'bon-commande' or 'bon-achat-fournisseur'
         availableBonCommandes: [],
         availableBonAchatFournisseurs: [],
+        searchImport: '',
         
         async init() {
             await this.fetchNextNumero();
@@ -86,6 +87,29 @@ function bonLivraisonApp() {
             this.importType = '';
             this.availableBonCommandes = [];
             this.availableBonAchatFournisseurs = [];
+            this.searchImport = '';
+        },
+        
+        get filteredBonCommandes() {
+            if (!this.searchImport) {
+                return this.availableBonCommandes;
+            }
+            const search = this.searchImport.toLowerCase();
+            return this.availableBonCommandes.filter(bc => 
+                bc.numero_bon?.toLowerCase().includes(search) ||
+                bc.client?.raison_sociale?.toLowerCase().includes(search)
+            );
+        },
+        
+        get filteredBonAchatFournisseurs() {
+            if (!this.searchImport) {
+                return this.availableBonAchatFournisseurs;
+            }
+            const search = this.searchImport.toLowerCase();
+            return this.availableBonAchatFournisseurs.filter(ba => 
+                ba.numero_bon?.toLowerCase().includes(search) ||
+                ba.fournisseur?.nom_fournisseur?.toLowerCase().includes(search)
+            );
         },
         
         async importBonCommande(id) {
@@ -602,7 +626,14 @@ function markAsDelivered(id, numero) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Echéance</label>
-                        <input type="date" x-model="formData.dateEcheance" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <select x-model="formData.echeance" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            <option value="30 jours">30 jours</option>
+                            <option value="45 jours">45 jours</option>
+                            <option value="60 jours">60 jours</option>
+                            <option value="75 jours">75 jours</option>
+                            <option value="90 jours">90 jours</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -792,11 +823,22 @@ function markAsDelivered(id, numero) {
             <div class="flex-1 flex gap-3 p-3 overflow-hidden">
                 <!-- Panel: Bon De Commandes Validés or Bon Fournisseur -->
                 <div class="flex-1 bg-gray-700 dark:bg-gray-700 rounded border border-gray-600 flex flex-col overflow-hidden">
-                    <div class="bg-gray-800 dark:bg-gray-800 px-3 py-2 border-b border-gray-600">
+                    <div class="bg-gray-800 dark:bg-gray-800 px-3 py-2 border-b border-gray-600 space-y-2">
                         <h3 class="text-white text-center text-sm font-medium" x-text="importType === 'bon-commande' ? 'Bon De Commandes Validés' : 'Bon Fournisseur'"></h3>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                x-model="searchImport" 
+                                placeholder="Rechercher par numéro ou nom..." 
+                                class="w-full px-3 py-1.5 bg-gray-700 dark:bg-gray-700 border border-gray-600 rounded text-white text-xs placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                            <svg class="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
                     </div>
                     <div class="flex-1 overflow-y-auto p-3 space-y-2">
-                        <template x-for="bonCommande in availableBonCommandes" :key="bonCommande.id" x-show="importType === 'bon-commande'">
+                        <template x-for="bonCommande in filteredBonCommandes" :key="bonCommande.id" x-show="importType === 'bon-commande'">
                             <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonCommande(bonCommande.id)">
                                 <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
                                 <div class="flex-1 text-white text-xs">
@@ -805,7 +847,7 @@ function markAsDelivered(id, numero) {
                                 </div>
                             </div>
                         </template>
-                        <template x-for="bonAchat in availableBonAchatFournisseurs" :key="bonAchat.id" x-show="importType === 'bon-achat-fournisseur'">
+                        <template x-for="bonAchat in filteredBonAchatFournisseurs" :key="bonAchat.id" x-show="importType === 'bon-achat-fournisseur'">
                             <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonAchatFournisseur(bonAchat.id)">
                                 <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
                                 <div class="flex-1 text-white text-xs">
@@ -814,16 +856,18 @@ function markAsDelivered(id, numero) {
                                 </div>
                             </div>
                         </template>
-                        <div x-show="(importType === 'bon-commande' && availableBonCommandes.length === 0) || (importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length === 0)" class="text-center text-gray-400 py-8 text-xs">
-                            <span x-show="importType === 'bon-commande'">Aucun bon de commande disponible</span>
-                            <span x-show="importType === 'bon-achat-fournisseur'">Aucun bon d'achat fournisseur disponible</span>
+                        <div x-show="(importType === 'bon-commande' && filteredBonCommandes.length === 0) || (importType === 'bon-achat-fournisseur' && filteredBonAchatFournisseurs.length === 0)" class="text-center text-gray-400 py-8 text-xs">
+                            <span x-show="importType === 'bon-commande' && availableBonCommandes.length === 0">Aucun bon de commande disponible</span>
+                            <span x-show="importType === 'bon-commande' && availableBonCommandes.length > 0 && filteredBonCommandes.length === 0">Aucun résultat trouvé</span>
+                            <span x-show="importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length === 0">Aucun bon d'achat fournisseur disponible</span>
+                            <span x-show="importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length > 0 && filteredBonAchatFournisseurs.length === 0">Aucun résultat trouvé</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Central Column with Arrow Button -->
                 <div class="w-24 flex flex-col items-center justify-center gap-3">
-                    <button class="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors" @click="importType === 'bon-commande' ? (availableBonCommandes.length > 0 ? importBonCommande(availableBonCommandes[0].id) : null) : (availableBonAchatFournisseurs.length > 0 ? importBonAchatFournisseur(availableBonAchatFournisseurs[0].id) : null)">
+                    <button class="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors" @click="importType === 'bon-commande' ? (filteredBonCommandes.length > 0 ? importBonCommande(filteredBonCommandes[0].id) : null) : (filteredBonAchatFournisseurs.length > 0 ? importBonAchatFournisseur(filteredBonAchatFournisseurs[0].id) : null)">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
                         </svg>
