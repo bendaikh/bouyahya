@@ -247,6 +247,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/articles', function () {
             return view('parametres.articles', ['page_title' => 'Paramètres Articles']);
         })->name('parametres.articles');
+        
+        Route::get('/commerciales', function () {
+            return view('parametres.commerciales', ['page_title' => 'Paramètres Commerciales']);
+        })->name('parametres.commerciales');
     });
 
     // API Routes for Settings
@@ -276,6 +280,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/unites-mesure/add', [SettingsController::class, 'addUniteMesure']);
         Route::post('/unites-mesure/update', [SettingsController::class, 'updateUniteMesure']);
         Route::post('/unites-mesure/remove', [SettingsController::class, 'removeUniteMesure']);
+        
+        // Commerciales routes
+        Route::get('/commerciales', [SettingsController::class, 'getCommerciales']);
+        Route::post('/commerciales/add', [SettingsController::class, 'addCommerciale']);
+        Route::post('/commerciales/update', [SettingsController::class, 'updateCommerciale']);
+        Route::post('/commerciales/remove', [SettingsController::class, 'removeCommerciale']);
     });
 
     // API Routes for Articles

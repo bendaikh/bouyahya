@@ -21,7 +21,8 @@ class SettingsController extends Controller
             'cities' => json_decode(Setting::getValue('cities', '[]'), true),
             'familles_article' => json_decode(Setting::getValue('familles_article', '[]'), true),
             'sous_familles_article' => json_decode(Setting::getValue('sous_familles_article', '[]'), true),
-            'unites_mesure' => json_decode(Setting::getValue('unites_mesure', '[]'), true)
+            'unites_mesure' => json_decode(Setting::getValue('unites_mesure', '[]'), true),
+            'commerciales' => json_decode(Setting::getValue('commerciales', '[]'), true)
         ];
 
         return response()->json($settings);
@@ -512,6 +513,125 @@ class SettingsController extends Controller
         return response()->json([
             'message' => 'Unité de mesure supprimée avec succès',
             'unites' => $unites
+        ]);
+    }
+
+    // =====================================================
+    // COMMERCIALES
+    // =====================================================
+
+    /**
+     * Get all commerciales
+     */
+    public function getCommerciales()
+    {
+        $commerciales = json_decode(Setting::getValue('commerciales', '[]'), true);
+        return response()->json(['commerciales' => $commerciales]);
+    }
+
+    /**
+     * Add a new commerciale
+     */
+    public function addCommerciale(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code_commercial' => 'required|string|max:255',
+            'nom_commercial' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $commerciales = json_decode(Setting::getValue('commerciales', '[]'), true);
+        
+        // Check if code commercial already exists
+        $exists = array_filter($commerciales, fn($c) => isset($c['code_commercial']) && strtolower($c['code_commercial']) === strtolower($request->code_commercial));
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code commercial existe déjà'], 422);
+        }
+
+        // Generate unique ID
+        $id = uniqid('com_');
+        
+        $commerciale = [
+            'id' => $id,
+            'code_commercial' => $request->code_commercial,
+            'nom_commercial' => $request->nom_commercial
+        ];
+
+        $commerciales[] = $commerciale;
+        Setting::setValue('commerciales', json_encode($commerciales));
+
+        return response()->json([
+            'message' => 'Commercial ajouté avec succès',
+            'commerciales' => $commerciales
+        ]);
+    }
+
+    /**
+     * Update a commerciale
+     */
+    public function updateCommerciale(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'code_commercial' => 'required|string|max:255',
+            'nom_commercial' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $commerciales = json_decode(Setting::getValue('commerciales', '[]'), true);
+        
+        // Check if code commercial already exists for another commerciale
+        $exists = array_filter($commerciales, fn($c) => 
+            isset($c['id']) && $c['id'] !== $request->id && 
+            isset($c['code_commercial']) && strtolower($c['code_commercial']) === strtolower($request->code_commercial)
+        );
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code commercial existe déjà'], 422);
+        }
+
+        foreach ($commerciales as &$commerciale) {
+            if (isset($commerciale['id']) && $commerciale['id'] === $request->id) {
+                $commerciale['code_commercial'] = $request->code_commercial;
+                $commerciale['nom_commercial'] = $request->nom_commercial;
+                break;
+            }
+        }
+        
+        Setting::setValue('commerciales', json_encode($commerciales));
+
+        return response()->json([
+            'message' => 'Commercial mis à jour avec succès',
+            'commerciales' => $commerciales
+        ]);
+    }
+
+    /**
+     * Remove a commerciale
+     */
+    public function removeCommerciale(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $commerciales = json_decode(Setting::getValue('commerciales', '[]'), true);
+        $commerciales = array_values(array_filter($commerciales, fn($c) => !isset($c['id']) || $c['id'] !== $request->id));
+        
+        Setting::setValue('commerciales', json_encode($commerciales));
+
+        return response()->json([
+            'message' => 'Commercial supprimé avec succès',
+            'commerciales' => $commerciales
         ]);
     }
 }

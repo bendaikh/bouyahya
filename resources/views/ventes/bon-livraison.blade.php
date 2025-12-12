@@ -24,7 +24,7 @@ function bonLivraisonApp() {
             nomClient: '',
             plafondAutorise: '',
             typeReglement: 'Crédit',
-            commercial: 'Commercial',
+            commercial: '',
             echeance: '',
             fournisseurId: '',
             codeFournisseur: '',
@@ -54,9 +54,34 @@ function bonLivraisonApp() {
         availableBonCommandes: [],
         availableBonAchatFournisseurs: [],
         searchImport: '',
+        commerciales: [],
         
         async init() {
             await this.fetchNextNumero();
+            await this.fetchCommerciales();
+        },
+        
+        async fetchCommerciales() {
+            try {
+                const response = await fetch('/api/settings/commerciales');
+                const data = await response.json();
+                // Handle both old format (strings) and new format (objects)
+                const rawCommerciales = data.commerciales || [];
+                this.commerciales = rawCommerciales.map(c => {
+                    if (typeof c === 'string') {
+                        // Legacy format - return as is for backward compatibility
+                        return c;
+                    }
+                    // New format - return nom_commercial for display
+                    return c.nom_commercial || c.code_commercial || '';
+                }).filter(c => c);
+                // Set default commercial if available
+                if (this.commerciales.length > 0 && !this.formData.commercial) {
+                    this.formData.commercial = this.commerciales[0];
+                }
+            } catch (error) {
+                console.error('Error fetching commerciales:', error);
+            }
         },
         
         async openImportModal(type) {
@@ -340,7 +365,7 @@ function bonLivraisonApp() {
                     this.formData.typeReglement = data.mode_reglement || 'Crédit';
                     this.formData.delaiReglement = data.delai_reglement || '0 Jours';
                     this.formData.transporteur = data.transporteur || '';
-                    this.formData.commercial = data.commercial || 'Commercial';
+                    this.formData.commercial = data.commercial || (this.commerciales.length > 0 ? this.commerciales[0] : '');
                     this.formData.situation = data.situation || 'Livré';
                     this.formData.vehicule = data.vehicule || '';
                     this.formData.echeance = data.echeance || '';
@@ -434,7 +459,7 @@ function bonLivraisonApp() {
             this.formData.nomClient = '';
             this.formData.plafondAutorise = '';
             this.formData.typeReglement = 'Crédit';
-            this.formData.commercial = 'Commercial';
+            this.formData.commercial = this.commerciales.length > 0 ? this.commerciales[0] : '';
             this.formData.echeance = '';
             this.formData.fournisseurId = '';
             this.formData.codeFournisseur = '';
@@ -619,9 +644,10 @@ function markAsDelivered(id, numero) {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Commercial</label>
                         <select x-model="formData.commercial" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="Commercial">Commercial</option>
-                            <option value="Commercial 1">Commercial 1</option>
-                            <option value="Commercial 2">Commercial 2</option>
+                            <option value="">Sélectionner</option>
+                            <template x-for="commerciale in commerciales" :key="commerciale">
+                                <option :value="commerciale" x-text="commerciale"></option>
+                            </template>
                         </select>
                     </div>
                     <div>
@@ -674,7 +700,11 @@ function markAsDelivered(id, numero) {
                     </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport</label>
-                        <input type="text" x-model="formData.transporteur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <select x-model="formData.transporteur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            <option value="DEPART">DEPART</option>
+                            <option value="RENDU">RENDU</option>
+                        </select>
                     </div>
                 </div>
             </div>
