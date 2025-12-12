@@ -6,6 +6,7 @@ use App\Models\BonLivraisonClient;
 use App\Models\BonCommandeClient;
 use App\Models\BonAchatFournisseur;
 use App\Models\Client;
+use App\Models\Fournisseur;
 use App\Models\Article;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class BonLivraisonClientController extends Controller
     {
         $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])->orderBy('created_at', 'desc')->get();
         $clients = Client::orderBy('raison_sociale')->get();
+        $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
         $articles = Article::where('actif', true)->orderBy('designation')->get();
         
         // Get cities from settings
@@ -27,6 +29,7 @@ class BonLivraisonClientController extends Controller
             'page_title' => 'Bon de livraison',
             'bonLivraisons' => $bonLivraisons,
             'clients' => $clients,
+            'fournisseurs' => $fournisseurs,
             'articles' => $articles,
             'cities' => $cities,
         ]);

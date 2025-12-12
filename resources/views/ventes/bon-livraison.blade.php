@@ -20,6 +20,18 @@ function bonLivraisonApp() {
             date: new Date().toISOString().split('T')[0],
             numero: '',
             clientId: '',
+            codeClient: '',
+            nomClient: '',
+            plafondAutorise: '',
+            typeReglement: 'Crédit',
+            commercial: 'Commercial',
+            echeance: '',
+            fournisseurId: '',
+            codeFournisseur: '',
+            nomFournisseur: '',
+            bonFournisseurNumero: '',
+            chauffeur: '',
+            matriculeVehicule: '',
             bonCommandeId: null,
             bonAchatFournisseurId: null,
             bonCommandeNumero: '',
@@ -28,13 +40,9 @@ function bonLivraisonApp() {
             modeReglement: 'Crédit',
             delaiReglement: '0 Jours',
             transporteur: '',
-            commercial: 'Commercial',
             situation: 'Livré',
             vehicule: '',
-            echeance: '',
             dateEcheance: '',
-            chauffeur: '',
-            matriculeVehicule: '',
             observations: ''
         },
         items: [],
@@ -91,6 +99,7 @@ function bonLivraisonApp() {
                 this.formData.modePaiement = data.mode_paiement || 'Espèces';
                 this.formData.echeance = data.echeance || '';
                 this.formData.villeLivraison = data.ville_livraison || '';
+                this.updateClientInfo();
                 this.items = (data.items || []).map(item => ({
                     ...item,
                     quantite: parseFloat(item.quantite) || 0,
@@ -112,6 +121,7 @@ function bonLivraisonApp() {
                 const data = await response.json();
                 
                 this.formData.bonAchatFournisseurId = data.bon_achat_fournisseur_id;
+                this.formData.bonFournisseurNumero = data.numero_bon_achat;
                 this.formData.bonCommandeNumero = data.numero_bon_achat;
                 if (data.numero_bon_commande) {
                     this.formData.bonCommandeNumero = data.numero_bon_commande;
@@ -154,6 +164,34 @@ function bonLivraisonApp() {
                 a.reference.toLowerCase().includes(search) || 
                 a.designation.toLowerCase().includes(search)
             ).slice(0, 10);
+        },
+        
+        updateClientInfo() {
+            if (!this.formData.clientId) {
+                this.formData.codeClient = '';
+                this.formData.nomClient = '';
+                this.formData.plafondAutorise = '';
+                return;
+            }
+            const client = @json($clients).find(c => c.id == this.formData.clientId);
+            if (client) {
+                this.formData.codeClient = client.code_client || '';
+                this.formData.nomClient = client.raison_sociale || '';
+                this.formData.plafondAutorise = client.plafond ? parseFloat(client.plafond).toFixed(2) + ' DH' : '';
+            }
+        },
+        
+        updateFournisseurInfo() {
+            if (!this.formData.fournisseurId) {
+                this.formData.codeFournisseur = '';
+                this.formData.nomFournisseur = '';
+                return;
+            }
+            const fournisseur = @json($fournisseurs ?? []).find(f => f.id == this.formData.fournisseurId);
+            if (fournisseur) {
+                this.formData.codeFournisseur = fournisseur.code_fournisseur || '';
+                this.formData.nomFournisseur = fournisseur.nom_fournisseur || '';
+            }
         },
         
         selectArticle(article) {
@@ -268,11 +306,14 @@ function bonLivraisonApp() {
                     this.formData.date = data.date ? data.date.split('T')[0] : '';
                     this.formData.numero = data.numero_bon;
                     this.formData.clientId = data.client_id;
+                    this.updateClientInfo();
                     this.formData.bonCommandeId = data.bon_commande_id;
                     this.formData.bonAchatFournisseurId = data.bon_achat_fournisseur_id;
                     this.formData.bonCommandeNumero = data.bon_commande ? data.bon_commande.numero_bon : (data.bon_achat_fournisseur ? data.bon_achat_fournisseur.numero_bon : '');
+                    this.formData.bonFournisseurNumero = data.bon_achat_fournisseur ? data.bon_achat_fournisseur.numero_bon : '';
                     this.formData.modePaiement = data.mode_paiement;
                     this.formData.modeReglement = data.mode_reglement || 'Crédit';
+                    this.formData.typeReglement = data.mode_reglement || 'Crédit';
                     this.formData.delaiReglement = data.delai_reglement || '0 Jours';
                     this.formData.transporteur = data.transporteur || '';
                     this.formData.commercial = data.commercial || 'Commercial';
@@ -365,6 +406,19 @@ function bonLivraisonApp() {
             this.showForm = false;
             this.items = [];
             this.formData.clientId = '';
+            this.formData.codeClient = '';
+            this.formData.nomClient = '';
+            this.formData.plafondAutorise = '';
+            this.formData.typeReglement = 'Crédit';
+            this.formData.commercial = 'Commercial';
+            this.formData.echeance = '';
+            this.formData.fournisseurId = '';
+            this.formData.codeFournisseur = '';
+            this.formData.nomFournisseur = '';
+            this.formData.bonFournisseurNumero = '';
+            this.formData.chauffeur = '';
+            this.formData.matriculeVehicule = '';
+            this.formData.transporteur = '';
             this.formData.bonCommandeId = null;
             this.formData.bonAchatFournisseurId = null;
             this.formData.bonCommandeNumero = '';
@@ -373,13 +427,9 @@ function bonLivraisonApp() {
             this.formData.modeReglement = 'Crédit';
             this.formData.delaiReglement = '0 Jours';
             this.formData.transporteur = '';
-            this.formData.commercial = 'Commercial';
             this.formData.situation = 'Livré';
             this.formData.vehicule = '';
-            this.formData.echeance = '';
             this.formData.dateEcheance = '';
-            this.formData.chauffeur = '';
-            this.formData.matriculeVehicule = '';
             this.formData.observations = '';
             this.formData.date = new Date().toISOString().split('T')[0];
             this.fetchNextNumero();
@@ -456,71 +506,85 @@ function markAsDelivered(id, numero) {
 
     <!-- Form Section -->
     <div x-show="showForm" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white" x-text="editMode ? 'Modifier bon de livraison' : 'Nouveau bon de livraison'"></h2>
-            <button @click="cancelEdit()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Header Information -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
-                <input type="date" x-model="formData.date" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">N° Bon de Livraison</label>
-                <input type="text" x-model="formData.numero" readonly class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client</label>
-                <select x-model="formData.clientId" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Sélectionner un client</option>
-                    @foreach($clients as $client)
-                        <option value="{{ $client->id }}">{{ $client->raison_sociale }} ({{ $client->code_client }})</option>
-                    @endforeach
-                </select>
+        <!-- Header Section -->
+        <div class="flex justify-between items-center mb-6 bg-gray-800 dark:bg-gray-800 p-4 rounded-lg">
+            <h2 class="text-xl font-semibold text-white dark:text-white">Nouveau bon de livraison</h2>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-white dark:text-white">Date</label>
+                    <input type="date" x-model="formData.date" class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-white dark:text-white">N° Bon de Livraison</label>
+                    <input type="text" x-model="formData.numero" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-40">
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                        </svg>
+                        Payer
+                    </button>
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Envoyer
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Import Section -->
-        <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Importer depuis</h3>
+        <div class="mb-6">
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">Importateur depuis</p>
             <div class="flex gap-3">
-                <button @click="openImportModal('bon-commande')" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                <button @click="openImportModal('bon-commande')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
                     </svg>
                     Bon de Commande Vente
                 </button>
-                <button @click="openImportModal('bon-achat-fournisseur')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                <button @click="openImportModal('bon-achat-fournisseur')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
                     </svg>
                     Bon d'Achat Fournisseur
                 </button>
             </div>
-            <div x-show="formData.bonCommandeNumero" class="mt-3 text-sm text-gray-700 dark:text-gray-300">
-                <span class="font-medium">Bon de Commande:</span> <span class="text-blue-600 dark:text-blue-400 font-mono" x-text="formData.bonCommandeNumero"></span>
-            </div>
         </div>
 
-        <!-- Informations du bon de livraison -->
-        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
-            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">Informations du bon de livraison</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Left Column -->
-                <div class="space-y-4">
+        <!-- Info Client Livré and Info Livraison Sections -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Info Client Livré Section -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-yellow-500 dark:text-yellow-400 mb-4">Info Client Livré</h3>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bon de Commande</label>
-                        <input type="text" x-model="formData.bonCommandeNumero" readonly class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code Client</label>
+                        <select x-model="formData.clientId" @change="updateClientInfo()" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}">{{ $client->code_client }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mode Règlement</label>
-                        <select x-model="formData.modeReglement" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom Client</label>
+                        <select x-model="formData.clientId" @change="updateClientInfo()" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}">{{ $client->raison_sociale }} ({{ $client->code_client }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Plafond Autorisé</label>
+                        <input type="text" x-model="formData.plafondAutorise" readonly class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type Réglement</label>
+                        <select x-model="formData.typeReglement" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="Crédit">Crédit</option>
                             <option value="Espèces">Espèces</option>
                             <option value="Chèque">Chèque</option>
@@ -529,90 +593,69 @@ function markAsDelivered(id, numero) {
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Délai de Règlement</label>
-                        <input type="text" x-model="formData.delaiReglement" placeholder="0 Jours" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transporteur</label>
-                        <input type="text" x-model="formData.transporteur" placeholder="Nom du transporteur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-                <!-- Right Column -->
-                <div class="space-y-4">
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Commercial</label>
-                        <select x-model="formData.commercial" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                        <select x-model="formData.commercial" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="Commercial">Commercial</option>
                             <option value="Commercial 1">Commercial 1</option>
                             <option value="Commercial 2">Commercial 2</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Situation</label>
-                        <select x-model="formData.situation" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                            <option value="Livré">Livré</option>
-                            <option value="En attente">En attente</option>
-                            <option value="Annulé">Annulé</option>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Echéance</label>
+                        <input type="date" x-model="formData.dateEcheance" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Livraison Section -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-green-500 dark:text-green-400 mb-4">Info Livraison</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code Fournisseur</label>
+                        <select x-model="formData.fournisseurId" @change="updateFournisseurInfo()" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            @foreach($fournisseurs ?? [] as $fournisseur)
+                                <option value="{{ $fournisseur->id }}">{{ $fournisseur->code_fournisseur }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Véhicule</label>
-                        <input type="text" x-model="formData.vehicule" placeholder="Numéro du véhicule" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom Fournisseur</label>
+                        <select x-model="formData.fournisseurId" @change="updateFournisseurInfo()" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            @foreach($fournisseurs ?? [] as $fournisseur)
+                                <option value="{{ $fournisseur->id }}">{{ $fournisseur->nom_fournisseur }} ({{ $fournisseur->code_fournisseur }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bon Fournisseur Numèro</label>
+                        <input type="text" x-model="formData.bonFournisseurNumero" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chauffeur</label>
+                        <input type="text" x-model="formData.chauffeur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Matricule</label>
+                        <input type="text" x-model="formData.matriculeVehicule" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport</label>
+                        <input type="text" x-model="formData.transporteur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Delivery Information -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ville de Livraison</label>
-                <select x-model="formData.villeLivraison" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Sélectionner une ville</option>
-                    @foreach($cities as $city)
-                        <option value="{{ $city }}">{{ $city }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mode de paiement</label>
-                <select x-model="formData.modePaiement" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                    <option>Espèces</option>
-                    <option>Chèque</option>
-                    <option>Virement</option>
-                    <option>Carte bancaire</option>
-                    <option>Crédit</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Échéance</label>
-                <input type="date" x-model="formData.dateEcheance" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-            </div>
-        </div>
-
-        <!-- Chauffeur Information -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
-            <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-4 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                Informations Livraison
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom du Chauffeur</label>
-                    <input type="text" x-model="formData.chauffeur" placeholder="Nom complet" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Matricule Véhicule</label>
-                    <input type="text" x-model="formData.matriculeVehicule" placeholder="Ex: 12345-A-12" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500">
-                </div>
-            </div>
-        </div>
-
-        <!-- Article Search -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rechercher un article</label>
+        <!-- Détail Commande Section -->
+        <div class="mb-6">
+            <h3 class="text-sm font-semibold text-yellow-500 dark:text-yellow-400 mb-4">Détail Commande</h3>
+            
+                <!-- Article Search -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rechercher un article</label>
             <div class="relative">
                 <input 
                     type="text" 
@@ -639,21 +682,21 @@ function markAsDelivered(id, numero) {
                     </template>
                 </div>
             </div>
-        </div>
+            </div>
 
-        <!-- Items Table -->
-        <div class="overflow-x-auto mb-6">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code Article</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Désignation</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">QTÉ</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">P.U. TTC</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sous-Total</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
-                    </tr>
-                </thead>
+                <!-- Items Table -->
+            <div class="overflow-x-auto mb-4">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CODE ARTICLE</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">DÉSIGNATION</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">QTÉ</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">P.U. TTC</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SOUS-TOTAL</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
+                        </tr>
+                    </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <template x-for="(item, index) in items" :key="index">
                         <tr>
@@ -684,103 +727,107 @@ function markAsDelivered(id, numero) {
                     </tr>
                 </tbody>
             </table>
+            </div>
+
+            <!-- Add Item Button -->
+            <div class="mb-6">
+                <button @click="addEmptyItem()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium text-sm flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    + Ajouter une ligne
+                </button>
+            </div>
         </div>
 
-        <!-- Add Item Button -->
-        <div class="mb-6">
-            <button @click="addEmptyItem()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium text-sm flex items-center">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Ajouter une ligne
-            </button>
-        </div>
-
-        <!-- Observations -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Observations</label>
-            <textarea x-model="formData.observations" rows="2" placeholder="Notes ou instructions spéciales..." class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"></textarea>
-        </div>
-
-        <!-- Totals -->
-        <div class="flex justify-end space-y-2">
-            <div class="w-full md:w-1/3 space-y-2">
-                <div class="flex justify-between items-center pb-2">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total Quantités</span>
-                    <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="totalQuantites"></span>
-                </div>
-                <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <span class="text-base font-semibold text-gray-800 dark:text-gray-200">Total Général TTC</span>
-                    <span class="text-lg font-bold text-blue-600 dark:text-blue-400" x-text="formatCurrency(totalGeneral) + ' DH'"></span>
-                </div>
+        <!-- Summary Section -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-4">
+                <label class="text-sm font-medium text-yellow-500 dark:text-yellow-400">Quantité Totale</label>
+                <input type="text" :value="totalQuantites" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-32">
+            </div>
+            <div class="flex items-center gap-4">
+                <label class="text-sm font-medium text-yellow-500 dark:text-yellow-400">Montant TTC</label>
+                <input type="text" :value="formatCurrency(totalGeneral) + ' DH'" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-40">
             </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button @click="cancelEdit()" type="button" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                Annuler
-            </button>
+        <div class="flex justify-end gap-3">
             <button @click="editMode ? updateForm() : submitForm()" type="button" :disabled="isSubmitting" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                <span x-show="!isSubmitting" x-text="editMode ? 'Modifier' : 'Enregistrer'"></span>
-                <span x-show="isSubmitting" x-text="editMode ? 'Modification...' : 'Enregistrement...'"></span>
+                <span x-show="!isSubmitting">Valider</span>
+                <span x-show="isSubmitting">Enregistrement...</span>
+            </button>
+            <button @click="editMode ? updateForm() : submitForm()" type="button" x-show="editMode" :disabled="isSubmitting" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Modifier
+            </button>
+            <button @click="window.open(`/ventes/bon-livraison/${editingId}/print`, '_blank')" type="button" x-show="editingId" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                Imprimer
+            </button>
+            <button @click="cancelEdit()" type="button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                Annuler
             </button>
         </div>
     </div>
 
-    <!-- Import Modal -->
-    <div x-show="showImportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click.self="closeImportModal()">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white" x-text="importType === 'bon-commande' ? 'Importer depuis Bon de Commande Vente' : 'Importer depuis Bon d\'Achat Fournisseur'"></h3>
-                <button @click="closeImportModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Import Modal - Compact Popup -->
+    <div x-show="showImportModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4" @click.self="closeImportModal()">
+        <div class="bg-gray-800 dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="bg-gray-700 dark:bg-gray-700 px-4 py-2.5 flex items-center justify-between border-b border-gray-600">
+                <div class="flex items-center gap-4 text-white text-xs">
+                    <span>Réglement</span>
+                    <span class="border-l border-yellow-500 pl-4">Echéance</span>
+                    <span class="border-l border-yellow-500 pl-4">Chauffeur</span>
+                    <span class="border-l border-yellow-500 pl-4">Matricule</span>
+                </div>
+                <button @click="closeImportModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
             
-            <div class="max-h-96 overflow-y-auto">
-                <div x-show="importType === 'bon-commande'">
-                    <template x-for="bonCommande in availableBonCommandes" :key="bonCommande.id">
-                        <div @click="importBonCommande(bonCommande.id)" class="p-4 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="font-semibold text-gray-900 dark:text-white" x-text="bonCommande.numero_bon"></div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="bonCommande.client ? bonCommande.client.raison_sociale : ''"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-500" x-text="new Date(bonCommande.date).toLocaleDateString('fr-FR')"></div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold text-blue-600 dark:text-blue-400" x-text="parseFloat(bonCommande.total_general).toFixed(2) + ' DH'"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-500" x-text="bonCommande.statut"></div>
+            <!-- Content Area with Panel -->
+            <div class="flex-1 flex gap-3 p-3 overflow-hidden">
+                <!-- Panel: Bon De Commandes Validés or Bon Fournisseur -->
+                <div class="flex-1 bg-gray-700 dark:bg-gray-700 rounded border border-gray-600 flex flex-col overflow-hidden">
+                    <div class="bg-gray-800 dark:bg-gray-800 px-3 py-2 border-b border-gray-600">
+                        <h3 class="text-white text-center text-sm font-medium" x-text="importType === 'bon-commande' ? 'Bon De Commandes Validés' : 'Bon Fournisseur'"></h3>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3 space-y-2">
+                        <template x-for="bonCommande in availableBonCommandes" :key="bonCommande.id" x-show="importType === 'bon-commande'">
+                            <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonCommande(bonCommande.id)">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
+                                <div class="flex-1 text-white text-xs">
+                                    <div class="font-medium" x-text="bonCommande.numero_bon"></div>
+                                    <div class="text-gray-400 mt-0.5" x-text="bonCommande.client ? bonCommande.client.raison_sociale : ''"></div>
                                 </div>
                             </div>
+                        </template>
+                        <template x-for="bonAchat in availableBonAchatFournisseurs" :key="bonAchat.id" x-show="importType === 'bon-achat-fournisseur'">
+                            <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonAchatFournisseur(bonAchat.id)">
+                                <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
+                                <div class="flex-1 text-white text-xs">
+                                    <div class="font-medium" x-text="bonAchat.numero_bon"></div>
+                                    <div class="text-gray-400 mt-0.5" x-text="bonAchat.fournisseur ? bonAchat.fournisseur.nom_fournisseur : ''"></div>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="(importType === 'bon-commande' && availableBonCommandes.length === 0) || (importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length === 0)" class="text-center text-gray-400 py-8 text-xs">
+                            <span x-show="importType === 'bon-commande'">Aucun bon de commande disponible</span>
+                            <span x-show="importType === 'bon-achat-fournisseur'">Aucun bon d'achat fournisseur disponible</span>
                         </div>
-                    </template>
-                    <div x-show="availableBonCommandes.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
-                        Aucun bon de commande disponible
                     </div>
                 </div>
-                
-                <div x-show="importType === 'bon-achat-fournisseur'">
-                    <template x-for="bonAchat in availableBonAchatFournisseurs" :key="bonAchat.id">
-                        <div @click="importBonAchatFournisseur(bonAchat.id)" class="p-4 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="font-semibold text-gray-900 dark:text-white" x-text="bonAchat.numero_bon"></div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-400" x-text="bonAchat.fournisseur ? bonAchat.fournisseur.nom_fournisseur : ''"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-500" x-text="new Date(bonAchat.date).toLocaleDateString('fr-FR')"></div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold text-green-600 dark:text-green-400" x-text="parseFloat(bonAchat.total_ttc).toFixed(2) + ' DH'"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-500" x-text="bonAchat.statut"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                    <div x-show="availableBonAchatFournisseurs.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
-                        Aucun bon d'achat fournisseur disponible
-                    </div>
+
+                <!-- Central Column with Arrow Button -->
+                <div class="w-24 flex flex-col items-center justify-center gap-3">
+                    <button class="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors" @click="importType === 'bon-commande' ? (availableBonCommandes.length > 0 ? importBonCommande(availableBonCommandes[0].id) : null) : (availableBonAchatFournisseurs.length > 0 ? importBonAchatFournisseur(availableBonAchatFournisseurs[0].id) : null)">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
