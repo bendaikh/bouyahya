@@ -55,6 +55,28 @@ function bonLivraisonApp() {
         availableBonAchatFournisseurs: [],
         searchImport: '',
         commerciales: [],
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const d = new Date(dateStr);
+                if (Number.isNaN(d.getTime())) return dateStr;
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return dateStr;
+            }
+        },
+
+        statutBadgeClass(statut) {
+            const s = (statut || '').toLowerCase();
+            if (s === 'validé' || s === 'valide') return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            if (s === 'annulé' || s === 'annule') return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            if (s === 'converti') return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        },
         
         async init() {
             await this.fetchNextNumero();
@@ -122,7 +144,9 @@ function bonLivraisonApp() {
             const search = this.searchImport.toLowerCase();
             return this.availableBonCommandes.filter(bc => 
                 bc.numero_bon?.toLowerCase().includes(search) ||
-                bc.client?.raison_sociale?.toLowerCase().includes(search)
+                bc.client?.raison_sociale?.toLowerCase().includes(search) ||
+                bc.fournisseur?.nom_fournisseur?.toLowerCase().includes(search) ||
+                (bc.statut || '').toLowerCase().includes(search)
             );
         },
         
@@ -133,7 +157,9 @@ function bonLivraisonApp() {
             const search = this.searchImport.toLowerCase();
             return this.availableBonAchatFournisseurs.filter(ba => 
                 ba.numero_bon?.toLowerCase().includes(search) ||
-                ba.fournisseur?.nom_fournisseur?.toLowerCase().includes(search)
+                ba.fournisseur?.nom_fournisseur?.toLowerCase().includes(search) ||
+                (ba.client_livre || '').toLowerCase().includes(search) ||
+                (ba.statut || '').toLowerCase().includes(search)
             );
         },
         
@@ -836,11 +862,8 @@ function markAsDelivered(id, numero) {
         <div class="bg-gray-800 dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <!-- Header -->
             <div class="bg-gray-700 dark:bg-gray-700 px-4 py-2.5 flex items-center justify-between border-b border-gray-600">
-                <div class="flex items-center gap-4 text-white text-xs">
-                    <span>Réglement</span>
-                    <span class="border-l border-yellow-500 pl-4">Echéance</span>
-                    <span class="border-l border-yellow-500 pl-4">Chauffeur</span>
-                    <span class="border-l border-yellow-500 pl-4">Matricule</span>
+                <div class="text-white text-sm font-medium">
+                    <span x-text="importType === 'bon-commande' ? 'Importation - Bon de commande vente (Validés)' : 'Importation - Bon d\'achat fournisseur (Validés)'"></span>
                 </div>
                 <button @click="closeImportModal()" class="text-gray-400 hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -854,12 +877,11 @@ function markAsDelivered(id, numero) {
                 <!-- Panel: Bon De Commandes Validés or Bon Fournisseur -->
                 <div class="flex-1 bg-gray-700 dark:bg-gray-700 rounded border border-gray-600 flex flex-col overflow-hidden">
                     <div class="bg-gray-800 dark:bg-gray-800 px-3 py-2 border-b border-gray-600 space-y-2">
-                        <h3 class="text-white text-center text-sm font-medium" x-text="importType === 'bon-commande' ? 'Bon De Commandes Validés' : 'Bon Fournisseur'"></h3>
                         <div class="relative">
                             <input 
                                 type="text" 
                                 x-model="searchImport" 
-                                placeholder="Rechercher par numéro ou nom..." 
+                                placeholder="Rechercher (N°, fournisseur, client, statut)..." 
                                 class="w-full px-3 py-1.5 bg-gray-700 dark:bg-gray-700 border border-gray-600 rounded text-white text-xs placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                             >
                             <svg class="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -867,31 +889,60 @@ function markAsDelivered(id, numero) {
                             </svg>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-3 space-y-2">
-                        <template x-for="bonCommande in filteredBonCommandes" :key="bonCommande.id" x-show="importType === 'bon-commande'">
-                            <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonCommande(bonCommande.id)">
-                                <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
-                                <div class="flex-1 text-white text-xs">
-                                    <div class="font-medium" x-text="bonCommande.numero_bon"></div>
-                                    <div class="text-gray-400 mt-0.5" x-text="bonCommande.client ? bonCommande.client.raison_sociale : ''"></div>
-                                </div>
-                            </div>
-                        </template>
-                        <template x-for="bonAchat in filteredBonAchatFournisseurs" :key="bonAchat.id" x-show="importType === 'bon-achat-fournisseur'">
-                            <div class="flex items-center gap-2 p-2 hover:bg-gray-600 rounded cursor-pointer transition-colors" @click="importBonAchatFournisseur(bonAchat.id)">
-                                <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-500 rounded focus:ring-blue-500 cursor-pointer" />
-                                <div class="flex-1 text-white text-xs">
-                                    <div class="font-medium" x-text="bonAchat.numero_bon"></div>
-                                    <div class="text-gray-400 mt-0.5" x-text="bonAchat.fournisseur ? bonAchat.fournisseur.nom_fournisseur : ''"></div>
-                                </div>
-                            </div>
-                        </template>
-                        <div x-show="(importType === 'bon-commande' && filteredBonCommandes.length === 0) || (importType === 'bon-achat-fournisseur' && filteredBonAchatFournisseurs.length === 0)" class="text-center text-gray-400 py-8 text-xs">
-                            <span x-show="importType === 'bon-commande' && availableBonCommandes.length === 0">Aucun bon de commande disponible</span>
-                            <span x-show="importType === 'bon-commande' && availableBonCommandes.length > 0 && filteredBonCommandes.length === 0">Aucun résultat trouvé</span>
-                            <span x-show="importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length === 0">Aucun bon d'achat fournisseur disponible</span>
-                            <span x-show="importType === 'bon-achat-fournisseur' && availableBonAchatFournisseurs.length > 0 && filteredBonAchatFournisseurs.length === 0">Aucun résultat trouvé</span>
-                        </div>
+                    <div class="flex-1 overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-600">
+                            <thead class="bg-gray-800 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-200 uppercase tracking-wider">N° bon</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-200 uppercase tracking-wider">Date</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-200 uppercase tracking-wider">Fournisseur</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-200 uppercase tracking-wider">Client livré</th>
+                                    <th class="px-3 py-2 text-right text-[10px] font-semibold text-gray-200 uppercase tracking-wider">Quantité</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-200 uppercase tracking-wider">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                <!-- Bon de commande rows -->
+                                <template x-for="bonCommande in filteredBonCommandes" :key="'bc-'+bonCommande.id">
+                                    <tr x-show="importType === 'bon-commande'" class="hover:bg-gray-600 cursor-pointer transition-colors" @click="importBonCommande(bonCommande.id)">
+                                        <td class="px-3 py-2 text-xs text-white font-mono" x-text="bonCommande.numero_bon"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="formatDate(bonCommande.date)"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="bonCommande.fournisseur ? bonCommande.fournisseur.nom_fournisseur : '-'"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="bonCommande.client ? bonCommande.client.raison_sociale : '-'"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200 text-right" x-text="bonCommande.total_quantites ?? 0"></td>
+                                        <td class="px-3 py-2">
+                                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full" :class="statutBadgeClass(bonCommande.statut)" x-text="bonCommande.statut"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr x-show="importType === 'bon-commande' && filteredBonCommandes.length === 0">
+                                    <td colspan="6" class="px-3 py-8 text-center text-gray-400 text-xs">
+                                        <span x-show="availableBonCommandes.length === 0">Aucun bon de commande validé disponible</span>
+                                        <span x-show="availableBonCommandes.length > 0">Aucun résultat trouvé</span>
+                                    </td>
+                                </tr>
+
+                                <!-- Bon d'achat fournisseur rows -->
+                                <template x-for="bonAchat in filteredBonAchatFournisseurs" :key="'ba-'+bonAchat.id">
+                                    <tr x-show="importType === 'bon-achat-fournisseur'" class="hover:bg-gray-600 cursor-pointer transition-colors" @click="importBonAchatFournisseur(bonAchat.id)">
+                                        <td class="px-3 py-2 text-xs text-white font-mono" x-text="bonAchat.numero_bon"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="formatDate(bonAchat.date)"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="bonAchat.fournisseur ? bonAchat.fournisseur.nom_fournisseur : '-'"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200" x-text="bonAchat.client_livre || '-'"></td>
+                                        <td class="px-3 py-2 text-xs text-gray-200 text-right" x-text="bonAchat.total_qte ?? 0"></td>
+                                        <td class="px-3 py-2">
+                                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full" :class="statutBadgeClass(bonAchat.statut)" x-text="bonAchat.statut"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr x-show="importType === 'bon-achat-fournisseur' && filteredBonAchatFournisseurs.length === 0">
+                                    <td colspan="6" class="px-3 py-8 text-center text-gray-400 text-xs">
+                                        <span x-show="availableBonAchatFournisseurs.length === 0">Aucun bon d'achat fournisseur validé disponible</span>
+                                        <span x-show="availableBonAchatFournisseurs.length > 0">Aucun résultat trouvé</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -902,6 +953,7 @@ function markAsDelivered(id, numero) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
                         </svg>
                     </button>
+                    <div class="text-[10px] text-gray-300 text-center">Importer le 1er résultat</div>
                 </div>
             </div>
         </div>

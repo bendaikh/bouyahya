@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\BonCommandeClientController;
 use App\Http\Controllers\BonCommandeFournisseurController;
 use App\Http\Controllers\BonLivraisonClientController;
+use App\Http\Controllers\CompteTresorerieController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -98,9 +99,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/bon-livraison/{id}/mark-delivered', [BonLivraisonClientController::class, 'markDelivered'])->name('ventes.bon-livraison.mark-delivered');
         Route::post('/bon-livraison/{id}/cancel', [BonLivraisonClientController::class, 'cancel'])->name('ventes.bon-livraison.cancel');
         
-        Route::get('/reglements-clients', function () {
-            return view('ventes.reglements-clients', ['page_title' => 'Règlements clients']);
-        })->name('ventes.reglements-clients');
+        // Trésorerie (Ventes) - previously "Règlements clients"
+        Route::get('/reglements-clients', [CompteTresorerieController::class, 'indexVentes'])->name('ventes.reglements-clients');
+        Route::post('/reglements-clients', [CompteTresorerieController::class, 'store'])->name('ventes.reglements-clients.store');
+        Route::get('/reglements-clients/next-code', [CompteTresorerieController::class, 'nextCode'])->name('ventes.reglements-clients.next-code');
+        Route::delete('/reglements-clients/{id}', [CompteTresorerieController::class, 'destroy'])->name('ventes.reglements-clients.destroy');
         
         Route::get('/reglements-recouvrement', function () {
             return view('ventes.reglements-recouvrement', ['page_title' => 'Règlements recouvrement']);
@@ -148,9 +151,10 @@ Route::middleware('auth')->group(function () {
             return view('tresorerie.liste-impots', ['page_title' => 'Liste rég impôts']);
         })->name('tresorerie.liste-impots');
         
-        Route::get('/compte-bancaire', function () {
-            return view('tresorerie.compte-bancaire', ['page_title' => 'Compte bancaire']);
-        })->name('tresorerie.compte-bancaire');
+        Route::get('/compte-bancaire', [CompteTresorerieController::class, 'index'])->name('tresorerie.compte-bancaire');
+        Route::post('/compte-bancaire', [CompteTresorerieController::class, 'store'])->name('tresorerie.compte-bancaire.store');
+        Route::get('/compte-bancaire/next-code', [CompteTresorerieController::class, 'nextCode'])->name('tresorerie.compte-bancaire.next-code');
+        Route::delete('/compte-bancaire/{id}', [CompteTresorerieController::class, 'destroy'])->name('tresorerie.compte-bancaire.destroy');
         
         Route::get('/encaissement-decaissement', function () {
             return view('tresorerie.encaissement-decaissement', ['page_title' => 'Encaissement / Décaissement']);

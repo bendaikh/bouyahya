@@ -149,8 +149,9 @@ class BonLivraisonClientController extends Controller
      */
     public function getBonCommandes()
     {
-        $bonCommandes = BonCommandeClient::with(['client'])
-            ->where('statut', '!=', 'Annulé')
+        $bonCommandes = BonCommandeClient::with(['client', 'fournisseur'])
+            // Accept common variants: Validé / Valide / valide / validé ...
+            ->whereRaw("LOWER(statut) LIKE 'valid%'")
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -163,7 +164,8 @@ class BonLivraisonClientController extends Controller
     public function getBonAchatFournisseurs()
     {
         $bonAchats = BonAchatFournisseur::with(['fournisseur'])
-            ->where('statut', '!=', 'annule')
+            // Accept common variants: valide / validé / Validé / Valide ...
+            ->whereRaw("LOWER(statut) LIKE 'valid%'")
             ->orderBy('created_at', 'desc')
             ->get();
         
