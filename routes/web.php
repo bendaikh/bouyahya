@@ -105,9 +105,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/reglements-clients/next-code', [CompteTresorerieController::class, 'nextCode'])->name('ventes.reglements-clients.next-code');
         Route::delete('/reglements-clients/{id}', [CompteTresorerieController::class, 'destroy'])->name('ventes.reglements-clients.destroy');
         
-        Route::get('/reglements-recouvrement', function () {
-            return view('ventes.reglements-recouvrement', ['page_title' => 'Règlements recouvrement']);
-        })->name('ventes.reglements-recouvrement');
+        Route::get('/reglements-clients-gestion', function () {
+            return view('ventes.reglements-clients-gestion', ['page_title' => 'Règlements clients']);
+        })->name('ventes.reglements-clients-gestion');
         
         Route::get('/historique', function () {
             return view('ventes.historique', ['page_title' => 'Historique ventes']);
@@ -231,6 +231,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/mark-paid', [ReglementFournisseurController::class, 'markAsPaid']);
         Route::post('/{id}/mark-postponed', [ReglementFournisseurController::class, 'markAsPostponed']);
         Route::delete('/{id}', [ReglementFournisseurController::class, 'destroy']);
+    });
+
+    // API Routes for Règlements Clients
+    Route::prefix('api/reglements-clients')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\ReglementClientController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\ReglementClientController::class, 'store']);
+        Route::get('/next-code', [\App\Http\Controllers\Api\ReglementClientController::class, 'nextCode']);
+        Route::get('/tresoreries', [\App\Http\Controllers\Api\ReglementClientController::class, 'getTresoreries']);
+        Route::get('/bons-livraison/{clientId}', [\App\Http\Controllers\Api\ReglementClientController::class, 'getBonsLivraisonClient']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\ReglementClientController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\ReglementClientController::class, 'update']);
+        Route::post('/{id}/mark-paid', [\App\Http\Controllers\Api\ReglementClientController::class, 'markAsPaid']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\ReglementClientController::class, 'destroy']);
     });
 
     // Paramètres (Settings)

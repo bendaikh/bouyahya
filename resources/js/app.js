@@ -24,6 +24,7 @@ import ReglementsFournisseurs from './components/achats/ReglementsFournisseurs.v
 import HistoriqueAchats from './components/achats/HistoriqueAchats.vue';
 import ReleveCompteFournisseurs from './components/achats/ReleveCompteFournisseurs.vue';
 import ArticlesList from './components/stock/ArticlesList.vue';
+import ReglementsClients from './components/ventes/ReglementsClients.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -50,6 +51,7 @@ app.component('ReglementsFournisseurs', ReglementsFournisseurs);
 app.component('HistoriqueAchats', HistoriqueAchats);
 app.component('ReleveCompteFournisseurs', ReleveCompteFournisseurs);
 app.component('ArticlesList', ArticlesList);
+app.component('ReglementsClients', ReglementsClients);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {
