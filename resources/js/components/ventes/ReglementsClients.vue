@@ -195,7 +195,7 @@
                         <tr v-else v-for="reglement in filteredReglements" :key="reglement.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">{{ reglement.code_reglement }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_reglement) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.client?.nom_client || 'N/A' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.client?.raison_sociale || 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.type_reglement }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.numero_piece || '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
@@ -369,27 +369,42 @@
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                         />
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
-                        <select 
-                            v-model="form.client_id" 
-                            @change="onClientChange"
-                            :disabled="formMode === 'view'"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                        >
-                            <option value="">Sélectionner...</option>
-                            <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.code_client }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
-                        <input 
-                            type="text" 
-                            :value="selectedClientName" 
-                            readonly
-                            placeholder="Nom s'affichera ici"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                        />
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code / Nom Client</label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                v-model="clientSearch"
+                                @focus="showClientDropdown = true"
+                                @input="showClientDropdown = true"
+                                @blur="closeClientDropdown"
+                                :disabled="formMode === 'view'"
+                                placeholder="Rechercher par code ou nom..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                            />
+                            <!-- Dropdown -->
+                            <div 
+                                v-if="showClientDropdown && filteredClients.length > 0"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                            >
+                                <div 
+                                    v-for="c in filteredClients" 
+                                    :key="c.id"
+                                    @click="selectClient(c)"
+                                    class="px-3 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer text-sm"
+                                >
+                                    <span class="font-medium text-blue-600 dark:text-blue-400">{{ c.code_client }}</span>
+                                    <span class="text-gray-600 dark:text-gray-300"> - {{ c.raison_sociale }}</span>
+                                </div>
+                            </div>
+                            <!-- No results -->
+                            <div 
+                                v-if="showClientDropdown && clientSearch && filteredClients.length === 0"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg p-3 text-sm text-gray-500 dark:text-gray-400"
+                            >
+                                Aucun client trouvé
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Row 2 -->
@@ -547,11 +562,11 @@
                 </div>
 
                 <!-- Right: Fiche Règlements -->
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden flex flex-col">
                     <div class="bg-green-600 text-white px-4 py-2 font-semibold text-sm">
                         Fiche Règlements
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto flex-1">
                         <table class="min-w-full">
                             <thead class="bg-green-600 text-white text-xs">
                                 <tr>
@@ -562,16 +577,22 @@
                                     <th class="px-2 py-2 text-left">Nom de Tiré</th>
                                     <th class="px-2 py-2 text-right">Montant</th>
                                     <th class="px-2 py-2 text-left">Échéance</th>
-                                    <th class="px-2 py-2 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-xs">
                                 <tr v-if="ficheReglements.length === 0">
-                                    <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                         Aucun règlement
                                     </td>
                                 </tr>
-                                <tr v-else v-for="fiche in ficheReglements" :key="fiche.id">
+                                <tr 
+                                    v-else 
+                                    v-for="fiche in ficheReglements" 
+                                    :key="fiche.id"
+                                    @click="selectFicheReglement(fiche)"
+                                    class="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                    :class="{'bg-blue-100 dark:bg-blue-900/40': selectedFicheReglement && selectedFicheReglement.id === fiche.id}"
+                                >
                                     <td class="px-2 py-2 text-blue-600 dark:text-blue-400">{{ fiche.code_reglement }}</td>
                                     <td class="px-2 py-2 text-gray-900 dark:text-white">{{ fiche.type_reglement }}</td>
                                     <td class="px-2 py-2 text-gray-900 dark:text-white">{{ fiche.numero_piece || '-' }}</td>
@@ -579,16 +600,33 @@
                                     <td class="px-2 py-2 text-gray-900 dark:text-white">{{ fiche.nom_tire || '-' }}</td>
                                     <td class="px-2 py-2 text-right font-semibold text-gray-900 dark:text-white">{{ formatCurrencySimple(fiche.montant) }}</td>
                                     <td class="px-2 py-2 text-gray-900 dark:text-white">{{ formatDate(fiche.date_encaissement) }}</td>
-                                    <td class="px-2 py-2">
-                                        <div class="flex flex-col gap-1">
-                                            <button @click="viewReglement(fiche)" class="px-2 py-0.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700">Afficher</button>
-                                            <button @click="printReglementPDF(fiche)" class="px-2 py-0.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700">Imprimer</button>
-                                            <button @click="printReglementPDF(fiche)" class="px-2 py-0.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700">PDF</button>
-                                        </div>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <!-- Action buttons - outside table -->
+                    <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+                        <button 
+                            @click="viewSelectedFiche" 
+                            :disabled="!selectedFicheReglement"
+                            class="px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Afficher
+                        </button>
+                        <button 
+                            @click="printSelectedFiche" 
+                            :disabled="!selectedFicheReglement"
+                            class="px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Imprimer
+                        </button>
+                        <button 
+                            @click="printSelectedFichePDF" 
+                            :disabled="!selectedFicheReglement"
+                            class="px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            PDF
+                        </button>
                     </div>
                 </div>
             </div>
@@ -608,6 +646,11 @@ const loadingBonsLivraison = ref(false)
 const showForm = ref(false)
 const formMode = ref('create')
 const editingReglementId = ref(null)
+
+// Client search
+const clientSearch = ref('')
+const showClientDropdown = ref(false)
+const selectedFicheReglement = ref(null)
 
 // List filters
 const filterEtat = ref('')
@@ -636,8 +679,19 @@ const form = ref({
 // Computed properties
 const selectedClientName = computed(() => {
     if (!form.value.client_id) return ''
-    const client = clients.value.find(c => c.id === form.value.client_id)
-    return client ? client.nom_client : ''
+    const clientId = parseInt(form.value.client_id)
+    const client = clients.value.find(c => c.id === clientId)
+    return client ? (client.raison_sociale || '') : ''
+})
+
+// Filtered clients for searchable dropdown
+const filteredClients = computed(() => {
+    if (!clientSearch.value) return clients.value
+    const search = clientSearch.value.toLowerCase()
+    return clients.value.filter(c => 
+        c.code_client.toLowerCase().includes(search) || 
+        (c.raison_sociale || '').toLowerCase().includes(search)
+    )
 })
 
 // Fiche Règlements for the selected client
@@ -822,6 +876,9 @@ const resetForm = () => {
     }
     bonsLivraisonClient.value = []
     editingReglementId.value = null
+    clientSearch.value = ''
+    showClientDropdown.value = false
+    selectedFicheReglement.value = null
 }
 
 const setStatut = (statut) => {
@@ -844,15 +901,59 @@ const cancelForm = () => {
     resetForm()
 }
 
+// Select a client from the searchable dropdown
+const selectClient = (client) => {
+    form.value.client_id = client.id
+    clientSearch.value = `${client.code_client} - ${client.raison_sociale || ''}`
+    showClientDropdown.value = false
+    form.value.nom_tire = client.raison_sociale || ''
+    selectedFicheReglement.value = null
+    loadBonsLivraisonClient(client.id)
+}
+
+// Close dropdown when clicking outside
+const closeClientDropdown = () => {
+    setTimeout(() => {
+        showClientDropdown.value = false
+    }, 200)
+}
+
+// Select a fiche règlement
+const selectFicheReglement = (fiche) => {
+    selectedFicheReglement.value = fiche
+}
+
+// Action buttons for selected fiche règlement
+const viewSelectedFiche = () => {
+    if (selectedFicheReglement.value) {
+        viewReglement(selectedFicheReglement.value)
+    }
+}
+
+const printSelectedFiche = () => {
+    if (selectedFicheReglement.value) {
+        printReglementPDF(selectedFicheReglement.value)
+    }
+}
+
+const printSelectedFichePDF = () => {
+    if (selectedFicheReglement.value) {
+        printReglementPDF(selectedFicheReglement.value)
+    }
+}
+
 const onClientChange = () => {
     if (form.value.client_id) {
-        const client = clients.value.find(c => c.id === form.value.client_id)
+        const clientId = parseInt(form.value.client_id)
+        const client = clients.value.find(c => c.id === clientId)
         if (client) {
-            form.value.nom_tire = client.nom_client
+            form.value.nom_tire = client.raison_sociale || ''
+            clientSearch.value = `${client.code_client} - ${client.raison_sociale || ''}`
         }
         loadBonsLivraisonClient(form.value.client_id)
     } else {
         bonsLivraisonClient.value = []
+        clientSearch.value = ''
     }
 }
 
@@ -994,6 +1095,12 @@ const viewReglement = async (reglement) => {
                 })) || []
             }
             editingReglementId.value = data.id
+            
+            // Set the clientSearch with the client info
+            if (data.client) {
+                clientSearch.value = `${data.client.code_client} - ${data.client.raison_sociale || ''}`
+            }
+            selectedFicheReglement.value = null
             
             await loadBonsLivraisonClient(data.client_id, data.id)
             
@@ -1152,7 +1259,7 @@ const exportToExcel = () => {
     const data = filteredReglements.value.map(reg => ({
         'Code': reg.code_reglement,
         'Date': formatDate(reg.date_reglement),
-        'Client': reg.client?.nom_client || 'N/A',
+        'Client': reg.client?.raison_sociale || 'N/A',
         'Type': reg.type_reglement,
         'N° Pièce': reg.numero_piece || '-',
         'Banque': reg.banque || '-',
@@ -1224,7 +1331,7 @@ const exportToPDF = () => {
                         <tr>
                             <td>${reg.code_reglement}</td>
                             <td>${formatDate(reg.date_reglement)}</td>
-                            <td>${reg.client?.nom_client || 'N/A'}</td>
+                            <td>${reg.client?.raison_sociale || 'N/A'}</td>
                             <td>${reg.type_reglement}</td>
                             <td>${reg.numero_piece || '-'}</td>
                             <td>${formatCurrency(reg.montant)}</td>
@@ -1310,7 +1417,7 @@ const printReglementPDF = (reglement) => {
                 <div class="info-grid">
                     <div class="info-item">
                         <span class="label">Client</span>
-                        <span class="value">${reglement.client?.nom_client || 'N/A'}</span>
+                        <span class="value">${reglement.client?.raison_sociale || 'N/A'}</span>
                     </div>
                     <div class="info-item">
                         <span class="label">Code client</span>
