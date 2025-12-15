@@ -163,65 +163,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Footer with totals and pagination -->
-            <div class="bg-gray-900 px-4 py-3 border-t border-gray-700">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                    <!-- Totals -->
-                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm w-full lg:w-auto">
-                        <div class="flex justify-between sm:block">
-                            <span class="text-gray-400">Montant Total TTC : </span>
-                            <span class="text-white font-bold">{{ formatMontant(totals.totalTTC) }}</span>
-                        </div>
-                        <div class="flex justify-between sm:block">
-                            <span class="text-gray-400">Solde TTC : </span>
-                            <span class="text-green-400 font-bold">{{ formatMontant(totals.soldeTTC) }}</span>
-                        </div>
-                        <div class="flex justify-between sm:block">
-                            <span class="text-gray-400">Reliquat TTC : </span>
-                            <span class="text-blue-400 font-bold">{{ formatMontant(totals.reliquatTTC) }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full lg:w-auto">
-                        <span class="text-sm text-gray-400 whitespace-nowrap">
-                            Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ ventesFiltered.length }}
-                        </span>
-                        <div class="flex gap-1 flex-wrap">
-                            <button 
-                                @click="previousPage"
-                                :disabled="currentPage === 1"
-                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                            >
-                                <span class="hidden sm:inline">Précédent</span>
-                                <span class="sm:hidden">Préc.</span>
-                            </button>
-                            <button 
-                                v-for="page in visiblePages" 
-                                :key="page"
-                                @click="goToPage(page)"
-                                :class="[
-                                    'px-3 py-1 rounded transition-colors text-sm',
-                                    page === currentPage 
-                                        ? 'bg-blue-600 text-white font-medium' 
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                ]"
-                            >
-                                {{ page }}
-                            </button>
-                            <button 
-                                @click="nextPage"
-                                :disabled="currentPage === totalPages"
-                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                            >
-                                <span class="hidden sm:inline">Suivant</span>
-                                <span class="sm:hidden">Suiv.</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </template>
