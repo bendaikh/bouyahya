@@ -346,8 +346,34 @@
             </div>
 
             <!-- Détails du règlement -->
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
-                <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-4">Détails du règlement</h4>
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-md font-semibold text-gray-700 dark:text-gray-300">Détails du règlement</h4>
+                    <div class="flex items-center gap-2">
+                        <button 
+                            v-if="formMode !== 'view'"
+                            @click="addDetailsToFiche" 
+                            type="button"
+                            class="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+                            title="Valider et ajouter à la fiche"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                        <button 
+                            v-if="formMode !== 'view'"
+                            @click="resetDetailsForm" 
+                            type="button"
+                            class="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+                            title="Créer un nouveau détail"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <!-- Row 1 -->
@@ -652,6 +678,9 @@ const clientSearch = ref('')
 const showClientDropdown = ref(false)
 const selectedFicheReglement = ref(null)
 
+// Temporary array for new règlements being created (before saving to DB)
+const tempFicheReglements = ref([])
+
 // List filters
 const filterEtat = ref('')
 const filterNumeroPiece = ref('')
@@ -671,7 +700,7 @@ const form = ref({
     montant: 0,
     date_encaissement: '',
     observation: '',
-    statut: 'impaye',
+    statut: 'instance',
     etat_remboursement: null,
     lignes: []
 })
@@ -694,10 +723,15 @@ const filteredClients = computed(() => {
     )
 })
 
-// Fiche Règlements for the selected client
+// Fiche Règlements for the selected client (includes saved + temporary new ones)
 const ficheReglements = computed(() => {
     if (!form.value.client_id) return []
-    return reglements.value.filter(r => r.client_id === form.value.client_id)
+    const savedReglements = reglements.value.filter(r => r.client_id === form.value.client_id)
+    // For create mode, show temporary règlements, for view/edit show saved ones
+    if (formMode.value === 'create') {
+        return [...tempFicheReglements.value]
+    }
+    return savedReglements
 })
 
 const filteredReglements = computed(() => {
@@ -870,7 +904,7 @@ const resetForm = () => {
         montant: 0,
         date_encaissement: '',
         observation: '',
-        statut: 'impaye',
+        statut: 'instance',
         etat_remboursement: null,
         lignes: []
     }
@@ -879,6 +913,7 @@ const resetForm = () => {
     clientSearch.value = ''
     showClientDropdown.value = false
     selectedFicheReglement.value = null
+    tempFicheReglements.value = []
 }
 
 const setStatut = (statut) => {
@@ -908,6 +943,7 @@ const selectClient = (client) => {
     showClientDropdown.value = false
     form.value.nom_tire = client.raison_sociale || ''
     selectedFicheReglement.value = null
+    tempFicheReglements.value = [] // Clear temporary règlements when changing client
     loadBonsLivraisonClient(client.id)
 }
 
@@ -916,6 +952,89 @@ const closeClientDropdown = () => {
     setTimeout(() => {
         showClientDropdown.value = false
     }, 200)
+}
+
+// Add details to fiche - validates and adds current form data to Fiche Règlements table (locally)
+const addDetailsToFiche = () => {
+    if (!form.value.client_id) {
+        alert('Veuillez sélectionner un client')
+        return
+    }
+    
+    if (!form.value.montant || form.value.montant <= 0) {
+        alert('Veuillez saisir un montant valide')
+        return
+    }
+    
+    // Create a temporary reglement entry for display in Fiche Règlements table
+    const tempReglement = {
+        id: Date.now(), // Temporary ID
+        code_reglement: form.value.code_reglement || `RC-TEMP-${tempFicheReglements.value.length + 1}`,
+        date_reglement: form.value.date_reglement,
+        client_id: form.value.client_id,
+        type_reglement: form.value.type_reglement,
+        numero_piece: form.value.numero_piece,
+        banque: form.value.banque,
+        nom_tire: form.value.nom_tire,
+        tresorerie_id: form.value.tresorerie_id,
+        montant: form.value.montant,
+        date_encaissement: form.value.date_encaissement,
+        observation: form.value.observation,
+        statut: form.value.statut,
+        etat_remboursement: form.value.etat_remboursement,
+        lignes: bonsLivraisonClient.value
+            .filter(bon => bon.selected && bon.montant_a_imputer > 0)
+            .map(bon => ({
+                bon_livraison_id: bon.id,
+                montant_regle: bon.montant_a_imputer
+            })),
+        isTemp: true // Flag to indicate this is not saved yet
+    }
+    
+    // Add to temporary fiche règlements
+    tempFicheReglements.value.push(tempReglement)
+    
+    alert('Détail ajouté à la fiche règlements. Cliquez sur + pour ajouter un autre ou sur Valider en haut pour enregistrer.')
+}
+
+// Reset details form to create another payment entry
+const resetDetailsForm = () => {
+    // Keep client selection but reset other fields
+    const savedClientId = form.value.client_id
+    const savedClient = clientSearch.value
+    
+    form.value = {
+        code_reglement: '',
+        date_reglement: new Date().toISOString().split('T')[0],
+        client_id: savedClientId,
+        type_reglement: 'Virement',
+        numero_piece: '',
+        banque: '',
+        nom_tire: form.value.nom_tire, // Keep the client name
+        tresorerie_id: '',
+        montant: 0,
+        date_encaissement: '',
+        observation: '',
+        statut: 'instance',
+        etat_remboursement: null,
+        lignes: []
+    }
+    
+    clientSearch.value = savedClient
+    
+    // Reset bon livraison selections
+    bonsLivraisonClient.value.forEach(bon => {
+        bon.selected = false
+        bon.montant_a_imputer = 0
+    })
+    
+    // Reload bons de livraison to refresh the list
+    if (savedClientId) {
+        loadBonsLivraisonClient(savedClientId)
+    }
+    
+    // Generate new code
+    getNextCode()
 }
 
 // Select a fiche règlement
@@ -1014,6 +1133,43 @@ const distributePayment = () => {
 
 // CRUD operations
 const saveReglement = async () => {
+    // For create mode with temporary règlements, save all of them
+    if (formMode.value === 'create' && tempFicheReglements.value.length > 0) {
+        if (!confirm(`Voulez-vous enregistrer ${tempFicheReglements.value.length} règlement(s) ?`)) {
+            return
+        }
+        
+        try {
+            // Save each temporary règlement
+            for (const tempReg of tempFicheReglements.value) {
+                const response = await fetch('/api/reglements-clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(tempReg)
+                })
+                
+                if (!response.ok) {
+                    const error = await response.json()
+                    alert('Erreur lors de l\'enregistrement: ' + (error.message || 'Une erreur est survenue'))
+                    return
+                }
+            }
+            
+            alert(`${tempFicheReglements.value.length} règlement(s) créé(s) avec succès`)
+            showForm.value = false
+            loadReglements()
+            resetForm()
+        } catch (error) {
+            console.error('Erreur:', error)
+            alert('Erreur lors de l\'enregistrement')
+        }
+        return
+    }
+    
+    // Original logic for edit mode or single create
     if (!form.value.client_id) {
         alert('Veuillez sélectionner un client')
         return
