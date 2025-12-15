@@ -1,10 +1,11 @@
 <template>
     <div class="space-y-4">
         <!-- Filters Section -->
-        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-            <div class="flex items-end gap-4">
+        <div class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
+            <!-- Filter Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
                 <!-- Date du -->
-                <div class="flex-shrink-0" style="width: 200px;">
+                <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300 mb-2">date du</label>
                     <input 
                         type="date" 
@@ -14,7 +15,7 @@
                 </div>
                 
                 <!-- Date au -->
-                <div class="flex-shrink-0" style="width: 200px;">
+                <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300 mb-2">Date au</label>
                     <input 
                         type="date" 
@@ -24,7 +25,7 @@
                 </div>
                 
                 <!-- Nom -->
-                <div class="flex-shrink-0" style="width: 200px;">
+                <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300 mb-2">Nom</label>
                     <input 
                         type="text" 
@@ -35,7 +36,7 @@
                 </div>
                 
                 <!-- N° de Bon -->
-                <div class="flex-shrink-0" style="width: 200px;">
+                <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300 mb-2">N° de Bon</label>
                     <input 
                         type="text" 
@@ -46,27 +47,27 @@
                 </div>
                 
                 <!-- Search Button -->
-                <div class="flex-shrink-0">
+                <div class="w-full flex items-end">
                     <button 
                         @click="rechercher"
-                        class="px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+                        class="w-full px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
                     >
                         Rechercher
                     </button>
                 </div>
-                
-                <!-- Spacer to push totals to the right -->
-                <div class="flex-grow"></div>
-                
+            </div>
+            
+            <!-- Totals Section -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-gray-700">
                 <!-- Total TTC -->
-                <div class="flex-shrink-0 bg-green-600 rounded-lg px-6 py-2.5 text-center min-w-[140px]">
+                <div class="flex-1 bg-green-600 rounded-lg px-6 py-2.5 text-center">
                     <div class="text-xs font-semibold text-white">Total TTC</div>
                     <div class="text-xl font-bold text-white leading-tight">{{ formatMontantSimple(totals.totalTTC) }}</div>
                     <div class="text-xs font-semibold text-white">MAD</div>
                 </div>
                 
                 <!-- Solde TTC -->
-                <div class="flex-shrink-0 bg-red-600 rounded-lg px-6 py-2.5 text-center min-w-[140px]">
+                <div class="flex-1 bg-red-600 rounded-lg px-6 py-2.5 text-center">
                     <div class="text-xs font-semibold text-white">Solde TTC</div>
                     <div class="text-xl font-bold text-white leading-tight">{{ formatMontantSimple(totals.soldeTTC) }}</div>
                     <div class="text-xs font-semibold text-white">MAD</div>
@@ -77,30 +78,32 @@
         <!-- Results Section -->
         <div class="bg-gray-800 rounded-lg shadow-lg">
             <!-- Header with title and actions -->
-            <div class="flex justify-between items-center p-4 border-b border-gray-700">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-700 gap-3">
                 <h3 class="text-lg font-semibold text-gray-200">Résultats</h3>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                     <button 
                         @click="imprimer"
-                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        class="flex-1 sm:flex-none px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                         </svg>
-                        Imprimer
+                        <span class="hidden sm:inline">Imprimer</span>
+                        <span class="sm:hidden">Impr.</span>
                     </button>
                     <button 
                         @click="exporterPDF"
-                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        class="flex-1 sm:flex-none px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                         </svg>
-                        Exporter PDF
+                        <span class="hidden sm:inline">Exporter PDF</span>
+                        <span class="sm:hidden">PDF</span>
                     </button>
                     <button 
                         @click="afficherReliquat"
-                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200"
+                        class="flex-1 sm:flex-none px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors duration-200"
                     >
                         Reliquat
                     </button>
@@ -163,42 +166,43 @@
 
             <!-- Footer with totals and pagination -->
             <div class="bg-gray-900 px-4 py-3 border-t border-gray-700">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <!-- Totals -->
-                    <div class="flex gap-6 text-sm">
-                        <div>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm w-full lg:w-auto">
+                        <div class="flex justify-between sm:block">
                             <span class="text-gray-400">Montant Total TTC : </span>
                             <span class="text-white font-bold">{{ formatMontant(totals.totalTTC) }}</span>
                         </div>
-                        <div>
+                        <div class="flex justify-between sm:block">
                             <span class="text-gray-400">Solde TTC : </span>
                             <span class="text-green-400 font-bold">{{ formatMontant(totals.soldeTTC) }}</span>
                         </div>
-                        <div>
+                        <div class="flex justify-between sm:block">
                             <span class="text-gray-400">Reliquat TTC : </span>
                             <span class="text-blue-400 font-bold">{{ formatMontant(totals.reliquatTTC) }}</span>
                         </div>
                     </div>
 
                     <!-- Pagination -->
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-400">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full lg:w-auto">
+                        <span class="text-sm text-gray-400 whitespace-nowrap">
                             Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ ventesFiltered.length }}
                         </span>
-                        <div class="flex gap-1 ml-4">
+                        <div class="flex gap-1 flex-wrap">
                             <button 
                                 @click="previousPage"
                                 :disabled="currentPage === 1"
-                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                             >
-                                Précédent
+                                <span class="hidden sm:inline">Précédent</span>
+                                <span class="sm:hidden">Préc.</span>
                             </button>
                             <button 
                                 v-for="page in visiblePages" 
                                 :key="page"
                                 @click="goToPage(page)"
                                 :class="[
-                                    'px-3 py-1 rounded transition-colors',
+                                    'px-3 py-1 rounded transition-colors text-sm',
                                     page === currentPage 
                                         ? 'bg-blue-600 text-white font-medium' 
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -209,9 +213,10 @@
                             <button 
                                 @click="nextPage"
                                 :disabled="currentPage === totalPages"
-                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                             >
-                                Suivant
+                                <span class="hidden sm:inline">Suivant</span>
+                                <span class="sm:hidden">Suiv.</span>
                             </button>
                         </div>
                     </div>
