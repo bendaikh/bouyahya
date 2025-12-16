@@ -455,6 +455,8 @@
                             <option value="Chèque">Chèque</option>
                             <option value="Espèces">Espèces</option>
                             <option value="Traite">Traite</option>
+                            <option value="A VUE">A VUE</option>
+                            <option value="VERSEMENT">VERSEMENT</option>
                         </select>
                     </div>
                     <div>

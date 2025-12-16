@@ -149,9 +149,16 @@ class BonLivraisonClientController extends Controller
      */
     public function getBonCommandes()
     {
+        // Get IDs of bon_commande_clients that are already imported
+        $importedIds = BonLivraisonClient::whereNotNull('bon_commande_id')
+            ->pluck('bon_commande_id')
+            ->toArray();
+        
         $bonCommandes = BonCommandeClient::with(['client', 'fournisseur'])
             // Accept common variants: Validé / Valide / valide / validé ...
             ->whereRaw("LOWER(statut) LIKE 'valid%'")
+            // Exclude already imported bons
+            ->whereNotIn('id', $importedIds)
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -163,9 +170,16 @@ class BonLivraisonClientController extends Controller
      */
     public function getBonAchatFournisseurs()
     {
+        // Get IDs of bon_achat_fournisseur that are already imported
+        $importedIds = BonLivraisonClient::whereNotNull('bon_achat_fournisseur_id')
+            ->pluck('bon_achat_fournisseur_id')
+            ->toArray();
+        
         $bonAchats = BonAchatFournisseur::with(['fournisseur'])
             // Accept common variants: valide / validé / Validé / Valide ...
             ->whereRaw("LOWER(statut) LIKE 'valid%'")
+            // Exclude already imported bons
+            ->whereNotIn('id', $importedIds)
             ->orderBy('created_at', 'desc')
             ->get();
         
