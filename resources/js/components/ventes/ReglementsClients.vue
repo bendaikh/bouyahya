@@ -107,7 +107,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
                     <select 
@@ -151,6 +151,14 @@
                     />
                 </div>
                 <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date règlement</label>
+                    <input 
+                        type="date"
+                        v-model="filterDateReglement"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+                <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date encaissement</label>
                     <input 
                         type="date"
@@ -172,23 +180,24 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date encaissement</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trésorerie</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 Chargement...
                             </td>
                         </tr>
                         <tr v-else-if="reglements.length === 0">
-                            <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 Aucun règlement trouvé
                             </td>
                         </tr>
                         <tr v-else-if="filteredReglements.length === 0">
-                            <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 Aucun règlement ne correspond aux filtres
                             </td>
                         </tr>
@@ -201,6 +210,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_encaissement) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">{{ formatCurrency(reglement.montant) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.tresorerie?.libelle || reglement.tresorerie?.code || '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="getStatusClass(reglement.statut)" class="px-2 py-1 text-xs font-semibold rounded-full">
                                     {{ getStatusText(reglement.statut) }}
@@ -686,6 +696,7 @@ const filterEtat = ref('')
 const filterNumeroPiece = ref('')
 const filterBanque = ref('')
 const filterMontant = ref(null)
+const filterDateReglement = ref('')
 const filterDateEncaissement = ref('')
 
 const form = ref({
@@ -754,8 +765,15 @@ const filteredReglements = computed(() => {
     if (filterMontant.value != null && filterMontant.value !== '') {
         const montant = parseFloat(filterMontant.value)
         if (!isNaN(montant)) {
-            list = list.filter(r => parseFloat(r.montant) >= montant)
+            list = list.filter(r => {
+                const reglementMontant = parseFloat(r.montant) || 0
+                return Math.abs(reglementMontant - montant) < 0.01 // Allow for floating point precision
+            })
         }
+    }
+
+    if (filterDateReglement.value) {
+        list = list.filter(r => (r.date_reglement || '').startsWith(filterDateReglement.value))
     }
 
     if (filterDateEncaissement.value) {

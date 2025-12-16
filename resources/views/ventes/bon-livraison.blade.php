@@ -55,6 +55,15 @@ function bonLivraisonApp() {
         availableBonAchatFournisseurs: [],
         searchImport: '',
         commerciales: [],
+        bonLivraisonsList: [],
+        filteredBonLivraisonsList: [],
+        searchFilters: {
+            mois: '',
+            code: '',
+            nomClient: '',
+            commercial: '',
+            ville: ''
+        },
 
         formatDate(dateStr) {
             if (!dateStr) return '';
@@ -79,6 +88,11 @@ function bonLivraisonApp() {
         },
         
         async init() {
+            // Initialize bon livraisons list, filtering out invalid entries
+            const rawData = @json($bonLivraisons);
+            this.bonLivraisonsList = rawData.filter(bl => bl && bl.numero_bon);
+            this.filteredBonLivraisonsList = [...this.bonLivraisonsList];
+            
             await this.fetchNextNumero();
             await this.fetchCommerciales();
         },
@@ -513,6 +527,82 @@ function bonLivraisonApp() {
         openNewForm() {
             this.cancelEdit();
             this.showForm = true;
+        },
+        
+        filterBonLivraisons() {
+            this.filteredBonLivraisonsList = this.bonLivraisonsList.filter(bl => {
+                const mois = this.searchFilters.mois.toLowerCase();
+                const code = this.searchFilters.code.toLowerCase();
+                const nomClient = this.searchFilters.nomClient.toLowerCase();
+                const commercial = this.searchFilters.commercial.toLowerCase();
+                const ville = this.searchFilters.ville.toLowerCase();
+                
+                // Check month filter
+                if (mois && !this.formatDate(bl.date).toLowerCase().includes(mois)) {
+                    return false;
+                }
+                
+                // Check code filter (client code or bon number)
+                if (code && 
+                    !(bl.client?.code_client || '').toLowerCase().includes(code) &&
+                    !(bl.numero_bon || '').toLowerCase().includes(code)) {
+                    return false;
+                }
+                
+                // Check client name filter
+                if (nomClient && !(bl.client?.raison_sociale || '').toLowerCase().includes(nomClient)) {
+                    return false;
+                }
+                
+                // Check commercial filter
+                if (commercial && !(bl.commercial || '').toLowerCase().includes(commercial)) {
+                    return false;
+                }
+                
+                // Check ville filter
+                if (ville && !(bl.ville_livraison || '').toLowerCase().includes(ville)) {
+                    return false;
+                }
+                
+                return true;
+            });
+        },
+        
+        printBonLivraisonFunc(id) {
+            window.open(`/ventes/bon-livraison/${id}/print`, '_blank');
+        },
+        
+        deleteBonLivraisonFunc(id, numero) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer le bon de livraison ${numero} ?`)) {
+                return;
+            }
+
+            fetch(`/ventes/bon-livraison/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error.message);
+            });
+        },
+        
+        copyBonLivraison(id) {
+            this.loadBonLivraisonForEdit(id);
+            this.editMode = false;
+            this.editingId = null;
+            this.formData.numero = '';
+            this.fetchNextNumero();
         }
     };
 }
@@ -576,6 +666,42 @@ function markAsDelivered(id, numero) {
     .catch(error => {
         alert('Erreur: ' + error.message);
     });
+}
+
+function exportToExcel() {
+    const component = Alpine.$data(document.querySelector('[x-data]'));
+    const data = component.filteredBonLivraisonsList;
+    
+    // Create CSV content
+    let csv = 'N° de Bon,Date,Code Client,Nom Client,Ville,Commercial,Quantité,Montant TTC,Statut\n';
+    
+    data.forEach(bl => {
+        csv += `${bl.numero_bon || ''},`;
+        csv += `${component.formatDate(bl.date) || ''},`;
+        csv += `${bl.client?.code_client || ''},`;
+        csv += `${bl.client?.raison_sociale || ''},`;
+        csv += `${bl.ville_livraison || ''},`;
+        csv += `${bl.commercial || ''},`;
+        csv += `${bl.total_quantites || 0},`;
+        csv += `${bl.total_general || 0},`;
+        csv += `${bl.statut || 'En attente'}\n`;
+    });
+    
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'bon_livraison_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportToPDF() {
+    alert('Export PDF sera implémenté prochainement');
+    // TODO: Implement PDF export functionality
 }
 </script>
 
@@ -960,100 +1086,219 @@ function markAsDelivered(id, numero) {
     </div>
 
     <!-- List View -->
-    <div x-show="!showForm" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Bon de livraison</h2>
-            <p class="text-gray-600 dark:text-gray-400">Gérer les bons de livraison clients</p>
+    <div x-show="!showForm" class="space-y-6">
+        <!-- Header Section -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Bon de livraison</h2>
+            <p class="text-gray-600 dark:text-slate-300">Gérer les bons de livraison clients</p>
         </div>
-        
-        <div class="space-y-4">
-            <div class="flex justify-end">
-                <button @click="openNewForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Quantité Card -->
+            <div class="bg-gradient-to-br from-lime-400 to-lime-500 rounded-lg shadow-lg p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Total Quantité</h3>
+                        <p class="text-3xl font-bold text-gray-900" x-text="@json($bonLivraisons->sum('total_quantites'))"></p>
+                    </div>
+                    <div class="text-gray-900 opacity-30">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total TTC Card -->
+            <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg shadow-lg p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-1">Total TTC</h3>
+                        <p class="text-3xl font-bold text-white" x-text="formatCurrency(@json($bonLivraisons->sum('total_general'))) + ' DH'"></p>
+                    </div>
+                    <div class="text-white opacity-30">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Button Card -->
+            <div class="flex items-center justify-center">
+                <button @click="openNewForm()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg font-semibold flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
                     Nouveau bon de livraison
                 </button>
             </div>
-            
+        </div>
+
+        <!-- Search Filters -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow p-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <!-- Mois Filter -->
+                <div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchFilters.mois"
+                            @input="filterBonLivraisons()"
+                            placeholder="Mois" 
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Code Filter -->
+                <div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchFilters.code"
+                            @input="filterBonLivraisons()"
+                            placeholder="Code" 
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Nom Client Filter -->
+                <div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchFilters.nomClient"
+                            @input="filterBonLivraisons()"
+                            placeholder="Nom Client" 
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Commercial Filter -->
+                <div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchFilters.commercial"
+                            @input="filterBonLivraisons()"
+                            placeholder="Commercial" 
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ville Filter -->
+                <div>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchFilters.ville"
+                            @input="filterBonLivraisons()"
+                            placeholder="Ville" 
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="flex justify-end gap-3">
+            <button onclick="exportToExcel()" class="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg font-semibold">
+                Excel
+            </button>
+            <button onclick="exportToPDF()" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg font-semibold">
+                PDF
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                    <thead class="bg-gray-50 dark:bg-slate-900">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N°</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Réf. Commande</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Client</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chauffeur</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">N° de Bon</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Code Client</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Nom Client</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Ville</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Commercial</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Quantité</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Montant TTC</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($bonLivraisons as $bonLivraison)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonLivraison->numero_bon }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($bonLivraison->bonCommande)
-                                        <span class="px-2 py-1 text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded">{{ $bonLivraison->bonCommande->numero_bon }}</span>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonLivraison->client->raison_sociale }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    @if($bonLivraison->chauffeur)
-                                        <span class="flex items-center">
-                                            <svg class="w-4 h-4 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                            </svg>
-                                            {{ $bonLivraison->chauffeur }}
-                                        </span>
-                                    @else
-                                        <span class="text-gray-400">Non assigné</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonLivraison->date->format('d/m/Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ number_format($bonLivraison->total_general, 2, ',', ' ') }} DH</td>
+                    <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                        <template x-for="bonLivraison in filteredBonLivraisonsList" :key="bonLivraison.id">
+                            <tr x-show="bonLivraison.numero_bon" class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-mono" x-text="bonLivraison.numero_bon"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="formatDate(bonLivraison.date)"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.client?.code_client || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.client?.raison_sociale || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.ville_livraison || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.commercial || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.total_quantites || 0"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="formatCurrency(bonLivraison.total_general || 0)"></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                        @if($bonLivraison->statut === 'Livré') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                        @elseif($bonLivraison->statut === 'Annulé') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                        @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                        @endif">
-                                        {{ $bonLivraison->statut }}
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full" 
+                                        :class="{
+                                            'bg-green-500 text-white': bonLivraison.statut === 'Livré',
+                                            'bg-red-500 text-white': bonLivraison.statut === 'Annulé',
+                                            'bg-yellow-500 text-gray-900': bonLivraison.statut === 'En attente'
+                                        }"
+                                        x-text="bonLivraison.statut || 'En attente'">
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="printBonLivraison({{ $bonLivraison->id }})" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="Imprimer">
+                                        <button @click="printBonLivraisonFunc(bonLivraison.id)" class="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Imprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="editBonLivraison({{ $bonLivraison->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200" title="Modifier">
+                                        <button @click="loadBonLivraisonForEdit(bonLivraison.id)" class="text-blue-400 hover:text-blue-300 transition-colors" title="Modifier">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        @if($bonLivraison->statut === 'En attente')
-                                            <button onclick="markAsDelivered({{ $bonLivraison->id }}, '{{ $bonLivraison->numero_bon }}')" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200" title="Marquer comme livré">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                            </button>
-                                            <button onclick="deleteBonLivraison({{ $bonLivraison->id }}, '{{ $bonLivraison->numero_bon }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="Supprimer">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                </svg>
-                                            </button>
-                                        @endif
+                                        <button @click="copyBonLivraison(bonLivraison.id)" class="text-purple-400 hover:text-purple-300 transition-colors" title="Copier">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteBonLivraisonFunc(bonLivraison.id, bonLivraison.numero_bon)" class="text-red-400 hover:text-red-300 transition-colors" title="Supprimer">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Aucun bon de livraison trouvé</td>
-                            </tr>
-                        @endforelse
+                        </template>
+                        <tr x-show="filteredBonLivraisonsList.length === 0">
+                            <td colspan="10" class="px-6 py-8 text-center text-gray-500 dark:text-slate-400">Aucun bon de livraison trouvé</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
