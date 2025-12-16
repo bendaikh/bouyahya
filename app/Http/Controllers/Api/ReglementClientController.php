@@ -234,7 +234,7 @@ class ReglementClientController extends Controller
         
         // Récupérer les bons de livraison livrés du client avec les montants déjà réglés
         $query = BonLivraisonClient::where('client_id', $clientId)
-            ->where('statut', 'livre');
+            ->where('statut', 'Livré');
         
         $bonsLivraison = $query->with(['client'])
             ->orderBy('date', 'asc')

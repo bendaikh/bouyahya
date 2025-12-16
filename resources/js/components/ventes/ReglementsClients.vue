@@ -851,6 +851,29 @@ const loadBonsLivraisonClient = async (clientId, excludeReglementId = null) => {
         if (response.ok) {
             const data = await response.json()
             bonsLivraisonClient.value = data
+                .map(bon => {
+                    // Calculate temporary allocations from tempFicheReglements
+                    let tempAllocations = 0
+                    tempFicheReglements.value.forEach(tempReg => {
+                        if (tempReg.lignes) {
+                            tempReg.lignes.forEach(ligne => {
+                                if (ligne.bon_livraison_id === bon.id) {
+                                    tempAllocations += parseFloat(ligne.montant_regle) || 0
+                                }
+                            })
+                        }
+                    })
+                    
+                    // Adjust solde_restant considering temporary allocations
+                    bon.solde_restant = parseFloat(bon.solde_restant) - tempAllocations
+                    bon.montant_regle = parseFloat(bon.montant_regle) + tempAllocations
+                    
+                    return {
+                        ...bon,
+                        selected: false,
+                        montant_a_imputer: 0
+                    }
+                })
                 .filter(bon => {
                     if (form.value.etat_remboursement) {
                         return bon.linked_to_remboursement_statut === true
@@ -858,11 +881,6 @@ const loadBonsLivraisonClient = async (clientId, excludeReglementId = null) => {
                         return bon.solde_restant > 0
                     }
                 })
-                .map(bon => ({
-                    ...bon,
-                    selected: false,
-                    montant_a_imputer: 0
-                }))
         }
     } catch (error) {
         console.error('Erreur lors du chargement des bons de livraison:', error)
@@ -994,7 +1012,37 @@ const addDetailsToFiche = () => {
     // Add to temporary fiche règlements
     tempFicheReglements.value.push(tempReglement)
     
-    alert('Détail ajouté à la fiche règlements. Cliquez sur + pour ajouter un autre ou sur Valider en haut pour enregistrer.')
+    // Reset selections and form fields but keep client info
+    const savedClientId = form.value.client_id
+    const savedClient = clientSearch.value
+    const savedNomTire = form.value.nom_tire
+    
+    form.value = {
+        code_reglement: '',
+        date_reglement: new Date().toISOString().split('T')[0],
+        client_id: savedClientId,
+        type_reglement: 'Virement',
+        numero_piece: '',
+        banque: '',
+        nom_tire: savedNomTire,
+        tresorerie_id: '',
+        montant: 0,
+        date_encaissement: '',
+        observation: '',
+        statut: 'instance',
+        etat_remboursement: null,
+        lignes: []
+    }
+    
+    clientSearch.value = savedClient
+    
+    // Generate new code
+    getNextCode()
+    
+    // Reload bons de livraison with updated amounts (considering temporary allocations)
+    loadBonsLivraisonClient(savedClientId)
+    
+    alert('Détail ajouté à la fiche règlements. Ajoutez un autre règlement ou cliquez sur Valider en haut pour enregistrer.')
 }
 
 // Reset details form to create another payment entry
