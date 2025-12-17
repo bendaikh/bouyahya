@@ -124,9 +124,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import MenuItem from './MenuItem.vue'
 import CollapsibleMenuItem from './CollapsibleMenuItem.vue'
+
+const emit = defineEmits(['collapse-change'])
 
 const isCollapsed = ref(false)
 const isMobileOpen = ref(false)
@@ -233,6 +235,7 @@ const menuItems = {
 
 const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value
+    emit('collapse-change', isCollapsed.value)
 }
 
 const toggleMenu = (menu) => {

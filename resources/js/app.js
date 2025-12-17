@@ -26,6 +26,7 @@ import ReleveCompteFournisseurs from './components/achats/ReleveCompteFournisseu
 import ArticlesList from './components/stock/ArticlesList.vue';
 import ReglementsClients from './components/ventes/ReglementsClients.vue';
 import HistoriqueVentes from './components/ventes/HistoriqueVentes.vue';
+import EcheancierFournisseurs from './components/achats/EcheancierFournisseurs.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -54,6 +55,7 @@ app.component('ReleveCompteFournisseurs', ReleveCompteFournisseurs);
 app.component('ArticlesList', ArticlesList);
 app.component('ReglementsClients', ReglementsClients);
 app.component('HistoriqueVentes', HistoriqueVentes);
+app.component('EcheancierFournisseurs', EcheancierFournisseurs);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get the content from Blade before Vue replaces it
         const bladeContent = vueApp.innerHTML.trim();
         const pageComponentName = vueApp.dataset.pageComponent;
-        
+
         // Mount the app
         app.mount('#app');
-        
+
         // Insert Blade content into the slot after Vue renders
         if (!pageComponentName && bladeContent) {
             setTimeout(() => {

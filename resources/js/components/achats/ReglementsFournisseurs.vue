@@ -228,7 +228,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                         </svg>
                                     </button>
-                                    <button @click="editReglement(reglement)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
+                                    <button v-if="reglement.statut !== 'paye'" @click="editReglement(reglement)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -238,7 +238,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </button>
-                                    <button @click="deleteReglement(reglement)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Supprimer">
+                                    <button v-if="reglement.statut !== 'paye'" @click="deleteReglement(reglement)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Supprimer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -682,7 +682,7 @@ const filteredReglements = computed(() => {
     if (filterMontant.value != null && filterMontant.value !== '') {
         const montant = parseFloat(filterMontant.value)
         if (!isNaN(montant)) {
-            list = list.filter(r => parseFloat(r.montant) >= montant)
+            list = list.filter(r => parseFloat(r.montant) === montant)
         }
     }
 
@@ -1023,16 +1023,22 @@ const viewReglement = async (reglement) => {
         const response = await fetch(`/api/reglements-fournisseurs/${reglement.id}`)
         if (response.ok) {
             const data = await response.json()
+            // Helper to format date for date input (extract YYYY-MM-DD from datetime string)
+            const formatDateForInput = (dateStr) => {
+                if (!dateStr) return ''
+                // Handle both "2025-12-17" and "2025-12-17T00:00:00.000Z" formats
+                return dateStr.split('T')[0]
+            }
             form.value = {
                 code_reglement: data.code_reglement,
-                date_reglement: data.date_reglement,
+                date_reglement: formatDateForInput(data.date_reglement),
                 fournisseur_id: data.fournisseur_id,
                 type_reglement: data.type_reglement,
                 numero_piece: data.numero_piece || '',
                 banque: data.banque || '',
                 nom_beneficiaire: data.nom_beneficiaire || '',
                 montant: parseFloat(data.montant),
-                date_encaissement: data.date_encaissement || '',
+                date_encaissement: formatDateForInput(data.date_encaissement),
                 observation: data.observation || '',
                 statut: data.statut || 'impaye',
                 etat_remboursement: data.etat_remboursement || null,

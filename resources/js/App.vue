@@ -1,10 +1,16 @@
 <template>
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Component -->
-        <Sidebar></Sidebar>
+        <Sidebar @collapse-change="onSidebarCollapseChange"></Sidebar>
         
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden lg:ml-64 transition-all duration-300" id="main-content">
+        <div 
+            :class="[
+                'flex-1 flex flex-col overflow-hidden transition-all duration-300',
+                sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+            ]" 
+            id="main-content"
+        >
             <!-- Top Header -->
             <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 z-10">
                 <div class="flex items-center justify-between px-6 py-4">
@@ -48,6 +54,11 @@ import ThemeToggle from './components/ThemeToggle.vue'
 const pageTitle = ref('Tableau de bord')
 const user = ref(null)
 const pageComponent = ref('')
+const sidebarCollapsed = ref(false)
+
+const onSidebarCollapseChange = (collapsed) => {
+    sidebarCollapsed.value = collapsed
+}
 
 onMounted(() => {
     // Get page title from data attribute on the app element
@@ -77,4 +88,3 @@ onMounted(() => {
     }
 })
 </script>
-

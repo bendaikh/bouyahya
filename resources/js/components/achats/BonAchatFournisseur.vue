@@ -1,11 +1,7 @@
 <template>
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <!-- Header -->
-        <div class="mb-6 flex justify-between items-center">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Bon d'achat Fournisseur</h2>
-                <p class="text-gray-600 dark:text-gray-400">Gérer les bons d'achat fournisseurs</p>
-            </div>
+        <div class="mb-6 flex justify-end items-center">
             <button 
                 v-if="!showForm"
                 @click="openCreateForm" 
@@ -20,29 +16,77 @@
 
         <!-- List View -->
         <div v-if="!showForm">
-            <!-- Search Filter -->
-            <div class="mb-4">
-                <div class="relative max-w-md">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
+            <!-- Summary Bars -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
+                    <div class="text-sm font-semibold">Total Qté</div>
+                    <div class="mt-1 text-xl font-bold">{{ totalQteSum }}</div>
+                </div>
+                <div class="rounded-lg px-4 py-3 bg-green-600 text-white shadow">
+                    <div class="text-sm font-semibold">Total TTC</div>
+                    <div class="mt-1 text-xl font-bold">{{ formatCurrency(totalTTCSum) }}</div>
+                </div>
+            </div>
+
+            <!-- Filter Fields -->
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° de bon</label>
                     <input 
-                        type="text" 
-                        v-model="searchQuery"
-                        placeholder="Rechercher par nom ou code fournisseur..."
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        type="text"
+                        v-model="filterNumeroBon"
+                        placeholder="Filtrer..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
                     />
-                    <button 
-                        v-if="searchQuery"
-                        @click="searchQuery = ''"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                    <input 
+                        type="date"
+                        v-model="filterDate"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fournisseur</label>
+                    <input 
+                        type="text"
+                        v-model="filterFournisseur"
+                        placeholder="Filtrer..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Client livré</label>
+                    <input 
+                        type="text"
+                        v-model="filterClientLivre"
+                        placeholder="Filtrer..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    />
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
+                    <select 
+                        v-model="filterStatut"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
                     >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                        <option value="">Tous</option>
+                        <option value="brouillon">Brouillon</option>
+                        <option value="valide">Validé</option>
+                        <option value="livre">Livré</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Etat</label>
+                    <select 
+                        v-model="filterEtat"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                    >
+                        <option value="">Tous</option>
+                        <option value="paye">Payé</option>
+                        <option value="impaye">Impayé</option>
+                    </select>
                 </div>
             </div>
             
@@ -79,22 +123,18 @@
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Qté</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total TTC</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Etat</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-if="loading">
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="9" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Chargement...
                         </td>
                     </tr>
-                    <tr v-else-if="filteredBonAchats.length === 0 && searchQuery">
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                            Aucun bon d'achat trouvé pour "{{ searchQuery }}"
-                        </td>
-                    </tr>
-                    <tr v-else-if="bonAchats.length === 0">
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                    <tr v-else-if="filteredBonAchats.length === 0">
+                        <td colspan="9" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Aucun bon d'achat trouvé
                         </td>
                     </tr>
@@ -110,6 +150,11 @@
                                 {{ getStatusText(bon.statut) }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span :class="getEtatClass(bon)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                                {{ getEtatText(bon) }}
+                            </span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center gap-3">
                                 <button @click="viewBon(bon)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Voir">
@@ -118,7 +163,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </button>
-                                <button v-if="bon.statut === 'brouillon'" @click="editBon(bon)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
+                                <button v-if="canEditBon(bon)" @click="editBon(bon)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
@@ -138,7 +183,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </button>
-                                <button @click="deleteBon(bon)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Supprimer">
+                                <button v-if="canDeleteBon(bon)" @click="deleteBon(bon)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Supprimer">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -556,6 +601,14 @@ const formMode = ref('create') // 'create', 'edit', 'view'
 const editingBonId = ref(null)
 const searchQuery = ref('')
 
+// Filter refs
+const filterNumeroBon = ref('')
+const filterDate = ref('')
+const filterFournisseur = ref('')
+const filterClientLivre = ref('')
+const filterStatut = ref('')
+const filterEtat = ref('')
+
 // Article autocomplete state
 const activeArticleIndex = ref(null) // Which article row is being searched
 const activeFieldType = ref(null) // 'ref' or 'designation' - which field is active
@@ -566,17 +619,88 @@ const showArticleSuggestions = ref(false)
 const clientSearchQuery = ref('')
 const showClientDropdown = ref(false)
 
+// Compute etat (paye/impaye) for a bon
+const getBonEtat = (bon) => {
+    const totalTtc = parseFloat(bon.total_ttc) || 0
+    const montantPaye = parseFloat(bon.montant_paye) || 0
+    return montantPaye >= totalTtc && totalTtc > 0 ? 'paye' : 'impaye'
+}
+
 const filteredBonAchats = computed(() => {
-    if (!searchQuery.value.trim()) {
-        return bonAchats.value
+    let result = bonAchats.value
+
+    // Filter by N° bon
+    if (filterNumeroBon.value) {
+        const query = filterNumeroBon.value.toLowerCase()
+        result = result.filter(bon => (bon.numero_bon || '').toLowerCase().includes(query))
     }
-    const query = searchQuery.value.toLowerCase().trim()
-    return bonAchats.value.filter(bon => {
-        const fournisseurNom = (bon.fournisseur?.nom_fournisseur || '').toLowerCase()
-        const fournisseurCode = (bon.fournisseur?.code_fournisseur || '').toLowerCase()
-        return fournisseurNom.includes(query) || fournisseurCode.includes(query)
-    })
+
+    // Filter by date
+    if (filterDate.value) {
+        result = result.filter(bon => (bon.date || '').startsWith(filterDate.value))
+    }
+
+    // Filter by fournisseur
+    if (filterFournisseur.value) {
+        const query = filterFournisseur.value.toLowerCase()
+        result = result.filter(bon => 
+            (bon.fournisseur?.nom_fournisseur || '').toLowerCase().includes(query) ||
+            (bon.fournisseur?.code_fournisseur || '').toLowerCase().includes(query)
+        )
+    }
+
+    // Filter by client livré
+    if (filterClientLivre.value) {
+        const query = filterClientLivre.value.toLowerCase()
+        result = result.filter(bon => (bon.client_livre || '').toLowerCase().includes(query))
+    }
+
+    // Filter by statut
+    if (filterStatut.value) {
+        result = result.filter(bon => bon.statut === filterStatut.value)
+    }
+
+    // Filter by etat (paye/impaye)
+    if (filterEtat.value) {
+        result = result.filter(bon => getBonEtat(bon) === filterEtat.value)
+    }
+
+    return result
 })
+
+// Computed totals from filtered bons
+const totalQteSum = computed(() => {
+    return filteredBonAchats.value.reduce((sum, bon) => sum + (parseInt(bon.total_qte) || 0), 0)
+})
+
+const totalTTCSum = computed(() => {
+    return filteredBonAchats.value.reduce((sum, bon) => sum + (parseFloat(bon.total_ttc) || 0), 0)
+})
+
+// Etat helpers
+const getEtatText = (bon) => {
+    return getBonEtat(bon) === 'paye' ? 'Payé' : 'Impayé'
+}
+
+const getEtatClass = (bon) => {
+    return getBonEtat(bon) === 'paye' 
+        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+}
+
+// Conditional button visibility
+const canEditBon = (bon) => {
+    // Can edit if statut is brouillon, or if not (livre AND paye)
+    if (bon.statut === 'brouillon') return true
+    if (bon.statut === 'livre' && getBonEtat(bon) === 'paye') return false
+    return bon.statut !== 'livre' // Allow editing for valide status
+}
+
+const canDeleteBon = (bon) => {
+    // Cannot delete if statut is livre AND etat is paye
+    if (bon.statut === 'livre' && getBonEtat(bon) === 'paye') return false
+    return true
+}
 
 const form = ref({
     numero_bon: '',

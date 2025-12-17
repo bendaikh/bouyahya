@@ -17,7 +17,10 @@ class BonLivraisonClientController extends Controller
 {
     public function index()
     {
-        $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])->orderBy('created_at', 'desc')->get();
+        $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])
+            ->withSum('reglementLignes as montant_paye', 'montant_regle')
+            ->orderBy('created_at', 'desc')
+            ->get();
         $clients = Client::orderBy('raison_sociale')->get();
         $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
         $articles = Article::where('actif', true)->orderBy('designation')->get();

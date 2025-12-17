@@ -58,6 +58,22 @@
             </div>
         </div>
 
+        <!-- Summary Bars -->
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="rounded-lg px-4 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow">
+                <div class="text-sm font-semibold">Montant Total TTC</div>
+                <div class="mt-1 text-xl font-bold">{{ formatNumber(totaux.montantTTC) }} MAD</div>
+            </div>
+            <div class="rounded-lg px-4 py-3 bg-gradient-to-br from-green-500 to-green-600 text-white shadow">
+                <div class="text-sm font-semibold">Solde TTC</div>
+                <div class="mt-1 text-xl font-bold">{{ formatNumber(totaux.solde) }} MAD</div>
+            </div>
+            <div class="rounded-lg px-4 py-3 bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow">
+                <div class="text-sm font-semibold">Reliquat TTC</div>
+                <div class="mt-1 text-xl font-bold">{{ formatNumber(totaux.reliquat) }} MAD</div>
+            </div>
+        </div>
+
         <!-- Results Section -->
         <div class="mb-4">
             <div class="flex items-center justify-between mb-4">
@@ -112,11 +128,12 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">MONTANT PAYÉ</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SOLDE</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">RELIQUAT</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">ÉTAT</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="11" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="12" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 <svg class="animate-spin h-6 w-6 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -125,7 +142,7 @@
                             </td>
                         </tr>
                         <tr v-else-if="filteredBons.length === 0">
-                            <td colspan="11" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="12" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 Aucun bon d'achat trouvé
                             </td>
                         </tr>
@@ -171,27 +188,15 @@
                                 :class="getReliquatClass(getReliquat(bon))">
                                 {{ formatNumber(getReliquat(bon)) }}
                             </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full"
+                                    :class="getSolde(bon) === 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'">
+                                    {{ getSolde(bon) === 0 ? 'Payé' : 'Impayé' }}
+                                </span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Summary Footer -->
-            <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Montant Total TTC :</span>
-                        <span class="ml-2 text-lg font-bold text-gray-900 dark:text-white">{{ formatNumber(totaux.montantTTC) }} MAD</span>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Solde TTC :</span>
-                        <span class="ml-2 text-lg font-bold text-green-600">{{ formatNumber(totaux.solde) }} MAD</span>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Reliquat TTC :</span>
-                        <span class="ml-2 text-lg font-bold text-blue-600">{{ formatNumber(totaux.reliquat) }} MAD</span>
-                    </div>
-                </div>
             </div>
 
             <!-- Pagination -->
@@ -497,6 +502,7 @@ const imprimer = () => {
                         <th class="text-right">MONTANT PAYÉ</th>
                         <th class="text-right">SOLDE</th>
                         <th class="text-right">RELIQUAT</th>
+                        <th class="text-center">ÉTAT</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -513,6 +519,11 @@ const imprimer = () => {
                             <td class="text-right">${formatNumber(bon.montant_paye)} MAD</td>
                             <td class="text-right ${getSolde(bon) > 0 ? 'text-red' : 'text-green'}">${formatNumber(getSolde(bon))}</td>
                             <td class="text-right ${getReliquat(bon) > 0 ? 'text-blue' : 'text-green'}">${formatNumber(getReliquat(bon))}</td>
+                            <td class="text-center">
+                                <span style="padding: 2px 6px; border-radius: 9999px; font-size: 10px; font-weight: 600; ${getSolde(bon) === 0 ? 'background-color: #dcfce7; color: #166534;' : 'background-color: #fee2e2; color: #991b1b;'}">
+                                    ${getSolde(bon) === 0 ? 'Payé' : 'Impayé'}
+                                </span>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>

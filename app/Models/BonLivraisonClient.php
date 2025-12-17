@@ -60,5 +60,15 @@ class BonLivraisonClient extends Model
     {
         return $this->hasMany(BonLivraisonClientArticle::class, 'bon_livraison_client_id');
     }
+
+    public function reglementLignes()
+    {
+        return $this->hasMany(ReglementClientLigne::class, 'bon_livraison_id');
+    }
+
+    public function getMontantPayeAttribute()
+    {
+        return $this->reglementLignes->sum('montant_regle');
+    }
 }
 
