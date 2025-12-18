@@ -690,15 +690,22 @@ const getEtatClass = (bon) => {
 
 // Conditional button visibility
 const canEditBon = (bon) => {
-    // Can edit if statut is brouillon, or if not (livre AND paye)
+    // Can edit if statut is brouillon
     if (bon.statut === 'brouillon') return true
-    if (bon.statut === 'livre' && getBonEtat(bon) === 'paye') return false
-    return bon.statut !== 'livre' // Allow editing for valide status
+    
+    // Cannot edit if (livre AND paye) OR (valide AND paye)
+    if (getBonEtat(bon) === 'paye') {
+        if (bon.statut === 'livre' || bon.statut === 'valide') return false
+    }
+    
+    return bon.statut !== 'livre' // Allow editing for valide status if not paye
 }
 
 const canDeleteBon = (bon) => {
-    // Cannot delete if statut is livre AND etat is paye
-    if (bon.statut === 'livre' && getBonEtat(bon) === 'paye') return false
+    // Cannot delete if (livre AND paye) OR (valide AND paye)
+    if (getBonEtat(bon) === 'paye') {
+        if (bon.statut === 'livre' || bon.statut === 'valide') return false
+    }
     return true
 }
 

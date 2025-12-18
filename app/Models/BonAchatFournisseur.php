@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ReglementFournisseurLigne;
 
 class BonAchatFournisseur extends Model
 {
@@ -31,6 +32,16 @@ class BonAchatFournisseur extends Model
         'sous_total_ttc' => 'decimal:2',
         'total_ttc' => 'decimal:2',
     ];
+
+    protected $appends = ['montant_paye'];
+
+    public function getMontantPayeAttribute()
+    {
+        return $this->reglementLignes()
+            ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
+            ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
+            ->sum('reglement_fournisseur_lignes.montant_regle');
+    }
     
     // Relationships
     public function fournisseur()
@@ -47,7 +58,7 @@ class BonAchatFournisseur extends Model
     {
         return $this->belongsTo(BonCommandeFournisseur::class, 'bon_commande_id');
     }
-    
+
     public function reglementLignes()
     {
         return $this->hasMany(ReglementFournisseurLigne::class, 'bon_achat_id');
