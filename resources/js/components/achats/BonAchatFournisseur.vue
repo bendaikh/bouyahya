@@ -85,6 +85,7 @@
                     >
                         <option value="">Tous</option>
                         <option value="paye">Payé</option>
+                        <option value="encours">En cours</option>
                         <option value="impaye">Impayé</option>
                     </select>
                 </div>
@@ -619,11 +620,14 @@ const showArticleSuggestions = ref(false)
 const clientSearchQuery = ref('')
 const showClientDropdown = ref(false)
 
-// Compute etat (paye/impaye) for a bon
+// Compute etat (paye/impaye/encours) for a bon
 const getBonEtat = (bon) => {
     const totalTtc = parseFloat(bon.total_ttc) || 0
     const montantPaye = parseFloat(bon.montant_paye) || 0
-    return montantPaye >= totalTtc && totalTtc > 0 ? 'paye' : 'impaye'
+    
+    if (montantPaye >= totalTtc && totalTtc > 0) return 'paye'
+    if (montantPaye > 0 && montantPaye < totalTtc) return 'encours'
+    return 'impaye'
 }
 
 const filteredBonAchats = computed(() => {
@@ -660,7 +664,7 @@ const filteredBonAchats = computed(() => {
         result = result.filter(bon => bon.statut === filterStatut.value)
     }
 
-    // Filter by etat (paye/impaye)
+    // Filter by etat
     if (filterEtat.value) {
         result = result.filter(bon => getBonEtat(bon) === filterEtat.value)
     }
@@ -679,13 +683,17 @@ const totalTTCSum = computed(() => {
 
 // Etat helpers
 const getEtatText = (bon) => {
-    return getBonEtat(bon) === 'paye' ? 'Payé' : 'Impayé'
+    const etat = getBonEtat(bon)
+    if (etat === 'paye') return 'Payé'
+    if (etat === 'encours') return 'En cours'
+    return 'Impayé'
 }
 
 const getEtatClass = (bon) => {
-    return getBonEtat(bon) === 'paye' 
-        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    const etat = getBonEtat(bon)
+    if (etat === 'paye') return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    if (etat === 'encours') return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
 }
 
 // Conditional button visibility
