@@ -455,11 +455,39 @@ const combinedData = computed(() => {
     // Sort by date
     data.sort((a, b) => new Date(a.date) - new Date(b.date))
     
-    // Calculate cumulative solde (Credit - Debit)
-    let solde = 0
+    // Calculate cumulative solde per client (Credit - Debit)
+    // We track separate running totals for each client so one client's balance 
+    // doesn't affect the next one in the list.
+    const clientBalances = {}
+    
     data.forEach(row => {
-        solde = solde + row.credit - row.debit
-        row.solde_cumule = solde
+        // Determine the client key for this row
+        let clientKey = 'Unassigned'
+        
+        if (row.type === 'achat') {
+            clientKey = row.client_livre || 'Unassigned'
+        } else if (row.type === 'reglement') {
+            // If the payment is linked to exactly one client, assign it to them
+            if (row.linkedClients && row.linkedClients.length === 1) {
+                clientKey = row.linkedClients[0]
+            }
+            // If linked to 0 or multiple clients, it remains 'Unassigned'
+            // (or you could choose to split it, but that requires row splitting)
+        }
+        
+        // Initialize balance for this client if not exists
+        if (clientBalances[clientKey] === undefined) {
+            clientBalances[clientKey] = 0
+        }
+        
+        // Update balance: Credit (Achat) increases debt, Debit (Reglement) decreases debt
+        // Note: Calculations handled as numbers
+        const credit = row.credit || 0
+        const debit = row.debit || 0
+        
+        clientBalances[clientKey] = clientBalances[clientKey] + credit - debit
+        
+        row.solde_cumule = clientBalances[clientKey]
     })
     
     return data
