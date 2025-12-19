@@ -1,191 +1,114 @@
 <template>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <!-- Header -->
-        <div class="mb-6 flex justify-between items-center">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                    consultation règlements des fournisseurs
-                </h2>
-                <p class="text-gray-600 dark:text-gray-400">
-                    consultation règlements des fournisseurs
-                </p>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
+        <!-- Sticky Top Section -->
+        <div class="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-none bg-white dark:bg-gray-800 z-20">
+            <!-- Header -->
+            <div class="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                        consultation règlements des fournisseurs
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        consultation règlements des fournisseurs
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap justify-end gap-2">
+                    <button v-if="!showForm" @click="openCreateForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Nouveau règlement
+                    </button>
+
+                    <template v-else>
+                        <button @click="cancelForm" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Quitter
+                        </button>
+                        <button v-if="formMode !== 'view'" @click="saveReglement" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            Valider
+                        </button>
+                        <button v-if="formMode === 'view' && editingReglementId" @click="formMode = 'edit'" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            Modifier
+                        </button>
+                    </template>
+                </div>
             </div>
 
-            <!-- Global actions (form + list) -->
-            <div class="flex flex-wrap justify-end gap-2">
-                <!-- List view: create button -->
-                <button 
-                    v-if="!showForm"
-                    @click="openCreateForm" 
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Nouveau règlement
-                </button>
+            <!-- List View Top: Stats & Filters -->
+            <div v-if="!showForm">
+                <!-- Stat blocks -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
+                        <div class="text-sm font-semibold">Total Règlements Fournisseurs</div>
+                        <div class="mt-1 text-xl font-bold">{{ formatCurrencySimple(totalReglements) }}</div>
+                    </div>
+                    <div class="rounded-lg px-4 py-3 bg-green-600 text-white shadow">
+                        <div class="text-sm font-semibold">Total Décaissé</div>
+                        <div class="mt-1 text-xl font-bold">{{ formatCurrencySimple(totalDecaisse) }}</div>
+                    </div>
+                    <div class="rounded-lg px-4 py-3 bg-red-600 text-white shadow">
+                        <div class="text-sm font-semibold">Total Impayé</div>
+                        <div class="mt-1 text-xl font-bold">{{ formatCurrencySimple(totalImpaye) }}</div>
+                    </div>
+                </div>
 
-                <!-- Form view: main actions moved from bottom -->
-                <template v-else>
-                    <button 
-                        @click="cancelForm" 
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Quitter
-                    </button>
-                    <button 
-                        v-if="formMode !== 'view'"
-                        @click="saveReglement" 
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Valider
-                    </button>
-                    <button 
-                        v-if="formMode === 'view' && editingReglementId"
-                        @click="formMode = 'edit'" 
-                        class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Modifier
-                    </button>
-                </template>
+                <!-- Export Buttons & Filters Row -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
+                        <select v-model="filterEtat" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs">
+                            <option value="">Tous</option><option value="paye">Payé</option><option value="impaye">Impayé</option><option value="reporte">Reporté</option><option value="instance">Instance</option><option value="cour">En cour</option><option value="devalide">Dévalidé</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° pièce</label>
+                        <input type="text" v-model="filterNumeroPiece" placeholder="N° pièce..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banque</label>
+                        <input type="text" v-model="filterBanque" placeholder="Banque..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Montant</label>
+                        <input type="number" v-model.number="filterMontant" placeholder="Montant..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                            <input type="date" v-model="filterDateEncaissement" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs" />
+                        </div>
+                        <div class="flex gap-1 mt-5">
+                            <button @click="exportToExcel" class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700" title="Excel"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
+                            <button @click="exportToPDF" class="p-2 bg-red-600 text-white rounded-md hover:bg-red-700" title="PDF"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- List View -->
-        <div v-if="!showForm">
-            <!-- Stat blocks -->
-            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
-                    <div class="text-sm font-semibold">Total Règlements Fournisseurs</div>
-                    <div class="mt-1 text-xl font-bold">
-                        {{ formatCurrencySimple(totalReglements) }}
-                    </div>
-                </div>
-                <div class="rounded-lg px-4 py-3 bg-green-600 text-white shadow">
-                    <div class="text-sm font-semibold">Total Décaissé</div>
-                    <div class="mt-1 text-xl font-bold">
-                        {{ formatCurrencySimple(totalDecaisse) }}
-                    </div>
-                </div>
-                <div class="rounded-lg px-4 py-3 bg-red-600 text-white shadow">
-                    <div class="text-sm font-semibold">Total Impayé</div>
-                    <div class="mt-1 text-xl font-bold">
-                        {{ formatCurrencySimple(totalImpaye) }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Export Buttons -->
-            <div class="mb-4 flex justify-end space-x-2">
-                <button 
-                    @click="exportToExcel" 
-                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center text-sm"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Exporter Excel
-                </button>
-                <button 
-                    @click="exportToPDF" 
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm"
-                >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    Exporter PDF
-                </button>
-            </div>
-
-            <!-- Filters -->
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
-                <!-- État Règlement -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
-                    <select 
-                        v-model="filterEtat"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                    >
-                        <option value="">Tous</option>
-                        <option value="paye">Payé</option>
-                        <option value="impaye">Impayé</option>
-                        <option value="reporte">Reporté</option>
-                        <option value="instance">Instance</option>
-                        <option value="cour">En cour</option>
-                        <option value="devalide">Dévalidé</option>
-                    </select>
-                </div>
-
-                <!-- N° pièce -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° pièce</label>
-                    <input 
-                        type="text"
-                        v-model="filterNumeroPiece"
-                        placeholder="Filtrer par N° pièce..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                    />
-                </div>
-
-                <!-- Banque -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banque</label>
-                    <input 
-                        type="text"
-                        v-model="filterBanque"
-                        placeholder="Filtrer par banque..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                    />
-                </div>
-
-                <!-- Montant -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Montant</label>
-                    <input 
-                        type="number"
-                        v-model.number="filterMontant"
-                        placeholder="Filtrer par montant..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                    />
-                </div>
-
-                <!-- Date encaissement -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date encaissement</label>
-                    <input 
-                        type="date"
-                        v-model="filterDateEncaissement"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                    />
-                </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fournisseur</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N° pièce</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date encaissement</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <!-- Scrollable Content Section -->
+        <div class="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+            <!-- List View Table -->
+            <div v-if="!showForm" class="p-0 h-full">
+                <div class="overflow-x-auto overflow-y-auto relative h-full">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 shadow-sm border-b border-gray-200 dark:border-gray-600">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Code</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fournisseur</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">N° pièce</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Banque</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date encaissement</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Statut</th>
+                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <tr v-if="loading">
                             <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 Chargement...
@@ -248,11 +171,11 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
-        </div>
 
-        <!-- Form View -->
-        <div v-if="showForm" class="space-y-6">
+            <!-- Form View (Scrollable) -->
+            <div v-if="showForm" class="p-6 h-full overflow-y-auto">
             <!-- Header -->
             <div class="pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
@@ -617,6 +540,7 @@
             </div>
         </div>
     </div>
+</div>
 </template>
 
 <script setup>
