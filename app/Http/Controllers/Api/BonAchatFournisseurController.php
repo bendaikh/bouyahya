@@ -288,4 +288,47 @@ class BonAchatFournisseurController extends Controller
         
         return response()->json(['message' => 'Bon d\'achat supprimé avec succès']);
     }
+    
+    /**
+     * Get payment details (fiche de paiement) for a bon d'achat
+     */
+    public function getPaymentDetails($id)
+    {
+        $bon = BonAchatFournisseur::with(['fournisseur'])->findOrFail($id);
+        
+        // Get all reglements linked to this bon through lignes
+        $reglements = ReglementFournisseurLigne::where('bon_achat_id', $id)
+            ->with(['reglement'])
+            ->get()
+            ->map(function ($ligne) {
+                $reglement = $ligne->reglement;
+                return [
+                    'numero_reglement' => $reglement->code_reglement,
+                    'type' => $reglement->type_reglement,
+                    'banque' => $reglement->banque,
+                    'nom_tire' => $reglement->nom_beneficiaire,
+                    'montant' => $ligne->montant_regle,
+                    'date_encaissement' => $reglement->date_encaissement,
+                    'statut' => $reglement->statut,
+                ];
+            });
+        
+        // Calculate total paid amount
+        $totalPaye = ReglementFournisseurLigne::where('bon_achat_id', $id)
+            ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
+            ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
+            ->sum('reglement_fournisseur_lignes.montant_regle');
+        
+        return response()->json([
+            'bon' => [
+                'numero_bon' => $bon->numero_bon,
+                'date' => $bon->date,
+                'fournisseur' => $bon->fournisseur->nom_fournisseur ?? 'N/A',
+            ],
+            'reglements' => $reglements,
+            'total_paye' => floatval($totalPaye),
+            'total_ttc' => floatval($bon->total_ttc),
+            'statut' => $bon->statut,
+        ]);
+    }
 }

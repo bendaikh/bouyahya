@@ -213,6 +213,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/historique', [BonAchatFournisseurController::class, 'historique']);
         Route::post('/', [BonAchatFournisseurController::class, 'store']);
         Route::get('/next-numero', [BonAchatFournisseurController::class, 'nextNumeroBon']);
+        Route::get('/{id}/payment-details', [BonAchatFournisseurController::class, 'getPaymentDetails']);
         Route::get('/{id}', [BonAchatFournisseurController::class, 'show']);
         Route::put('/{id}', [BonAchatFournisseurController::class, 'update']);
         Route::post('/{id}/validate', [BonAchatFournisseurController::class, 'validateBon']);

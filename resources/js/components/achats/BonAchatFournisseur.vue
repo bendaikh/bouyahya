@@ -125,17 +125,18 @@
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total TTC</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Statut</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Etat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fiche de paie</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-if="loading">
-                        <td colspan="9" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Chargement...
                         </td>
                     </tr>
                     <tr v-else-if="filteredBonAchats.length === 0">
-                        <td colspan="9" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             Aucun bon d'achat trouvé
                         </td>
                     </tr>
@@ -155,6 +156,17 @@
                             <span :class="getEtatClass(bon)" class="px-2 py-1 text-xs font-semibold rounded-full">
                                 {{ getEtatText(bon) }}
                             </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button 
+                                @click="showPaymentDetails(bon)" 
+                                class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" 
+                                title="Voir fiche de paiement"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </button>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center gap-3">
@@ -585,6 +597,135 @@
                 </div>
             </div>
         </div>
+
+        <!-- Payment Details Modal -->
+        <div 
+            v-if="showPaymentModal" 
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="closePaymentModal"
+        >
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+                <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Fiche Paiement Fournisseur</h3>
+                    <button 
+                        @click="closePaymentModal" 
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <div v-if="paymentLoading" class="text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p class="mt-2 text-gray-600 dark:text-gray-400">Chargement...</p>
+                    </div>
+                    
+                    <div v-else>
+                        <!-- Header Info -->
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° Bon</label>
+                                <input 
+                                    type="text" 
+                                    :value="paymentData.bon?.numero_bon || ''" 
+                                    readonly
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date Cmd</label>
+                                <input 
+                                    type="text" 
+                                    :value="paymentData.bon?.date ? formatDate(paymentData.bon.date) : ''" 
+                                    readonly
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nom Fournisseur</label>
+                                <input 
+                                    type="text" 
+                                    :value="paymentData.bon?.fournisseur || ''" 
+                                    readonly
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Payment Details Table -->
+                        <div class="mb-6">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N° Règ</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Tiré</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Encais</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tr v-if="paymentData.reglements && paymentData.reglements.length === 0">
+                                        <td colspan="6" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                            Aucun règlement trouvé
+                                        </td>
+                                    </tr>
+                                    <tr v-else v-for="(reglement, index) in paymentData.reglements" :key="index">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.numero_reglement }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.type }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.nom_tire || '-' }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">{{ formatCurrency(reglement.montant) }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.date_encaissement ? formatDate(reglement.date_encaissement) : '-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Footer Info -->
+                        <div class="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">Total: {{ formatCurrency(paymentData.total_paye || 0) }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span :class="getStatusClass(paymentData.statut)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                                        {{ getStatusText(paymentData.statut) }}
+                                    </span>
+                                    <span :class="getEtatClassFromPayment(paymentData)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                                        {{ getEtatTextFromPayment(paymentData) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button 
+                                    @click="exportPaymentPDF" 
+                                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                    PDF
+                                </button>
+                                <button 
+                                    @click="printPaymentDetails" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                    Imprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -619,6 +760,17 @@ const showArticleSuggestions = ref(false)
 // Client search/filter state
 const clientSearchQuery = ref('')
 const showClientDropdown = ref(false)
+
+// Payment modal state
+const showPaymentModal = ref(false)
+const paymentLoading = ref(false)
+const paymentData = ref({
+    bon: null,
+    reglements: [],
+    total_paye: 0,
+    total_ttc: 0,
+    statut: ''
+})
 
 // Compute etat (paye/impaye/encours) for a bon
 const getBonEtat = (bon) => {
@@ -1605,6 +1757,254 @@ const exportToPDF = () => {
     
     printWindow.document.write(htmlContent)
     printWindow.document.close()
+}
+
+// Payment modal functions
+const showPaymentDetails = async (bon) => {
+    showPaymentModal.value = true
+    paymentLoading.value = true
+    paymentData.value = {
+        bon: null,
+        reglements: [],
+        total_paye: 0,
+        total_ttc: 0,
+        statut: ''
+    }
+    
+    try {
+        const response = await fetch(`/api/bon-achat-fournisseur/${bon.id}/payment-details`)
+        if (response.ok) {
+            const data = await response.json()
+            paymentData.value = data
+        } else {
+            alert('Erreur lors du chargement des détails de paiement')
+        }
+    } catch (error) {
+        console.error('Erreur:', error)
+        alert('Erreur lors du chargement des détails de paiement')
+    } finally {
+        paymentLoading.value = false
+    }
+}
+
+const closePaymentModal = () => {
+    showPaymentModal.value = false
+    paymentData.value = {
+        bon: null,
+        reglements: [],
+        total_paye: 0,
+        total_ttc: 0,
+        statut: ''
+    }
+}
+
+const getEtatClassFromPayment = (paymentData) => {
+    const totalTtc = parseFloat(paymentData.total_ttc) || 0
+    const totalPaye = parseFloat(paymentData.total_paye) || 0
+    
+    if (totalPaye >= totalTtc && totalTtc > 0) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    if (totalPaye > 0 && totalPaye < totalTtc) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+}
+
+const getEtatTextFromPayment = (paymentData) => {
+    const totalTtc = parseFloat(paymentData.total_ttc) || 0
+    const totalPaye = parseFloat(paymentData.total_paye) || 0
+    
+    if (totalPaye >= totalTtc && totalTtc > 0) return 'Payé'
+    if (totalPaye > 0 && totalPaye < totalTtc) return 'En cours'
+    return 'Impayé'
+}
+
+const exportPaymentPDF = () => {
+    if (!paymentData.value.bon) return
+    
+    // Helper functions for PDF
+    const getStatusTextForPDF = (statut) => {
+        switch (statut) {
+            case 'valide': return 'Validé'
+            case 'annule': return 'Annulé'
+            default: return 'Brouillon'
+        }
+    }
+    
+    const getEtatTextForPDF = () => {
+        const totalTtc = parseFloat(paymentData.value.total_ttc) || 0
+        const totalPaye = parseFloat(paymentData.value.total_paye) || 0
+        
+        if (totalPaye >= totalTtc && totalTtc > 0) return 'Payé'
+        if (totalPaye > 0 && totalPaye < totalTtc) return 'En cours'
+        return 'Impayé'
+    }
+    
+    const getEtatClassForPDF = () => {
+        const etat = getEtatTextForPDF()
+        return etat.toLowerCase().replace(' ', '')
+    }
+    
+    const printWindow = window.open('', '_blank')
+    
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Fiche Paiement ${paymentData.value.bon.numero_bon}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 3px solid #4CAF50;
+                    padding-bottom: 10px;
+                }
+                .header h1 {
+                    margin: 0;
+                    color: #4CAF50;
+                }
+                .info-section {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }
+                .info-box {
+                    border: 1px solid #ddd;
+                    padding: 15px;
+                    border-radius: 5px;
+                    background-color: #f9f9f9;
+                }
+                .info-label {
+                    font-weight: bold;
+                    display: block;
+                    margin-bottom: 5px;
+                    color: #666;
+                    font-size: 12px;
+                }
+                .info-value {
+                    font-size: 14px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                th {
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 12px;
+                    text-align: left;
+                    font-size: 13px;
+                }
+                td {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    font-size: 12px;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .footer {
+                    margin-top: 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-top: 20px;
+                    border-top: 2px solid #4CAF50;
+                }
+                .total {
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                .status-badge {
+                    padding: 4px 12px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    display: inline-block;
+                    margin-left: 10px;
+                }
+                .status-valide { background-color: #d4edda; color: #155724; }
+                .status-paye { background-color: #d4edda; color: #155724; }
+                .status-encours { background-color: #fff3cd; color: #856404; }
+                .status-impaye { background-color: #f8d7da; color: #721c24; }
+                @media print {
+                    button { display: none; }
+                    body { margin: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>FICHE PAIEMENT FOURNISSEUR</h1>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-box">
+                    <span class="info-label">N° Bon</span>
+                    <span class="info-value">${paymentData.value.bon.numero_bon}</span>
+                </div>
+                <div class="info-box">
+                    <span class="info-label">Date Cmd</span>
+                    <span class="info-value">${paymentData.value.bon.date ? new Date(paymentData.value.bon.date).toLocaleDateString('fr-FR') : '-'}</span>
+                </div>
+                <div class="info-box">
+                    <span class="info-label">Nom Fournisseur</span>
+                    <span class="info-value">${paymentData.value.bon.fournisseur || 'N/A'}</span>
+                </div>
+            </div>
+            
+            <h3>Détails des Règlements</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>N° Règ</th>
+                        <th>Type</th>
+                        <th>Banque</th>
+                        <th>Nom Tiré</th>
+                        <th style="text-align: right;">Montant</th>
+                        <th>Date Encais</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${paymentData.value.reglements && paymentData.value.reglements.length > 0 
+                        ? paymentData.value.reglements.map(reg => `
+                            <tr>
+                                <td>${reg.numero_reglement}</td>
+                                <td>${reg.type}</td>
+                                <td>${reg.banque || '-'}</td>
+                                <td>${reg.nom_tire || '-'}</td>
+                                <td style="text-align: right;">${new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD' }).format(reg.montant)}</td>
+                                <td>${reg.date_encaissement ? new Date(reg.date_encaissement).toLocaleDateString('fr-FR') : '-'}</td>
+                            </tr>
+                        `).join('')
+                        : '<tr><td colspan="6" style="text-align: center;">Aucun règlement trouvé</td></tr>'
+                    }
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <div>
+                    <span class="total">Total: ${new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD' }).format(paymentData.value.total_paye || 0)}</span>
+                    <span class="status-badge status-${paymentData.value.statut}">${getStatusTextForPDF(paymentData.value.statut)}</span>
+                    <span class="status-badge status-${getEtatClassForPDF()}">${getEtatTextForPDF()}</span>
+                </div>
+                <button onclick="window.print()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px;">
+                    Imprimer / Sauvegarder en PDF
+                </button>
+            </div>
+        </body>
+        </html>
+    `
+    
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+}
+
+const printPaymentDetails = () => {
+    exportPaymentPDF()
 }
 
 // Initialize
