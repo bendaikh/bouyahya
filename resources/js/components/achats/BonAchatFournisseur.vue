@@ -152,7 +152,7 @@
                             Aucun bon d'achat trouvé
                         </td>
                     </tr>
-                    <tr v-else v-for="bon in filteredBonAchats" :key="bon.id">
+                    <tr v-else v-for="bon in filteredBonAchats" :key="bon.id" :class="getEtatRowBgClass(bon)">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.numero_bon }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(bon.date) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.fournisseur?.nom_fournisseur || 'N/A' }}</td>
@@ -866,6 +866,14 @@ const getEtatClass = (bon) => {
     if (etat === 'paye') return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     if (etat === 'encours') return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+}
+
+// Get row background color class based on etat (no background for paye)
+const getEtatRowBgClass = (bon) => {
+    const etat = getBonEtat(bon)
+    if (etat === 'paye') return '' // No background color for paye
+    if (etat === 'encours') return 'bg-orange-100 dark:bg-orange-900/30'
+    return 'bg-red-100 dark:bg-red-900/30' // Impayé
 }
 
 // Conditional button visibility
