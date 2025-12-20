@@ -1,37 +1,25 @@
 <template>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div class="dark:bg-gray-800 rounded-lg">
         <!-- Main Content Area -->
-        <div class="flex flex-col lg:flex-row">
+        <div class="flex flex-col lg:flex-row gap-4">
             <!-- Left Section: Filters + Table -->
-            <div class="flex-1 p-6">
+            <div class="flex-1 p-4">
                 <!-- Section Header -->
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                     Etat Règlements Fournisseur
                 </h2>
 
                 <!-- Filter Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
                     <!-- Mois -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mois</label>
                         <select 
                             v-model="filters.mois"
-                            class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         >
                             <option value="">Tous</option>
                             <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
-                        </select>
-                    </div>
-
-                    <!-- Code -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
-                        <select 
-                            v-model="filters.code"
-                            class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value="">Tous</option>
-                            <option v-for="code in uniqueCodes" :key="code" :value="code">{{ code }}</option>
                         </select>
                     </div>
 
@@ -40,7 +28,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom Fournisseur</label>
                         <select 
                             v-model="filters.nomFournisseur"
-                            class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         >
                             <option value="">Tous</option>
                             <option v-for="nom in uniqueFournisseurs" :key="nom" :value="nom">{{ nom }}</option>
@@ -52,82 +40,101 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom Client</label>
                         <select 
                             v-model="filters.nomClient"
-                            class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         >
                             <option value="">Tous</option>
                             <option v-for="nom in uniqueClients" :key="nom" :value="nom">{{ nom }}</option>
                         </select>
                     </div>
 
-                    <!-- Statue (Status) -->
+                    <!-- Statue (Status) with Action Buttons -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
-                        <select 
-                            v-model="filters.statut"
-                            class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value="">Tous</option>
-                            <option value="paye">Payé</option>
-                            <option value="impaye">Impayé</option>
-                            <option value="reporte">Reporté</option>
-                            <option value="instance">Instance</option>
-                        </select>
-                    </div>
-
-                    <!-- TTC Display + Actions -->
-                    <div class="flex items-end gap-2">
-                        <div class="flex-1 px-4 py-2 bg-gradient-to-r from-yellow-400 to-green-500 rounded-lg text-center">
-                            <span class="text-white font-bold text-sm lg:text-base whitespace-nowrap">
-                                {{ formatCurrency(totalTTC) }} TTC
-                            </span>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Statue</label>
+                        <div class="flex gap-2">
+                            <select 
+                                v-model="filters.statut"
+                                class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                                <option value="">Tous</option>
+                                <option value="paye">Payé</option>
+                                <option value="impaye">Impayé</option>
+                                <option value="reporte">Reporté</option>
+                                <option value="instance">Instance</option>
+                            </select>
+                            <button 
+                                @click="addNew"
+                                class="p-2 bg-blue-100 dark:bg-blue-600 hover:bg-blue-200 dark:hover:bg-blue-500 rounded transition-colors"
+                                title="Ajouter"
+                            >
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                            <button 
+                                @click="loadReglements"
+                                class="p-2 bg-green-100 dark:bg-green-600 hover:bg-green-200 dark:hover:bg-green-500 rounded transition-colors"
+                                title="Actualiser"
+                            >
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
                         </div>
-                        <button 
-                            @click="sendEmail"
-                            class="p-2 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
-                            title="Envoyer par email"
-                        >
-                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </button>
-                        <button 
-                            @click="printTable"
-                            class="p-2 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
-                            title="Imprimer"
-                        >
-                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
 
+                <!-- TTC Display + Actions -->
+                <div class="flex items-center gap-3 mb-4">
+                    <button 
+                        class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded text-white font-semibold text-sm"
+                    >
+                        {{ formatCurrency(totalTTC) }} TTC
+                    </button>
+                    <button 
+                        @click="sendEmail"
+                        class="p-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-full transition-colors"
+                        title="Envoyer par email"
+                    >
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                    <button 
+                        @click="printTable"
+                        class="p-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-full transition-colors"
+                        title="Imprimer"
+                    >
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- Remise Bancaire Header -->
-                <div class="text-gray-600 dark:text-gray-300 text-sm mb-3 font-medium">
+                <div class="text-gray-600 dark:text-gray-300 text-sm mb-2 font-medium">
                     Remise Bancaire N° .......
                 </div>
 
                 <!-- Data Table -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-600">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N°</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Fournisseur</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Client</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Tiré</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Encais</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">N°</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Fournisseur</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Client</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Banque</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Tiré</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Montant</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Date Encais</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <!-- Loading State -->
                             <tr v-if="loading">
-                                <td colspan="10" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
                                     <div class="flex items-center justify-center gap-2">
                                         <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -139,7 +146,7 @@
                             </tr>
                             <!-- Empty State -->
                             <tr v-else-if="filteredReglements.length === 0">
-                                <td colspan="10" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
                                     Aucun règlement trouvé
                                 </td>
                             </tr>
@@ -150,40 +157,37 @@
                                 :key="reglement.id" 
                                 class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ formatDate(reglement.date_reglement) }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ reglement.numero_piece || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                                    {{ reglement.code_reglement }}
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
                                     {{ reglement.fournisseur?.nom_fournisseur || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
                                     {{ reglement.nom_beneficiaire || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ reglement.type_reglement || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
                                     {{ reglement.banque || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
                                     {{ reglement.nom_beneficiaire || '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                                <td class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ formatCurrency(reglement.montant) }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ formatDate(reglement.date_encaissement) }}
                                 </td>
                             </tr>
                             <!-- Empty rows for visual consistency -->
-                            <tr v-for="n in emptyRowsCount" :key="'empty-' + n" class="h-12">
-                                <td colspan="10" class="border-t border-gray-100 dark:border-gray-700"></td>
+                            <tr v-for="n in emptyRowsCount" :key="'empty-' + n" class="h-8">
+                                <td colspan="9" class="border-t border-gray-100 dark:border-gray-700"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -191,70 +195,58 @@
             </div>
 
             <!-- Right Section: Calendar -->
-            <div class="w-full lg:w-80 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                <!-- Year Display -->
-                <div class="text-center mb-6">
-                    <div class="flex justify-center items-baseline gap-1">
-                        <span class="text-5xl font-bold text-yellow-500">2</span>
-                        <span class="text-5xl font-bold text-cyan-500">0</span>
-                        <span class="text-5xl font-bold text-green-500">2</span>
-                        <span class="text-5xl font-bold text-pink-500">5</span>
+            <div class="w-full lg:w-96 xl:w-[420px] p-6 bg-gray-100 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                <!-- Month Navigation -->
+                <div class="flex items-center justify-center mb-4">
+                    <button 
+                        @click="previousMonth"
+                        class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        title="Mois précédent"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div class="mx-4 px-6 py-2 bg-green-500 text-white font-bold rounded text-base">
+                        {{ currentDate.getDate() }} {{ getMonthName(currentDate.getMonth()) }} {{ currentDate.getFullYear() }}
+                    </div>
+                    <button 
+                        @click="nextMonth"
+                        class="p-2 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                        title="Mois suivant"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Days of Week -->
+                <div class="grid grid-cols-7 gap-2 mb-3">
+                    <div 
+                        v-for="(day, index) in dayNames" 
+                        :key="index"
+                        class="text-center py-2.5 text-sm font-bold text-white rounded"
+                        :style="{ backgroundColor: day.color }"
+                    >
+                        {{ day.abbr }}
                     </div>
                 </div>
 
-                <!-- Calendar Grid -->
-                <div class="grid grid-cols-3 gap-3">
+                <!-- Calendar Days -->
+                <div class="grid grid-cols-7 gap-2">
                     <div 
-                        v-for="(month, index) in calendarMonths" 
+                        v-for="(day, index) in calendarDays" 
                         :key="index"
-                        @click="selectMonth(index + 1)"
-                        class="cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-md"
+                        class="text-center py-2.5 text-sm rounded transition-colors min-h-[40px] flex items-center justify-center"
                         :class="[
-                            selectedMonth === index + 1 
-                                ? 'border-blue-500 ring-2 ring-blue-500/50' 
-                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-400'
+                            day === 0 ? 'text-transparent' : '',
+                            isWeekendOrHoliday(day) ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-900 dark:text-white',
+                            day === currentDate.getDate() && isCurrentMonth ? 'bg-blue-100 dark:bg-blue-900/30 font-bold' : ''
                         ]"
                     >
-                        <!-- Month Header -->
-                        <div 
-                            class="text-center py-1.5 text-[10px] font-bold text-white tracking-wide"
-                            :style="{ backgroundColor: month.color }"
-                        >
-                            {{ month.name }}
-                        </div>
-                        <!-- Mini Calendar Grid -->
-                        <div class="bg-white p-1.5">
-                            <div class="grid grid-cols-7 gap-px text-center">
-                                <!-- Day headers -->
-                                <div 
-                                    v-for="(day, i) in ['D', 'L', 'M', 'M', 'J', 'V', 'S']" 
-                                    :key="'header-' + i" 
-                                    class="text-[7px] text-gray-400 font-semibold"
-                                >
-                                    {{ day }}
-                                </div>
-                                <!-- Days -->
-                                <div 
-                                    v-for="(day, dayIndex) in month.days" 
-                                    :key="dayIndex" 
-                                    class="text-[7px] text-gray-600 leading-tight"
-                                    :class="{ 'text-transparent': day === 0 }"
-                                >
-                                    {{ day || '' }}
-                                </div>
-                            </div>
-                        </div>
+                        {{ day || '' }}
                     </div>
-                </div>
-
-                <!-- Clear Filter Button -->
-                <div v-if="selectedMonth" class="mt-4 text-center">
-                    <button 
-                        @click="clearMonthFilter"
-                        class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                        Effacer le filtre du mois
-                    </button>
                 </div>
             </div>
         </div>
@@ -270,11 +262,10 @@ import { ref, computed, onMounted } from 'vue'
 
 const reglements = ref([])
 const loading = ref(false)
-const selectedMonth = ref(null)
+const currentDate = ref(new Date(2025, 2, 3)) // March 3, 2025
 
 const filters = ref({
     mois: '',
-    code: '',
     nomFournisseur: '',
     nomClient: '',
     statut: ''
@@ -299,58 +290,22 @@ const months = [
     { value: '12', label: 'Décembre' }
 ]
 
-const calendarMonths = [
-    { name: 'JANUARY', color: '#3B82F6', days: generateMonthDays(2025, 0) },
-    { name: 'FEBRUARY', color: '#EC4899', days: generateMonthDays(2025, 1) },
-    { name: 'MARCH', color: '#10B981', days: generateMonthDays(2025, 2) },
-    { name: 'APRIL', color: '#F59E0B', days: generateMonthDays(2025, 3) },
-    { name: 'MAY', color: '#8B5CF6', days: generateMonthDays(2025, 4) },
-    { name: 'JUNE', color: '#06B6D4', days: generateMonthDays(2025, 5) },
-    { name: 'JULY', color: '#6366F1', days: generateMonthDays(2025, 6) },
-    { name: 'AUGUST', color: '#F97316', days: generateMonthDays(2025, 7) },
-    { name: 'SEPTEMBER', color: '#14B8A6', days: generateMonthDays(2025, 8) },
-    { name: 'OCTOBER', color: '#EF4444', days: generateMonthDays(2025, 9) },
-    { name: 'NOVEMBER', color: '#84CC16', days: generateMonthDays(2025, 10) },
-    { name: 'DECEMBER', color: '#F43F5E', days: generateMonthDays(2025, 11) }
+const dayNames = [
+    { abbr: 'SUN', color: '#FCD34D' }, // Yellow
+    { abbr: 'MON', color: '#F472B6' }, // Pink
+    { abbr: 'TUE', color: '#60A5FA' }, // Light Blue
+    { abbr: 'WED', color: '#14B8A6' }, // Teal
+    { abbr: 'THU', color: '#FB923C' }, // Orange
+    { abbr: 'FRI', color: '#F472B6' }, // Pink
+    { abbr: 'SAT', color: '#10B981' }  // Green
 ]
 
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Generate days array for a given month (with leading empty cells for alignment)
- */
-function generateMonthDays(year, month) {
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const days = []
-    
-    // Add empty cells for days before the 1st
-    for (let i = 0; i < firstDay; i++) {
-        days.push(0)
-    }
-    
-    // Add the actual days
-    for (let i = 1; i <= daysInMonth; i++) {
-        days.push(i)
-    }
-    
-    // Fill remaining cells to complete the grid (6 rows x 7 days = 42)
-    while (days.length < 42) {
-        days.push(0)
-    }
-    
-    return days
-}
+// Red dates for March 2025 (weekends and holidays based on image)
+const redDates = [3, 5, 9, 13, 19, 20, 22, 25, 28, 29, 30, 31]
 
 // =============================================================================
 // COMPUTED PROPERTIES
 // =============================================================================
-
-const uniqueCodes = computed(() => {
-    return [...new Set(reglements.value.map(r => r.code_reglement).filter(Boolean))]
-})
 
 const uniqueFournisseurs = computed(() => {
     return [...new Set(reglements.value.map(r => r.fournisseur?.nom_fournisseur).filter(Boolean))]
@@ -367,9 +322,6 @@ const filteredReglements = computed(() => {
             const reglementMonth = r.date_reglement ? r.date_reglement.substring(5, 7) : ''
             if (reglementMonth !== filters.value.mois) return false
         }
-        
-        // Code filter
-        if (filters.value.code && r.code_reglement !== filters.value.code) return false
         
         // Fournisseur filter
         if (filters.value.nomFournisseur && r.fournisseur?.nom_fournisseur !== filters.value.nomFournisseur) return false
@@ -389,9 +341,49 @@ const totalTTC = computed(() => {
 })
 
 const emptyRowsCount = computed(() => {
-    const minRows = 6
+    const minRows = 8
     const currentRows = filteredReglements.value.length
     return Math.max(0, minRows - currentRows)
+})
+
+const calendarDays = computed(() => {
+    const year = currentDate.value.getFullYear()
+    const month = currentDate.value.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const days = []
+    
+    // Adjust first day: 0 = Sunday, 1 = Monday, etc.
+    // We want Sunday to be first (0)
+    const adjustedFirstDay = firstDay === 0 ? 0 : firstDay
+    
+    // Add empty cells for days before the 1st
+    for (let i = 0; i < adjustedFirstDay; i++) {
+        days.push(0)
+    }
+    
+    // Add the actual days
+    for (let i = 1; i <= daysInMonth; i++) {
+        days.push(i)
+    }
+    
+    // Fill remaining cells to complete the grid (up to 6 rows x 7 days = 42)
+    while (days.length < 42) {
+        days.push(0)
+    }
+    
+    // Limit to 35 cells (5 rows) if possible
+    if (days.length > 35 && days.slice(35, 42).every(d => d === 0)) {
+        return days.slice(0, 35)
+    }
+    
+    return days
+})
+
+const isCurrentMonth = computed(() => {
+    const now = new Date()
+    return currentDate.value.getMonth() === now.getMonth() && 
+           currentDate.value.getFullYear() === now.getFullYear()
 })
 
 // =============================================================================
@@ -422,19 +414,64 @@ const formatCurrency = (value) => {
 }
 
 /**
- * Select a month from the calendar widget
+ * Get month name in French
  */
-const selectMonth = (month) => {
-    selectedMonth.value = month
-    filters.value.mois = month.toString().padStart(2, '0')
+const getMonthName = (monthIndex) => {
+    const monthNames = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ]
+    return monthNames[monthIndex]
 }
 
 /**
- * Clear the month filter
+ * Navigate to previous month
  */
-const clearMonthFilter = () => {
-    selectedMonth.value = null
-    filters.value.mois = ''
+const previousMonth = () => {
+    const newDate = new Date(currentDate.value)
+    newDate.setMonth(newDate.getMonth() - 1)
+    currentDate.value = newDate
+    filters.value.mois = (newDate.getMonth() + 1).toString().padStart(2, '0')
+}
+
+/**
+ * Navigate to next month
+ */
+const nextMonth = () => {
+    const newDate = new Date(currentDate.value)
+    newDate.setMonth(newDate.getMonth() + 1)
+    currentDate.value = newDate
+    filters.value.mois = (newDate.getMonth() + 1).toString().padStart(2, '0')
+}
+
+/**
+ * Check if a date is a weekend or holiday (highlighted in red)
+ */
+const isWeekendOrHoliday = (day) => {
+    if (day === 0) return false
+    const year = currentDate.value.getFullYear()
+    const month = currentDate.value.getMonth()
+    const date = new Date(year, month, day)
+    const dayOfWeek = date.getDay()
+    
+    // Check if it's a weekend (Saturday = 6, Sunday = 0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return true
+    }
+    
+    // Check if it's in the red dates list for the current month
+    if (month === 2 && year === 2025) { // March 2025
+        return redDates.includes(day)
+    }
+    
+    return false
+}
+
+/**
+ * Add new entry (placeholder)
+ */
+const addNew = () => {
+    alert('Fonctionnalité d\'ajout à implémenter')
 }
 
 /**
@@ -480,7 +517,8 @@ onMounted(() => {
 <style scoped>
 /* Print styles */
 @media print {
-    .lg\:w-80 {
+    .lg\:w-96,
+    .xl\:w-\[420px\] {
         display: none;
     }
 }
