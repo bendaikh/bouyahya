@@ -634,4 +634,235 @@ class SettingsController extends Controller
             'commerciales' => $commerciales
         ]);
     }
+
+    // =====================================================
+    // TRANSPORTS
+    // =====================================================
+
+    /**
+     * Get all transports
+     */
+    public function getTransports()
+    {
+        $transports = json_decode(Setting::getValue('transports', '[]'), true);
+        return response()->json(['transports' => $transports]);
+    }
+
+    /**
+     * Add a new transport
+     */
+    public function addTransport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'age' => 'required|integer|min:1|max:120',
+            'telephone' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $transports = json_decode(Setting::getValue('transports', '[]'), true);
+        
+        // Generate unique ID
+        $id = uniqid('trans_');
+        
+        $transport = [
+            'id' => $id,
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
+            'age' => $request->age,
+            'telephone' => $request->telephone
+        ];
+
+        $transports[] = $transport;
+        Setting::setValue('transports', json_encode($transports));
+
+        return response()->json([
+            'message' => 'Transport ajouté avec succès',
+            'transports' => $transports
+        ]);
+    }
+
+    /**
+     * Update a transport
+     */
+    public function updateTransport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'age' => 'required|integer|min:1|max:120',
+            'telephone' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $transports = json_decode(Setting::getValue('transports', '[]'), true);
+        
+        foreach ($transports as &$transport) {
+            if (isset($transport['id']) && $transport['id'] === $request->id) {
+                $transport['nom'] = $request->nom;
+                $transport['prenom'] = $request->prenom;
+                $transport['age'] = $request->age;
+                $transport['telephone'] = $request->telephone;
+                break;
+            }
+        }
+        
+        Setting::setValue('transports', json_encode($transports));
+
+        return response()->json([
+            'message' => 'Transport mis à jour avec succès',
+            'transports' => $transports
+        ]);
+    }
+
+    /**
+     * Remove a transport
+     */
+    public function removeTransport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $transports = json_decode(Setting::getValue('transports', '[]'), true);
+        $transports = array_values(array_filter($transports, fn($t) => !isset($t['id']) || $t['id'] !== $request->id));
+        
+        Setting::setValue('transports', json_encode($transports));
+
+        return response()->json([
+            'message' => 'Transport supprimé avec succès',
+            'transports' => $transports
+        ]);
+    }
+
+    // =====================================================
+    // MATRICULES
+    // =====================================================
+
+    /**
+     * Get all matricules
+     */
+    public function getMatricules()
+    {
+        $matricules = json_decode(Setting::getValue('matricules', '[]'), true);
+        return response()->json(['matricules' => $matricules]);
+    }
+
+    /**
+     * Add a new matricule
+     */
+    public function addMatricule(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'vehicule_name' => 'required|string|max:255',
+            'matricule' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $matricules = json_decode(Setting::getValue('matricules', '[]'), true);
+        
+        // Check if matricule already exists
+        $exists = array_filter($matricules, fn($m) => isset($m['matricule']) && strtolower($m['matricule']) === strtolower($request->matricule));
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce matricule existe déjà'], 422);
+        }
+
+        // Generate unique ID
+        $id = uniqid('mat_');
+        
+        $matricule = [
+            'id' => $id,
+            'vehicule_name' => $request->vehicule_name,
+            'matricule' => $request->matricule
+        ];
+
+        $matricules[] = $matricule;
+        Setting::setValue('matricules', json_encode($matricules));
+
+        return response()->json([
+            'message' => 'Matricule ajouté avec succès',
+            'matricules' => $matricules
+        ]);
+    }
+
+    /**
+     * Update a matricule
+     */
+    public function updateMatricule(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'vehicule_name' => 'required|string|max:255',
+            'matricule' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $matricules = json_decode(Setting::getValue('matricules', '[]'), true);
+        
+        // Check if matricule already exists for another vehicule
+        $exists = array_filter($matricules, fn($m) => 
+            isset($m['id']) && $m['id'] !== $request->id && 
+            isset($m['matricule']) && strtolower($m['matricule']) === strtolower($request->matricule)
+        );
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce matricule existe déjà'], 422);
+        }
+        
+        foreach ($matricules as &$matricule) {
+            if (isset($matricule['id']) && $matricule['id'] === $request->id) {
+                $matricule['vehicule_name'] = $request->vehicule_name;
+                $matricule['matricule'] = $request->matricule;
+                break;
+            }
+        }
+        
+        Setting::setValue('matricules', json_encode($matricules));
+
+        return response()->json([
+            'message' => 'Matricule mis à jour avec succès',
+            'matricules' => $matricules
+        ]);
+    }
+
+    /**
+     * Remove a matricule
+     */
+    public function removeMatricule(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $matricules = json_decode(Setting::getValue('matricules', '[]'), true);
+        $matricules = array_values(array_filter($matricules, fn($m) => !isset($m['id']) || $m['id'] !== $request->id));
+        
+        Setting::setValue('matricules', json_encode($matricules));
+
+        return response()->json([
+            'message' => 'Matricule supprimé avec succès',
+            'matricules' => $matricules
+        ]);
+    }
 }

@@ -56,6 +56,8 @@ function bonLivraisonApp() {
         availableBonAchatFournisseurs: [],
         searchImport: '',
         commerciales: [],
+        transports: [],
+        matricules: [],
         bonLivraisonsList: [],
         filteredBonLivraisonsList: [],
         searchFilters: {
@@ -96,6 +98,8 @@ function bonLivraisonApp() {
             
             await this.fetchNextNumero();
             await this.fetchCommerciales();
+            await this.fetchTransports();
+            await this.fetchMatricules();
         },
         
         async fetchCommerciales() {
@@ -118,6 +122,26 @@ function bonLivraisonApp() {
                 }
             } catch (error) {
                 console.error('Error fetching commerciales:', error);
+            }
+        },
+        
+        async fetchTransports() {
+            try {
+                const response = await fetch('/api/settings/transports');
+                const data = await response.json();
+                this.transports = data.transports || [];
+            } catch (error) {
+                console.error('Error fetching transports:', error);
+            }
+        },
+        
+        async fetchMatricules() {
+            try {
+                const response = await fetch('/api/settings/matricules');
+                const data = await response.json();
+                this.matricules = data.matricules || [];
+            } catch (error) {
+                console.error('Error fetching matricules:', error);
             }
         },
         
@@ -857,11 +881,21 @@ function exportToPDF() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chauffeur</label>
-                        <input type="text" x-model="formData.chauffeur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <select x-model="formData.chauffeur" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            <template x-for="transport in transports" :key="transport.id">
+                                <option :value="transport.nom + ' ' + transport.prenom" x-text="transport.nom + ' ' + transport.prenom"></option>
+                            </template>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Matricule</label>
-                        <input type="text" x-model="formData.matriculeVehicule" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <select x-model="formData.matriculeVehicule" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Sélectionner</option>
+                            <template x-for="matricule in matricules" :key="matricule.id">
+                                <option :value="matricule.matricule" x-text="matricule.vehicule_name + ' - ' + matricule.matricule"></option>
+                            </template>
+                        </select>
                     </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport</label>

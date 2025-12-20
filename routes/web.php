@@ -274,6 +274,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/commerciales', function () {
             return view('parametres.commerciales', ['page_title' => 'Paramètres Commerciales']);
         })->name('parametres.commerciales');
+        
+        Route::get('/transports', function () {
+            return view('parametres.transports', ['page_title' => 'Paramètres Transports']);
+        })->name('parametres.transports');
+        
+        Route::get('/matricules', function () {
+            return view('parametres.matricules', ['page_title' => 'Paramètres Matricules']);
+        })->name('parametres.matricules');
     });
 
     // API Routes for Settings
@@ -309,6 +317,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/commerciales/add', [SettingsController::class, 'addCommerciale']);
         Route::post('/commerciales/update', [SettingsController::class, 'updateCommerciale']);
         Route::post('/commerciales/remove', [SettingsController::class, 'removeCommerciale']);
+        
+        // Transports routes
+        Route::get('/transports', [SettingsController::class, 'getTransports']);
+        Route::post('/transports/add', [SettingsController::class, 'addTransport']);
+        Route::post('/transports/update', [SettingsController::class, 'updateTransport']);
+        Route::post('/transports/remove', [SettingsController::class, 'removeTransport']);
+        
+        // Matricules routes
+        Route::get('/matricules', [SettingsController::class, 'getMatricules']);
+        Route::post('/matricules/add', [SettingsController::class, 'addMatricule']);
+        Route::post('/matricules/update', [SettingsController::class, 'updateMatricule']);
+        Route::post('/matricules/remove', [SettingsController::class, 'removeMatricule']);
     });
 
     // API Routes for Articles
