@@ -114,7 +114,7 @@ Route::middleware('auth')->group(function () {
         })->name('ventes.historique');
         
         Route::get('/releve-compte-clients', function () {
-            return view('ventes.releve-compte-clients', ['page_title' => 'Relevé compte clients']);
+            return view('ventes.releve-compte-clients', ['page_title' => 'Relevé compte clients', 'vue_component' => 'ReleveCompteClients']);
         })->name('ventes.releve-compte-clients');
 });
 
