@@ -73,8 +73,7 @@
                             <td class="px-6 py-4 text-gray-700 dark:text-gray-200">{{ client.ville || '—' }}</td>
                             <td class="px-6 py-4">
                                 <span
-                                    class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
-                                    :class="client.typeClient === 'Société' ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'"
+                                    class="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
                                 >
                                     {{ client.typeClient }}
                                 </span>
@@ -285,7 +284,7 @@ const villeOptions = [
     'Oujda',
     'Tetouan'
 ]
-const typeOptions = ['Particulier', 'Société']
+const typeOptions = ['REV', 'PROMO', 'ENTR', 'CON.FI']
 const modePaiementOptions = ['Espèces', 'Virement', 'Chèque', 'Traite']
 const echeanceOptions = ['0j', '30j', '45j', '60j', '90j']
 

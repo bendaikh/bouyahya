@@ -205,7 +205,7 @@ const clientsListUrl = '/clients'
 
 const villeOptions = ref([])
 
-const typeOptions = ['Particulier', 'Société']
+const typeOptions = ['REV', 'PROMO', 'ENTR', 'CON.FI']
 const modePaiementOptions = ['Espèces', 'Virement', 'Chèque', 'Traite']
 const echeanceOptions = ['0j', '30j', '45j', '60j', '90j']
 
