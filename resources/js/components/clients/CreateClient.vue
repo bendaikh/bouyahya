@@ -274,7 +274,7 @@ const handleSubmit = async () => {
         isSubmitting.value = true
         await new Promise((resolve) => setTimeout(resolve, 400))
 
-        createClient({
+        await createClient({
             ...form,
             plafond: form.plafond !== null ? Number(form.plafond) : null
         })
@@ -285,6 +285,11 @@ const handleSubmit = async () => {
         }, 1200)
     } catch (error) {
         console.error('Erreur lors de la création du client', error)
+        const errorMessage = error.response?.data?.errors 
+            ? Object.values(error.response.data.errors).flat().join(', ')
+            : error.response?.data?.message || 'Erreur lors de la création du client'
+        alert(errorMessage)
+        successMessage.value = ''
     } finally {
         isSubmitting.value = false
     }

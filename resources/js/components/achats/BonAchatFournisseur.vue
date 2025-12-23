@@ -695,7 +695,7 @@
                                             Aucun règlement trouvé
                                         </td>
                                     </tr>
-                                    <tr v-else v-for="(reglement, index) in paymentData.reglements" :key="index">
+                                    <tr v-else v-for="(reglement, index) in paymentData.reglements" :key="index" :class="getReglementRowBgClass(reglement.statut)">
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.numero_reglement }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.type }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
@@ -1325,6 +1325,19 @@ const getStatusText = (statut) => {
             return 'Annulé'
         default:
             return 'Brouillon'
+    }
+}
+
+// Get row background color class for reglement based on status
+const getReglementRowBgClass = (statut) => {
+    if (!statut) return ''
+    switch (statut) {
+        case 'devalide':
+            return 'bg-purple-500/40 dark:bg-purple-600/50'
+        case 'impaye':
+            return 'bg-red-500/40 dark:bg-red-600/50'
+        default:
+            return ''
     }
 }
 
