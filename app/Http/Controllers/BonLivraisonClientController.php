@@ -397,5 +397,31 @@ class BonLivraisonClientController extends Controller
             return response()->json(['error' => 'Erreur: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Update status of bon de livraison
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'statut' => 'required|string|in:En attente,Livré,Annulé',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $bonLivraison = BonLivraisonClient::findOrFail($id);
+            $bonLivraison->update(['statut' => $request->statut]);
+            
+            return response()->json([
+                'message' => 'Statut mis à jour avec succès',
+                'bonLivraison' => $bonLivraison->load('client', 'articles'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur: ' . $e->getMessage()], 500);
+        }
+    }
 }
 

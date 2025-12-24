@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bon-livraison/{id}/print', [BonLivraisonClientController::class, 'print'])->name('ventes.bon-livraison.print');
         Route::post('/bon-livraison/{id}/mark-delivered', [BonLivraisonClientController::class, 'markDelivered'])->name('ventes.bon-livraison.mark-delivered');
         Route::post('/bon-livraison/{id}/cancel', [BonLivraisonClientController::class, 'cancel'])->name('ventes.bon-livraison.cancel');
+        Route::post('/bon-livraison/{id}/update-status', [BonLivraisonClientController::class, 'updateStatus'])->name('ventes.bon-livraison.update-status');
         
         // Trésorerie (Ventes) - previously "Règlements clients"
         Route::get('/reglements-clients', [CompteTresorerieController::class, 'indexVentes'])->name('ventes.reglements-clients');

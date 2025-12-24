@@ -67,6 +67,10 @@ function bonLivraisonApp() {
             commercial: '',
             ville: ''
         },
+        showStatusModal: false,
+        selectedBonLivraisonId: null,
+        selectedBonLivraisonNumero: '',
+        availableStatuses: ['En attente', 'Livré', 'Annulé'],
 
         formatDate(dateStr) {
             if (!dateStr) return '';
@@ -638,6 +642,57 @@ function bonLivraisonApp() {
                 this.formData.numero = '';
                 this.fetchNextNumero();
             });
+        },
+        
+        openStatusModal(id, numero) {
+            this.selectedBonLivraisonId = id;
+            this.selectedBonLivraisonNumero = numero;
+            this.showStatusModal = true;
+        },
+        
+        closeStatusModal() {
+            this.showStatusModal = false;
+            this.selectedBonLivraisonId = null;
+            this.selectedBonLivraisonNumero = '';
+        },
+        
+        async updateStatus(newStatus) {
+            if (!this.selectedBonLivraisonId) return;
+            
+            try {
+                const response = await fetch(`/ventes/bon-livraison/${this.selectedBonLivraisonId}/update-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        statut: newStatus
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update the status in the local list
+                    const bonLivraison = this.bonLivraisonsList.find(bl => bl.id === this.selectedBonLivraisonId);
+                    if (bonLivraison) {
+                        bonLivraison.statut = newStatus;
+                    }
+                    // Also update in filtered list
+                    const filteredBonLivraison = this.filteredBonLivraisonsList.find(bl => bl.id === this.selectedBonLivraisonId);
+                    if (filteredBonLivraison) {
+                        filteredBonLivraison.statut = newStatus;
+                    }
+                    
+                    this.closeStatusModal();
+                    alert('Statut mis à jour avec succès!');
+                } else {
+                    alert('Erreur: ' + (data.error || data.message || 'Erreur lors de la mise à jour'));
+                }
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
         }
     };
 }
@@ -1310,13 +1365,16 @@ function exportToPDF() {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.total_quantites || 0"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="formatCurrency(bonLivraison.total_general || 0)"></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 text-xs font-semibold rounded-full" 
+                                    <span 
+                                        @click="openStatusModal(bonLivraison.id, bonLivraison.numero_bon)"
+                                        class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity" 
                                         :class="{
                                             'bg-green-500 text-white': bonLivraison.statut === 'Livré',
                                             'bg-red-500 text-white': bonLivraison.statut === 'Annulé',
                                             'bg-yellow-500 text-gray-900': bonLivraison.statut === 'En attente'
                                         }"
-                                        x-text="bonLivraison.statut || 'En attente'">
+                                        x-text="bonLivraison.statut || 'En attente'"
+                                        title="Cliquer pour modifier le statut">
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -1368,6 +1426,59 @@ function exportToPDF() {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Update Modal -->
+    <div x-show="showStatusModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4" @click.self="closeStatusModal()">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md">
+            <!-- Header -->
+            <div class="bg-gray-800 dark:bg-gray-700 px-6 py-4 flex items-center justify-between border-b border-gray-600">
+                <h3 class="text-lg font-semibold text-white">Modifier le statut</h3>
+                <button @click="closeStatusModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-6">
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                    Bon de livraison: <span class="font-semibold" x-text="selectedBonLivraisonNumero"></span>
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    Sélectionnez un nouveau statut:
+                </p>
+                
+                <div class="space-y-3">
+                    <template x-for="status in availableStatuses" :key="status">
+                        <button
+                            @click="updateStatus(status)"
+                            class="w-full px-4 py-3 text-left rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                            :class="{
+                                'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': status === 'Livré',
+                                'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': status === 'Annulé',
+                                'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200': status === 'En attente'
+                            }"
+                        >
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold" x-text="status"></span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-end border-t border-gray-200 dark:border-gray-600">
+                <button @click="closeStatusModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Annuler
+                </button>
             </div>
         </div>
     </div>
