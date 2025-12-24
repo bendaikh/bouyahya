@@ -232,9 +232,11 @@ class ReglementClientController extends Controller
         $excludeReglementId = $request->query('exclude_reglement_id');
         $etatRemboursement = $request->query('etat_remboursement');
         
-        // Récupérer les bons de livraison livrés du client avec les montants déjà réglés
+        // Récupérer les bons de livraison du client avec les montants déjà réglés
+        // Include all statuses except 'Annulé' to show unpaid delivery notes
         $query = BonLivraisonClient::where('client_id', $clientId)
-            ->where('statut', 'Livré');
+            ->where('statut', '!=', 'Annulé')
+            ->where('total_general', '>', 0);
         
         $bonsLivraison = $query->with(['client'])
             ->orderBy('date', 'asc')

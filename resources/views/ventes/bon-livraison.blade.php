@@ -50,6 +50,9 @@ function bonLivraisonApp() {
         articles: window.bonLivraisonArticles || [],
         searchArticle: '',
         filteredArticles: [],
+        clientSearch: '',
+        showClientDropdown: false,
+        filteredClients: [],
         showImportModal: false,
         importType: '', // 'bon-commande' or 'bon-achat-fournisseur'
         availableBonCommandes: [],
@@ -100,10 +103,42 @@ function bonLivraisonApp() {
             this.bonLivraisonsList = rawData.filter(bl => bl && bl.numero_bon);
             this.filteredBonLivraisonsList = [...this.bonLivraisonsList];
             
+            // Initialize clients list - filter out any null/undefined entries
+            const rawClients = @json($clients);
+            this.clients = rawClients.filter(c => c && c.id && (c.code_client || c.raison_sociale));
+            this.filteredClients = this.clients;
+            
             await this.fetchNextNumero();
             await this.fetchCommerciales();
             await this.fetchTransports();
             await this.fetchMatricules();
+        },
+        
+        searchClients() {
+            if (!this.clientSearch || this.clientSearch.length < 1) {
+                this.filteredClients = this.clients.filter(c => c && c.id && (c.code_client || c.raison_sociale));
+                return;
+            }
+            const search = this.clientSearch.toLowerCase();
+            this.filteredClients = this.clients.filter(c => {
+                if (!c || !c.id) return false;
+                const codeClient = (c.code_client || '').toLowerCase();
+                const raisonSociale = (c.raison_sociale || '').toLowerCase();
+                return codeClient.includes(search) || raisonSociale.includes(search);
+            });
+        },
+        
+        selectClient(client) {
+            this.formData.clientId = client.id;
+            this.clientSearch = `${client.code_client} - ${client.raison_sociale || ''}`;
+            this.showClientDropdown = false;
+            this.updateClientInfo();
+        },
+        
+        closeClientDropdown() {
+            setTimeout(() => {
+                this.showClientDropdown = false;
+            }, 200);
         },
         
         async fetchCommerciales() {
@@ -291,11 +326,14 @@ function bonLivraisonApp() {
                 this.formData.plafondAutorise = '';
                 return;
             }
-            const client = @json($clients).find(c => c.id == this.formData.clientId);
+            const client = this.clients.find(c => c.id == this.formData.clientId);
             if (client) {
                 this.formData.codeClient = client.code_client || '';
                 this.formData.nomClient = client.raison_sociale || '';
                 this.formData.plafondAutorise = client.plafond ? parseFloat(client.plafond).toFixed(2) + ' DH' : '';
+                if (!this.clientSearch || !this.clientSearch.includes(client.code_client)) {
+                    this.clientSearch = `${client.code_client} - ${client.raison_sociale || ''}`;
+                }
             }
         },
         
@@ -424,6 +462,10 @@ function bonLivraisonApp() {
                     this.formData.date = data.date ? data.date.split('T')[0] : '';
                     this.formData.numero = data.numero_bon;
                     this.formData.clientId = data.client_id;
+                    const client = this.clients.find(c => c.id == data.client_id);
+                    if (client) {
+                        this.clientSearch = `${client.code_client} - ${client.raison_sociale || ''}`;
+                    }
                     this.updateClientInfo();
                     this.formData.bonCommandeId = data.bon_commande_id;
                     this.formData.bonAchatFournisseurId = data.bon_achat_fournisseur_id;
@@ -558,6 +600,9 @@ function bonLivraisonApp() {
             this.formData.dateEcheance = '';
             this.formData.observations = '';
             this.formData.date = new Date().toISOString().split('T')[0];
+            this.clientSearch = '';
+            this.showClientDropdown = false;
+            this.filteredClients = this.clients.filter(c => c && c.id && (c.code_client || c.raison_sociale));
             this.fetchNextNumero();
         },
         
@@ -864,12 +909,40 @@ function exportToPDF() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom Client</label>
-                        <select x-model="formData.clientId" @change="updateClientInfo()" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="">Sélectionner</option>
-                            @foreach($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->raison_sociale }} ({{ $client->code_client }})</option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                x-model="clientSearch"
+                                @input="searchClients()"
+                                @focus="showClientDropdown = true"
+                                @blur="closeClientDropdown()"
+                                placeholder="Rechercher par code ou nom..."
+                                class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            />
+                            <!-- Dropdown -->
+                            <div 
+                                x-show="showClientDropdown && filteredClients.length > 0"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                            >
+                                <template x-for="c in filteredClients" :key="c.id">
+                                    <div 
+                                        x-show="c && c.id && (c.code_client || c.raison_sociale)"
+                                        @click="selectClient(c)"
+                                        class="px-3 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer text-sm"
+                                    >
+                                        <span class="font-medium text-blue-600 dark:text-blue-400" x-text="c.code_client || ''"></span>
+                                        <span class="text-gray-600 dark:text-gray-300" x-show="c.raison_sociale"> - <span x-text="c.raison_sociale"></span></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <!-- No results -->
+                            <div 
+                                x-show="showClientDropdown && clientSearch && filteredClients.length === 0"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 text-sm text-gray-500 dark:text-gray-400"
+                            >
+                                Aucun client trouvé
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Plafond Autorisé</label>
