@@ -346,9 +346,13 @@ class BonLivraisonClientController extends Controller
     public function print($id)
     {
         $bonLivraison = BonLivraisonClient::with(['client', 'articles', 'bonCommande'])->findOrFail($id);
+        $appLogo = Setting::getValue('app_logo', null);
+        $appName = Setting::getValue('app_name', 'STE LES ATELIERS BOUYAHYA');
         
         return view('ventes.bon-livraison-print', [
             'bonLivraison' => $bonLivraison,
+            'appLogo' => $appLogo,
+            'appName' => $appName,
         ]);
     }
 

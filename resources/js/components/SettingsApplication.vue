@@ -192,6 +192,15 @@ const loadSettings = async () => {
         const data = await response.json()
         appName.value = data.app_name
         appLogo.value = data.app_logo
+        // Force reload image if logo exists
+        if (appLogo.value) {
+            // Create a new image object to check if it loads
+            const img = new Image()
+            img.onerror = () => {
+                console.warn('Logo image failed to load, path:', appLogo.value)
+            }
+            img.src = getLogoUrl(appLogo.value)
+        }
     } catch (error) {
         console.error('Erreur lors du chargement des paramètres:', error)
         showMessage('Erreur lors du chargement des paramètres', true)
@@ -247,7 +256,7 @@ const handleFileChange = async (event) => {
 
         const data = await response.json()
         if (response.ok) {
-            appLogo.value = data.logo_path
+            appLogo.value = data.logo_path || data.logo_url
             showMessage('Logo téléchargé avec succès')
         } else {
             throw new Error(data.message || 'Erreur lors du téléchargement')
@@ -289,6 +298,11 @@ const deleteLogo = async () => {
 
 const getLogoUrl = (path) => {
     if (!path) return ''
+    // If path already starts with /storage, return as is
+    if (path.startsWith('/storage/')) {
+        return path
+    }
+    // Otherwise, prepend /storage/
     return `/storage/${path}`
 }
 

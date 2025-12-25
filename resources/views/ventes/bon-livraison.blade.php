@@ -74,6 +74,7 @@ function bonLivraisonApp() {
         selectedBonLivraisonId: null,
         selectedBonLivraisonNumero: '',
         availableStatuses: ['En attente', 'Livré', 'Annulé'],
+        openStatusDropdownId: null,
 
         formatDate(dateStr) {
             if (!dateStr) return '';
@@ -701,6 +702,49 @@ function bonLivraisonApp() {
             this.selectedBonLivraisonNumero = '';
         },
         
+        toggleStatusDropdown(bonLivraisonId) {
+            if (this.openStatusDropdownId === bonLivraisonId) {
+                this.openStatusDropdownId = null;
+            } else {
+                this.openStatusDropdownId = bonLivraisonId;
+            }
+        },
+        
+        async updateStatusDirect(bonLivraisonId, newStatus) {
+            try {
+                const response = await fetch(`/ventes/bon-livraison/${bonLivraisonId}/update-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        statut: newStatus
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update the status in the local list
+                    const bonLivraison = this.bonLivraisonsList.find(bl => bl.id === bonLivraisonId);
+                    if (bonLivraison) {
+                        bonLivraison.statut = newStatus;
+                    }
+                    // Also update in filtered list
+                    const filteredBonLivraison = this.filteredBonLivraisonsList.find(bl => bl.id === bonLivraisonId);
+                    if (filteredBonLivraison) {
+                        filteredBonLivraison.statut = newStatus;
+                    }
+                    this.openStatusDropdownId = null;
+                } else {
+                    alert('Erreur: ' + (data.error || data.message || 'Erreur lors de la mise à jour'));
+                }
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        },
+        
         async updateStatus(newStatus) {
             if (!this.selectedBonLivraisonId) return;
             
@@ -853,7 +897,6 @@ function exportToPDF() {
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-sm font-medium text-white dark:text-white">N° Bon de Livraison</label>
-                    <!-- Make Numero input explicitly readonly in viewMode via fieldset, but it's already readonly -->
                     <input type="text" x-model="formData.numero" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-40">
                 </div>
                 <div class="flex gap-2">
@@ -863,7 +906,7 @@ function exportToPDF() {
                         </svg>
                         Payer
                     </button>
-                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
@@ -873,21 +916,44 @@ function exportToPDF() {
             </div>
         </div>
 
-        <!-- Import Section -->
-        <div class="mb-6">
-            <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">Importateur depuis</p>
+        <!-- Import Section and Action Buttons Row -->
+        <div class="flex justify-between items-start mb-6">
+            <!-- Import Section -->
+            <div>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">Importateur depuis</p>
+                <div class="flex gap-3">
+                    <button @click="openImportModal('bon-commande')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                        </svg>
+                        Bon de Commande Vente
+                    </button>
+                    <button @click="openImportModal('bon-achat-fournisseur')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                        </svg>
+                        Bon d'Achat Fournisseur
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons - Positioned on the right -->
             <div class="flex gap-3">
-                <button @click="openImportModal('bon-commande')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
-                    </svg>
-                    Bon de Commande Vente
+                <button @click="editMode ? updateForm() : submitForm()" type="button" :disabled="isSubmitting" x-show="!viewMode" class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
+                    <span x-show="!isSubmitting">Valider</span>
+                    <span x-show="isSubmitting">...</span>
                 </button>
-                <button @click="openImportModal('bon-achat-fournisseur')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
-                    </svg>
-                    Bon d'Achat Fournisseur
+                <button @click="formMode = 'edit'" type="button" x-show="viewMode" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold">
+                    Modifier
+                </button>
+                <button @click="updateForm()" type="button" x-show="editMode && !viewMode" :disabled="isSubmitting" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
+                    Modifier
+                </button>
+                <button @click="deleteBonLivraisonFunc(editingId, formData.numero)" type="button" x-show="(editMode || viewMode) && editingId" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+                    Supprimer
+                </button>
+                <button @click="cancelEdit()" type="button" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+                    Annuler
                 </button>
             </div>
         </div>
@@ -895,8 +961,8 @@ function exportToPDF() {
         <!-- Info Client Livré and Info Livraison Sections -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <!-- Info Client Livré Section -->
-            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-semibold text-yellow-500 dark:text-yellow-400 mb-4">Info Client Livré</h3>
+            <div class="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <h3 class="text-sm font-semibold text-amber-600 dark:text-yellow-400 mb-4">Info Client Livré</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code Client</label>
@@ -982,8 +1048,8 @@ function exportToPDF() {
             </div>
 
             <!-- Info Livraison Section -->
-            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-semibold text-green-500 dark:text-green-400 mb-4">Info Livraison</h3>
+            <div class="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <h3 class="text-sm font-semibold text-green-600 dark:text-green-400 mb-4">Info Livraison</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code Fournisseur</label>
@@ -1039,7 +1105,7 @@ function exportToPDF() {
 
         <!-- Détail Commande Section -->
         <div class="mb-6">
-            <h3 class="text-sm font-semibold text-yellow-500 dark:text-yellow-400 mb-4">Détail Commande</h3>
+            <h3 class="text-sm font-semibold text-amber-600 dark:text-yellow-400 mb-4">Détail Commande</h3>
             
                 <!-- Article Search -->
             <div class="mb-4">
@@ -1128,33 +1194,23 @@ function exportToPDF() {
             </div>
         </div>
 
-        <!-- Summary Section -->
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center gap-4">
-                <label class="text-sm font-medium text-yellow-500 dark:text-yellow-400">Quantité Totale</label>
-                <input type="text" :value="totalQuantites" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-32">
+        <!-- Summary Section - Positioned at bottom right -->
+        <div class="flex justify-end items-center mb-6 gap-6">
+            <div class="flex items-center gap-3">
+                <label class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Quantité Total</label>
+                <input type="text" :value="totalQuantites" readonly class="px-4 py-2 bg-blue-500 border-0 rounded-lg text-white w-32 text-center font-bold">
             </div>
-            <div class="flex items-center gap-4">
-                <label class="text-sm font-medium text-yellow-500 dark:text-yellow-400">Montant TTC</label>
-                <input type="text" :value="formatCurrency(totalGeneral) + ' DH'" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-40">
+            <div class="flex items-center gap-3">
+                <label class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Total TTC</label>
+                <input type="text" :value="formatCurrency(totalGeneral) + ' DH'" readonly class="px-4 py-2 bg-yellow-400 border-0 rounded-lg text-gray-900 w-40 text-center font-bold">
             </div>
         </div>
         </fieldset>
 
-        <!-- Action Buttons -->
-        <div class="flex justify-end gap-3">
-            <button @click="editMode ? updateForm() : submitForm()" type="button" :disabled="isSubmitting" x-show="!viewMode" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                <span x-show="!isSubmitting">Valider</span>
-                <span x-show="isSubmitting">Enregistrement...</span>
-            </button>
-            <button @click="editMode ? updateForm() : submitForm()" type="button" x-show="editMode" :disabled="isSubmitting" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Modifier
-            </button>
-            <button @click="window.open(`/ventes/bon-livraison/${editingId}/print`, '_blank')" type="button" x-show="editingId" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+        <!-- Additional Action Buttons at bottom -->
+        <div class="flex justify-end gap-3" x-show="editingId">
+            <button @click="window.open(`/ventes/bon-livraison/${editingId}/print`, '_blank')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                 Imprimer
-            </button>
-            <button @click="cancelEdit()" type="button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                Annuler
             </button>
         </div>
     </div>
@@ -1437,18 +1493,63 @@ function exportToPDF() {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.commercial || '-'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.total_quantites || 0"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="formatCurrency(bonLivraison.total_general || 0)"></td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4 whitespace-nowrap relative">
+                                    <!-- Status Badge - Click to toggle dropdown -->
                                     <span 
-                                        @click="openStatusModal(bonLivraison.id, bonLivraison.numero_bon)"
-                                        class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity" 
+                                        @click.stop="toggleStatusDropdown(bonLivraison.id)"
+                                        class="px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1" 
                                         :class="{
                                             'bg-green-500 text-white': bonLivraison.statut === 'Livré',
                                             'bg-red-500 text-white': bonLivraison.statut === 'Annulé',
                                             'bg-yellow-500 text-gray-900': bonLivraison.statut === 'En attente'
                                         }"
-                                        x-text="bonLivraison.statut || 'En attente'"
                                         title="Cliquer pour modifier le statut">
+                                        <span x-text="bonLivraison.statut || 'En attente'"></span>
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </span>
+                                    
+                                    <!-- Status Dropdown -->
+                                    <div 
+                                        x-show="openStatusDropdownId === bonLivraison.id"
+                                        @click.away="openStatusDropdownId = null"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="absolute z-50 mt-1 left-0 w-36 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden"
+                                        style="display: none;">
+                                        
+                                        <!-- En attente Option -->
+                                        <button 
+                                            @click.stop="updateStatusDirect(bonLivraison.id, 'En attente')"
+                                            class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            :class="bonLivraison.statut === 'En attente' ? 'bg-yellow-50 dark:bg-yellow-900/30' : ''">
+                                            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                            <span class="text-yellow-700 dark:text-yellow-400 font-medium">En attente</span>
+                                        </button>
+                                        
+                                        <!-- Livré Option -->
+                                        <button 
+                                            @click.stop="updateStatusDirect(bonLivraison.id, 'Livré')"
+                                            class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            :class="bonLivraison.statut === 'Livré' ? 'bg-green-50 dark:bg-green-900/30' : ''">
+                                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                            <span class="text-green-700 dark:text-green-400 font-medium">Livré</span>
+                                        </button>
+                                        
+                                        <!-- Annulé Option -->
+                                        <button 
+                                            @click.stop="updateStatusDirect(bonLivraison.id, 'Annulé')"
+                                            class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            :class="bonLivraison.statut === 'Annulé' ? 'bg-red-50 dark:bg-red-900/30' : ''">
+                                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                            <span class="text-red-700 dark:text-red-400 font-medium">Annulé</span>
+                                        </button>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 text-xs font-semibold rounded-full" 

@@ -12,9 +12,9 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             padding: 20px;
-            color: #333;
+            color: #000;
             background: white;
         }
         
@@ -22,216 +22,188 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #1a4d1a;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #000;
         }
         
-        .company-info h1 {
-            color: #1a4d1a;
-            font-size: 28px;
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 5px;
         }
         
-        .document-info {
+        .logo-image {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            padding: 8px;
+            background: white;
+        }
+        
+        .logo-placeholder {
+            width: 120px;
+            height: 120px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .company-info {
             text-align: right;
         }
         
-        .document-info h2 {
-            color: #1a4d1a;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .document-info .number {
-            font-size: 18px;
+        .company-name {
+            color: #006400;
+            font-size: 22px;
             font-weight: bold;
-            color: #333;
+            text-decoration: underline;
+            margin-bottom: 5px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
         }
         
-        .document-info .date {
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .reference-badge {
-            display: inline-block;
-            background: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 3px 8px;
-            border-radius: 4px;
+        .company-subtitle {
+            color: #000;
             font-size: 12px;
             margin-top: 5px;
         }
         
         .info-section {
             display: flex;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
         
         .info-box {
             flex: 1;
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-        }
-        
-        .info-box.driver {
-            background: linear-gradient(135deg, #e8f4fd 0%, #f8f9fa 100%);
-            border-color: #b3d9f7;
-        }
-        
-        .info-box h3 {
-            color: #1a4d1a;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .info-box.driver h3 {
-            color: #2563eb;
-            border-color: #b3d9f7;
+            border: 1px solid #006400;
+            padding: 10px;
+            background: #fff;
         }
         
         .info-row {
             display: flex;
             margin-bottom: 5px;
+            font-size: 11px;
         }
         
         .info-label {
-            font-weight: 600;
-            color: #666;
-            width: 120px;
-            font-size: 13px;
+            font-weight: normal;
+            color: #000;
+            min-width: 100px;
         }
         
         .info-value {
-            color: #333;
-            font-size: 13px;
+            color: #000;
+            flex: 1;
         }
+        
+        .info-value.dotted {
+            border-bottom: 1px dotted #000;
+            flex: 1;
+            margin-left: 5px;
+            min-height: 15px;
+        }
+        
+        .signature-cell {
+            flex: 1;
+            border-bottom: 1px solid #000;
+            height: 30px;
+            margin: 0 5px;
+            padding: 5px;
+            font-size: 11px;
+        }
+        
+        .signature-headers {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .signature-header {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
         
         .articles-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .articles-table th {
-            background: #1a4d1a;
+            background: #808080;
             color: white;
-            padding: 12px;
+            padding: 8px;
             text-align: left;
-            font-size: 13px;
-            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #000;
         }
         
         .articles-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 13px;
-        }
-        
-        .articles-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        
-        .articles-table .text-center {
-            text-align: center;
+            padding: 8px;
+            border: 1px solid #000;
+            font-size: 11px;
         }
         
         .articles-table .text-right {
             text-align: right;
         }
         
-        .totals {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 40px;
+        .articles-table .text-center {
+            text-align: center;
         }
         
         .totals-box {
-            width: 300px;
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
+            width: 250px;
+            background: #e8e8e8;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-left: auto;
         }
         
         .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .total-row:last-child {
-            border-bottom: none;
-            padding-top: 15px;
+            padding: 5px 0;
+            font-size: 11px;
         }
         
         .total-row.final {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1a4d1a;
-        }
-        
-        .observations {
-            background: #fff9e6;
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 40px;
-        }
-        
-        .observations h3 {
-            color: #856404;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .observations p {
-            color: #333;
-            font-size: 13px;
-        }
-        
-        .signatures {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 60px;
-        }
-        
-        .signature-box {
-            text-align: center;
-            width: 200px;
-        }
-        
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-bottom: 5px;
-        }
-        
-        .signature-label {
             font-size: 12px;
-            color: #666;
-        }
-        
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 15px;
+            font-weight: bold;
+            margin-top: 5px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
         }
         
         @media print {
             body {
-                padding: 0;
+                padding: 10px;
             }
             
             .no-print {
@@ -242,72 +214,82 @@
 </head>
 <body>
     <div class="header">
-        <div class="company-info">
-            <h1>BOUYAHYA</h1>
-            <p>Gestion Commerciale</p>
+        <div class="logo-section">
+            <div class="logo-container">
+                @if($appLogo && file_exists(storage_path('app/public/' . $appLogo)))
+                    <img src="{{ asset('storage/' . $appLogo) }}" alt="Logo" class="logo-image">
+                @else
+                    <div class="logo-placeholder">Logo</div>
+                @endif
+            </div>
         </div>
-        <div class="document-info">
-            <h2>BON DE LIVRAISON</h2>
-            <div class="number">{{ $bonLivraison->numero_bon }}</div>
-            <div class="date">Date: {{ $bonLivraison->date->format('d/m/Y') }}</div>
-            @if($bonLivraison->bonCommande)
-                <div class="reference-badge">Réf: {{ $bonLivraison->bonCommande->numero_bon }}</div>
-            @endif
+        <div class="company-info">
+            <div class="company-name">{{ $appName }}</div>
+            <div class="company-subtitle">Materiaux de construction</div>
         </div>
     </div>
     
     <div class="info-section">
         <div class="info-box">
-            <h3>Client</h3>
             <div class="info-row">
-                <span class="info-label">Code:</span>
-                <span class="info-value">{{ $bonLivraison->client->code_client }}</span>
+                <span class="info-label">Bon de Livraison N° :</span>
+                <span class="info-value">{{ $bonLivraison->numero_bon }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Nom:</span>
+                <span class="info-label">Date de Livraison :</span>
+                <span class="info-value">{{ $bonLivraison->date->format('d/m/Y') }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Affaire de Livraison :</span>
+                <span class="info-value">{{ $bonLivraison->ville_livraison ?? '-' }}</span>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">Code Client</span>
+                <span class="info-value dotted"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nom Client</span>
                 <span class="info-value">{{ $bonLivraison->client->raison_sociale }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Ville:</span>
-                <span class="info-value">{{ $bonLivraison->ville_livraison ?? $bonLivraison->client->ville ?? '-' }}</span>
-            </div>
-            @if($bonLivraison->adresse_livraison)
-            <div class="info-row">
-                <span class="info-label">Adresse:</span>
-                <span class="info-value">{{ $bonLivraison->adresse_livraison }}</span>
-            </div>
-            @endif
-        </div>
-        
-        <div class="info-box driver">
-            <h3>Informations Livraison</h3>
-            <div class="info-row">
-                <span class="info-label">Chauffeur:</span>
-                <span class="info-value">{{ $bonLivraison->chauffeur ?? 'Non assigné' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Véhicule:</span>
-                <span class="info-value">{{ $bonLivraison->matricule_vehicule ?? '-' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Téléphone:</span>
-                <span class="info-value">{{ $bonLivraison->telephone_chauffeur ?? '-' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Mode Paiement:</span>
+                <span class="info-label">Mode Paiement</span>
                 <span class="info-value">{{ $bonLivraison->mode_paiement }}</span>
             </div>
+            <div class="info-row">
+                <span class="info-value">{{ $bonLivraison->ville_livraison ?? $bonLivraison->client->ville ?? 'FES' }}</span>
+            </div>
         </div>
+    </div>
+    
+    <div class="signature-headers">
+        <div class="signature-header">Bon de Commande</div>
+        <div class="signature-header">Commercial</div>
+        <div class="signature-header">Chauffeur</div>
+        <div class="signature-header">Matricule</div>
+    </div>
+    
+    <div class="signature-row">
+        <div class="signature-cell">
+            @if($bonLivraison->bonCommande)
+                {{ $bonLivraison->bonCommande->numero_bon }}
+            @endif
+        </div>
+        <div class="signature-cell">{{ $bonLivraison->commercial ?? '' }}</div>
+        <div class="signature-cell">{{ $bonLivraison->chauffeur ?? '' }}</div>
+        <div class="signature-cell">{{ $bonLivraison->matricule_vehicule ?? '' }}</div>
     </div>
     
     <table class="articles-table">
         <thead>
             <tr>
-                <th>Code Article</th>
+                <th>REF</th>
                 <th>Désignation</th>
                 <th class="text-center">Quantité</th>
-                <th class="text-right">Prix Unitaire</th>
-                <th class="text-right">Sous-Total</th>
+                <th class="text-right">prix U</th>
+                <th class="text-right">S-Total</th>
             </tr>
         </thead>
         <tbody>
@@ -315,7 +297,7 @@
             <tr>
                 <td>{{ $article->code_article }}</td>
                 <td>{{ $article->designation }}</td>
-                <td class="text-center">{{ $article->quantite }}</td>
+                <td class="text-center">{{ number_format($article->quantite, 0, ',', ' ') }}</td>
                 <td class="text-right">{{ number_format($article->prix_unitaire, 2, ',', ' ') }} DH</td>
                 <td class="text-right">{{ number_format($article->sous_total, 2, ',', ' ') }} DH</td>
             </tr>
@@ -323,39 +305,15 @@
         </tbody>
     </table>
     
-    <div class="totals">
-        <div class="totals-box">
-            <div class="total-row">
-                <span>Total Quantités:</span>
-                <span>{{ $bonLivraison->total_quantites }}</span>
-            </div>
-            <div class="total-row final">
-                <span>TOTAL TTC:</span>
-                <span>{{ number_format($bonLivraison->total_general, 2, ',', ' ') }} DH</span>
-            </div>
+    <div class="totals-box">
+        <div class="total-row">
+            <span>Total Quantités:</span>
+            <span>{{ number_format($bonLivraison->total_quantites, 0, ',', ' ') }}</span>
         </div>
-    </div>
-    
-    @if($bonLivraison->observations)
-    <div class="observations">
-        <h3>Observations</h3>
-        <p>{{ $bonLivraison->observations }}</p>
-    </div>
-    @endif
-    
-    <div class="signatures">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">Signature Chauffeur</div>
+        <div class="total-row final">
+            <span>TOTAL TTC:</span>
+            <span>{{ number_format($bonLivraison->total_general, 2, ',', ' ') }} DH</span>
         </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-label">Signature Client</div>
-        </div>
-    </div>
-    
-    <div class="footer">
-        <p>Document généré le {{ now()->format('d/m/Y à H:i') }} - BOUYAHYA - Gestion Commerciale</p>
     </div>
     
     <script>
@@ -365,4 +323,6 @@
     </script>
 </body>
 </html>
+
+
 
