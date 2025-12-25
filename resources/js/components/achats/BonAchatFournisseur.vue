@@ -159,10 +159,54 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.client_livre || '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900 dark:text-white">{{ bon.total_qte || 0 }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">{{ formatCurrency(bon.total_ttc) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span :class="getStatusClass(bon.statut)" class="px-2 py-1 text-xs font-semibold rounded-full">
-                                {{ getStatusText(bon.statut) }}
+                        <td class="px-6 py-4 whitespace-nowrap relative">
+                            <!-- Status Badge - Click to toggle dropdown -->
+                            <span 
+                                @click.stop="toggleStatusDropdown(bon.id)"
+                                :class="getStatusClass(bon.statut)" 
+                                class="px-2 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+                                title="Cliquer pour modifier le statut">
+                                <span>{{ getStatusText(bon.statut) }}</span>
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
                             </span>
+                            
+                            <!-- Status Dropdown -->
+                            <div 
+                                v-show="openStatusDropdownId === bon.id"
+                                @click.away="openStatusDropdownId = null"
+                                class="absolute z-50 mt-1 left-0 w-36 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden"
+                                style="display: none;"
+                                :style="{ display: openStatusDropdownId === bon.id ? 'block' : 'none' }">
+                                
+                                <!-- Brouillon Option -->
+                                <button 
+                                    @click.stop="updateStatusDirect(bon.id, 'brouillon')"
+                                    class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    :class="bon.statut === 'brouillon' ? 'bg-gray-50 dark:bg-gray-900/30' : ''">
+                                    <span class="w-3 h-3 rounded-full bg-gray-500"></span>
+                                    <span class="text-gray-700 dark:text-gray-400 font-medium">Brouillon</span>
+                                </button>
+                                
+                                <!-- Validé Option -->
+                                <button 
+                                    @click.stop="updateStatusDirect(bon.id, 'valide')"
+                                    class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    :class="bon.statut === 'valide' ? 'bg-green-50 dark:bg-green-900/30' : ''">
+                                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                    <span class="text-green-700 dark:text-green-400 font-medium">Validé</span>
+                                </button>
+                                
+                                <!-- Annulé Option -->
+                                <button 
+                                    @click.stop="updateStatusDirect(bon.id, 'annule')"
+                                    class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                    :class="bon.statut === 'annule' ? 'bg-red-50 dark:bg-red-900/30' : ''">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="text-red-700 dark:text-red-400 font-medium">Annulé</span>
+                                </button>
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span :class="getEtatClass(bon)" class="px-2 py-1 text-xs font-semibold rounded-full">
@@ -771,6 +815,9 @@ const filterClientLivre = ref('')
 const filterStatut = ref('')
 const filterEtat = ref('')
 
+// Status dropdown state
+const openStatusDropdownId = ref(null)
+
 // Article autocomplete state
 const activeArticleIndex = ref(null) // Which article row is being searched
 const activeFieldType = ref(null) // 'ref' or 'designation' - which field is active
@@ -1198,6 +1245,46 @@ const onFournisseurChange = () => {
         if (fournisseur && fournisseur.ville) {
             form.value.ville = fournisseur.ville
         }
+    }
+}
+
+// Status dropdown functions
+const toggleStatusDropdown = (bonId) => {
+    if (openStatusDropdownId.value === bonId) {
+        openStatusDropdownId.value = null
+    } else {
+        openStatusDropdownId.value = bonId
+    }
+}
+
+const updateStatusDirect = async (bonId, newStatus) => {
+    try {
+        const response = await fetch(`/api/bon-achat-fournisseur/${bonId}/update-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                statut: newStatus
+            })
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok) {
+            // Update the status in the local list
+            const bon = bonAchats.value.find(b => b.id === bonId)
+            if (bon) {
+                bon.statut = newStatus
+            }
+            openStatusDropdownId.value = null
+        } else {
+            alert('Erreur: ' + (data.error || data.message || 'Erreur lors de la mise à jour'))
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du statut:', error)
+        alert('Erreur: ' + error.message)
     }
 }
 

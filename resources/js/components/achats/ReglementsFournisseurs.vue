@@ -133,10 +133,81 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ reglement.banque || '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(reglement.date_encaissement) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">{{ formatCurrency(reglement.montant) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="getStatusClass(reglement.statut)" class="px-2 py-1 text-xs font-semibold rounded-full">
-                                    {{ getStatusText(reglement.statut) }}
+                            <td class="px-6 py-4 whitespace-nowrap relative">
+                                <!-- Status Badge - Click to toggle dropdown -->
+                                <span 
+                                    @click.stop="toggleStatusDropdown(reglement.id)"
+                                    :class="getStatusClass(reglement.statut)" 
+                                    class="px-2 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+                                    title="Cliquer pour modifier le statut">
+                                    <span>{{ getStatusText(reglement.statut) }}</span>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
                                 </span>
+                                
+                                <!-- Status Dropdown -->
+                                <div 
+                                    v-show="openStatusDropdownId === reglement.id"
+                                    @click.away="openStatusDropdownId = null"
+                                    class="absolute z-50 mt-1 left-0 w-40 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden"
+                                    style="display: none;"
+                                    :style="{ display: openStatusDropdownId === reglement.id ? 'block' : 'none' }">
+                                    
+                                    <!-- Payé Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'paye')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'paye' ? 'bg-green-50 dark:bg-green-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                        <span class="text-green-700 dark:text-green-400 font-medium">Payé</span>
+                                    </button>
+                                    
+                                    <!-- Impayé Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'impaye')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'impaye' ? 'bg-red-50 dark:bg-red-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                        <span class="text-red-700 dark:text-red-400 font-medium">Impayé</span>
+                                    </button>
+                                    
+                                    <!-- Reporté Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'reporte')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'reporte' ? 'bg-orange-50 dark:bg-orange-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+                                        <span class="text-orange-700 dark:text-orange-400 font-medium">Reporté</span>
+                                    </button>
+                                    
+                                    <!-- Instance Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'instance')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'instance' ? 'bg-gray-50 dark:bg-gray-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-gray-400"></span>
+                                        <span class="text-gray-700 dark:text-gray-400 font-medium">Instance</span>
+                                    </button>
+                                    
+                                    <!-- En cour Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'cour')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'cour' ? 'bg-blue-50 dark:bg-blue-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                        <span class="text-blue-700 dark:text-blue-400 font-medium">En cour</span>
+                                    </button>
+                                    
+                                    <!-- Dévalidé Option -->
+                                    <button 
+                                        @click.stop="updateStatusDirect(reglement.id, 'devalide')"
+                                        class="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        :class="reglement.statut === 'devalide' ? 'bg-purple-50 dark:bg-purple-900/30' : ''">
+                                        <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                                        <span class="text-purple-700 dark:text-purple-400 font-medium">Dévalidé</span>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center gap-3">
@@ -555,6 +626,9 @@ const showForm = ref(false)
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingReglementId = ref(null)
 
+// Status dropdown state
+const openStatusDropdownId = ref(null)
+
 // List filters
 const filterEtat = ref('')
 const filterNumeroPiece = ref('')
@@ -878,6 +952,46 @@ const distributePayment = () => {
             bon.montant_a_imputer = amountForThisBon
             remainingAmount -= amountForThisBon
         }
+    }
+}
+
+// Status dropdown functions
+const toggleStatusDropdown = (reglementId) => {
+    if (openStatusDropdownId.value === reglementId) {
+        openStatusDropdownId.value = null
+    } else {
+        openStatusDropdownId.value = reglementId
+    }
+}
+
+const updateStatusDirect = async (reglementId, newStatus) => {
+    try {
+        const response = await fetch(`/api/reglements-fournisseurs/${reglementId}/update-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                statut: newStatus
+            })
+        })
+        
+        const data = await response.json()
+        
+        if (response.ok) {
+            // Update the status in the local list
+            const reglement = reglements.value.find(r => r.id === reglementId)
+            if (reglement) {
+                reglement.statut = newStatus
+            }
+            openStatusDropdownId.value = null
+        } else {
+            alert('Erreur: ' + (data.error || data.message || 'Erreur lors de la mise à jour'))
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du statut:', error)
+        alert('Erreur: ' + error.message)
     }
 }
 

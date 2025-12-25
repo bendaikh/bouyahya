@@ -210,6 +210,24 @@ class ReglementFournisseurController extends Controller
     }
 
     /**
+     * Update status directly
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'statut' => 'required|in:paye,impaye,reporte,instance,cour,devalide'
+        ]);
+
+        $reglement = ReglementFournisseur::findOrFail($id);
+        $reglement->update(['statut' => $request->statut]);
+
+        return response()->json([
+            'message' => 'Statut mis à jour avec succès',
+            'reglement' => $reglement->load(['fournisseur', 'lignes.bonAchat'])
+        ]);
+    }
+
+    /**
      * Supprimer un règlement
      */
     public function destroy($id)

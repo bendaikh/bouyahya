@@ -277,6 +277,21 @@ class BonAchatFournisseurController extends Controller
             'bon' => $bon->load(['fournisseur', 'articles'])
         ]);
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'statut' => 'required|in:brouillon,valide,annule'
+        ]);
+
+        $bon = BonAchatFournisseur::findOrFail($id);
+        $bon->update(['statut' => $request->statut]);
+
+        return response()->json([
+            'message' => 'Statut mis à jour avec succès',
+            'bon' => $bon->load(['fournisseur', 'articles'])
+        ]);
+    }
     
     /**
      * Delete a bon d'achat

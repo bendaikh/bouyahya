@@ -219,6 +219,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [BonAchatFournisseurController::class, 'update']);
         Route::post('/{id}/validate', [BonAchatFournisseurController::class, 'validateBon']);
         Route::post('/{id}/cancel', [BonAchatFournisseurController::class, 'cancel']);
+        Route::post('/{id}/update-status', [BonAchatFournisseurController::class, 'updateStatus']);
         Route::delete('/{id}', [BonAchatFournisseurController::class, 'destroy']);
     });
 
@@ -232,6 +233,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [ReglementFournisseurController::class, 'update']);
         Route::post('/{id}/mark-paid', [ReglementFournisseurController::class, 'markAsPaid']);
         Route::post('/{id}/mark-postponed', [ReglementFournisseurController::class, 'markAsPostponed']);
+        Route::post('/{id}/update-status', [ReglementFournisseurController::class, 'updateStatus']);
         Route::delete('/{id}', [ReglementFournisseurController::class, 'destroy']);
     });
 
