@@ -80,13 +80,17 @@
                 <!-- Client Livré -->
                 <div class="min-w-[140px]">
                     <label class="block text-xs text-gray-400 mb-1">Client Livré</label>
-                    <select 
+                    <input 
+                        type="text"
                         v-model="filters.clientLivre"
+                        list="clients-livres-list"
+                        placeholder="Rechercher..."
                         class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
+                    />
+                    <datalist id="clients-livres-list">
                         <option value="">Tous</option>
                         <option v-for="client in clientsLivres" :key="client" :value="client">{{ client }}</option>
-                    </select>
+                    </datalist>
                 </div>
                 
                 <!-- Refresh Button -->

@@ -477,14 +477,7 @@
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                         >
                             <option value="">Sélectionner banque</option>
-                            <option value="Attijariwafa Bank">Attijariwafa Bank</option>
-                            <option value="BMCE Bank">BMCE Bank</option>
-                            <option value="Banque Populaire">Banque Populaire</option>
-                            <option value="BMCI">BMCI</option>
-                            <option value="Société Générale">Société Générale</option>
-                            <option value="CIH Bank">CIH Bank</option>
-                            <option value="Crédit du Maroc">Crédit du Maroc</option>
-                            <option value="Autre">Autre</option>
+                            <option v-for="banque in banques" :key="banque.id" :value="banque.nom">{{ banque.nom }}</option>
                         </select>
                     </div>
                     <div>
@@ -540,7 +533,7 @@
                                 :disabled="formMode === 'view'"
                                 class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                             >
-                                <option value="">Sélectionner banque</option>
+                                <option value="">Sélectionner trésorerie</option>
                                 <option v-for="t in tresoreries" :key="t.id" :value="t.id">{{ t.libelle }} ({{ t.code }})</option>
                             </select>
                         </div>
@@ -678,6 +671,7 @@ import { ref, computed, onMounted } from 'vue'
 const reglements = ref([])
 const clients = ref([])
 const tresoreries = ref([])
+const banques = ref([])
 const bonsLivraisonClient = ref([])
 const loading = ref(false)
 const loadingBonsLivraison = ref(false)
@@ -841,6 +835,18 @@ const loadTresoreries = async () => {
         }
     } catch (error) {
         console.error('Erreur lors du chargement des trésoreries:', error)
+    }
+}
+
+const loadBanques = async () => {
+    try {
+        const response = await fetch('/api/settings/banques')
+        if (response.ok) {
+            const data = await response.json()
+            banques.value = data.banques || []
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des banques:', error)
     }
 }
 
@@ -1694,6 +1700,7 @@ onMounted(() => {
     loadReglements()
     loadClients()
     loadTresoreries()
+    loadBanques()
 })
 </script>
 

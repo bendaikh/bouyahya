@@ -22,7 +22,8 @@ class SettingsController extends Controller
             'familles_article' => json_decode(Setting::getValue('familles_article', '[]'), true),
             'sous_familles_article' => json_decode(Setting::getValue('sous_familles_article', '[]'), true),
             'unites_mesure' => json_decode(Setting::getValue('unites_mesure', '[]'), true),
-            'commerciales' => json_decode(Setting::getValue('commerciales', '[]'), true)
+            'commerciales' => json_decode(Setting::getValue('commerciales', '[]'), true),
+            'banques' => \App\Models\Banque::orderBy('nom')->get()
         ];
 
         return response()->json($settings);
@@ -863,6 +864,93 @@ class SettingsController extends Controller
         return response()->json([
             'message' => 'Matricule supprimé avec succès',
             'matricules' => $matricules
+        ]);
+    }
+
+    // =====================================================
+    // BANQUES
+    // =====================================================
+
+    /**
+     * Get all banques
+     */
+    public function getBanques()
+    {
+        $banques = \App\Models\Banque::orderBy('nom')->get();
+        return response()->json(['banques' => $banques]);
+    }
+
+    /**
+     * Add a new banque
+     */
+    public function addBanque(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nom' => 'required|string|max:255|unique:banques,nom'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors(), 'message' => 'Cette banque existe déjà'], 422);
+        }
+
+        $banque = \App\Models\Banque::create([
+            'nom' => $request->nom
+        ]);
+
+        $banques = \App\Models\Banque::orderBy('nom')->get();
+
+        return response()->json([
+            'message' => 'Banque ajoutée avec succès',
+            'banques' => $banques
+        ]);
+    }
+
+    /**
+     * Update a banque
+     */
+    public function updateBanque(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:banques,id',
+            'nom' => 'required|string|max:255|unique:banques,nom,' . $request->id
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors(), 'message' => 'Cette banque existe déjà'], 422);
+        }
+
+        $banque = \App\Models\Banque::findOrFail($request->id);
+        $banque->update(['nom' => $request->nom]);
+
+        $banques = \App\Models\Banque::orderBy('nom')->get();
+
+        return response()->json([
+            'message' => 'Banque mise à jour avec succès',
+            'banques' => $banques
+        ]);
+    }
+
+    /**
+     * Remove a banque
+     */
+    public function removeBanque(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:banques,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $banque = \App\Models\Banque::findOrFail($request->id);
+        $banque->delete();
+
+        $banques = \App\Models\Banque::orderBy('nom')->get();
+
+        return response()->json([
+            'message' => 'Banque supprimée avec succès',
+            'banques' => $banques
         ]);
     }
 }

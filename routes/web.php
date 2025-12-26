@@ -285,6 +285,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/matricules', function () {
             return view('parametres.matricules', ['page_title' => 'Paramètres Matricules']);
         })->name('parametres.matricules');
+        
+        Route::get('/banques', function () {
+            return view('parametres.banques', ['page_title' => 'Paramètres Banques']);
+        })->name('parametres.banques');
     });
 
     // API Routes for Settings
@@ -332,6 +336,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/matricules/add', [SettingsController::class, 'addMatricule']);
         Route::post('/matricules/update', [SettingsController::class, 'updateMatricule']);
         Route::post('/matricules/remove', [SettingsController::class, 'removeMatricule']);
+        
+        // Banques routes
+        Route::get('/banques', [SettingsController::class, 'getBanques']);
+        Route::post('/banques/add', [SettingsController::class, 'addBanque']);
+        Route::post('/banques/update', [SettingsController::class, 'updateBanque']);
+        Route::post('/banques/remove', [SettingsController::class, 'removeBanque']);
     });
 
     // API Routes for Articles

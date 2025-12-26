@@ -254,6 +254,21 @@
                 </h3>
             </div>
 
+            <!-- Total TTC and Solde TTC Display -->
+            <div v-if="form.fournisseur_id && bonsAchatFournisseur.length > 0" class="mt-4 mb-6 grid grid-cols-2 gap-4">
+                <!-- Total TTC Box -->
+                <div class="rounded-lg px-6 py-4 bg-red-600 text-white shadow-lg">
+                    <div class="text-sm font-semibold opacity-90 mb-1">Total TTC</div>
+                    <div class="text-3xl font-bold">{{ formatCurrencySimple(totalTTC) }}</div>
+                </div>
+                
+                <!-- Solde TTC Box -->
+                <div class="rounded-lg px-6 py-4 bg-yellow-500 text-white shadow-lg">
+                    <div class="text-sm font-semibold opacity-90 mb-1">Solde TTC</div>
+                    <div class="text-3xl font-bold">{{ formatCurrencySimple(soldeTTC) }}</div>
+                </div>
+            </div>
+
             <!-- État Règlement & État Remboursement - Side by Side -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <!-- État Règlement Legend - Clickable -->
@@ -436,14 +451,7 @@
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                         >
                             <option value="">Sélectionner banque</option>
-                            <option value="Attijariwafa Bank">Attijariwafa Bank</option>
-                            <option value="BMCE Bank">BMCE Bank</option>
-                            <option value="Banque Populaire">Banque Populaire</option>
-                            <option value="BMCI">BMCI</option>
-                            <option value="Société Générale">Société Générale</option>
-                            <option value="CIH Bank">CIH Bank</option>
-                            <option value="Crédit du Maroc">Crédit du Maroc</option>
-                            <option value="Autre">Autre</option>
+                            <option v-for="banque in banques" :key="banque.id" :value="banque.nom">{{ banque.nom }}</option>
                         </select>
                     </div>
                     <div>
@@ -620,6 +628,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 const reglements = ref([])
 const fournisseurs = ref([])
 const bonsAchatFournisseur = ref([])
+const banques = ref([])
 const loading = ref(false)
 const loadingBonsAchat = ref(false)
 const showForm = ref(false)
@@ -723,6 +732,16 @@ const difference = computed(() => {
     return Math.abs(resteAImputer.value)
 })
 
+// Total TTC of all bons d'achat for the selected fournisseur
+const totalTTC = computed(() => {
+    return bonsAchatFournisseur.value.reduce((sum, bon) => sum + (parseFloat(bon.total_ttc) || 0), 0)
+})
+
+// Solde TTC (remaining amount to pay) for the selected fournisseur
+const soldeTTC = computed(() => {
+    return bonsAchatFournisseur.value.reduce((sum, bon) => sum + (parseFloat(bon.solde_restant) || 0), 0)
+})
+
 // Load data functions
 const loadReglements = async () => {
     loading.value = true
@@ -746,6 +765,18 @@ const loadFournisseurs = async () => {
         }
     } catch (error) {
         console.error('Erreur lors du chargement des fournisseurs:', error)
+    }
+}
+
+const loadBanques = async () => {
+    try {
+        const response = await fetch('/api/settings/banques')
+        if (response.ok) {
+            const data = await response.json()
+            banques.value = data.banques || []
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des banques:', error)
     }
 }
 
@@ -1543,5 +1574,6 @@ const printReglementPDF = (reglement) => {
 onMounted(() => {
     loadReglements()
     loadFournisseurs()
+    loadBanques()
 })
 </script>
