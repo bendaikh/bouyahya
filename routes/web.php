@@ -12,6 +12,7 @@ use App\Http\Controllers\BonCommandeClientController;
 use App\Http\Controllers\BonCommandeFournisseurController;
 use App\Http\Controllers\BonLivraisonClientController;
 use App\Http\Controllers\CompteTresorerieController;
+use App\Http\Controllers\StockController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -129,9 +130,8 @@ Route::middleware('auth')->group(function () {
             return view('stock.mouvement', ['page_title' => 'Mouvement stock']);
         })->name('stock.mouvement');
         
-        Route::get('/stocks', function () {
-            return view('stock.stocks', ['page_title' => 'Les stocks']);
-        })->name('stock.stocks');
+        Route::get('/stocks', [StockController::class, 'index'])->name('stock.stocks');
+        Route::get('/stocks/data', [StockController::class, 'getStockData'])->name('stock.stocks.data');
 });
 
     // La gestion trésorerie
