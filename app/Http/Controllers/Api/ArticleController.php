@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\BonAchatArticle;
+use App\Models\BonLivraisonClientArticle;
 use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -38,14 +41,35 @@ class ArticleController extends Controller
 
         $articles = $query->orderBy('created_at', 'desc')->get();
 
+        // Calculate stock for each article
+        $purchased = BonAchatArticle::join('bon_achat_fournisseur', 'bon_achat_articles.bon_achat_id', '=', 'bon_achat_fournisseur.id')
+            ->where('bon_achat_fournisseur.statut', 'valide')
+            ->select('bon_achat_articles.ref_article', DB::raw('SUM(bon_achat_articles.qte) as total_purchased'))
+            ->groupBy('bon_achat_articles.ref_article')
+            ->get()
+            ->keyBy('ref_article');
+
+        $sold = BonLivraisonClientArticle::join('bon_livraison_clients', 'bon_livraison_client_articles.bon_livraison_client_id', '=', 'bon_livraison_clients.id')
+            ->where('bon_livraison_clients.statut', 'Livré')
+            ->select('bon_livraison_client_articles.code_article', DB::raw('SUM(bon_livraison_client_articles.quantite) as total_sold'))
+            ->groupBy('bon_livraison_client_articles.code_article')
+            ->get()
+            ->keyBy('code_article');
+
         // Add famille and sous-famille names
         $familles = json_decode(Setting::getValue('familles_article', '[]'), true);
         $sousFamilles = json_decode(Setting::getValue('sous_familles_article', '[]'), true);
         $unites = json_decode(Setting::getValue('unites_mesure', '[]'), true);
 
-        $articles = $articles->map(function ($article) use ($familles, $sousFamilles, $unites) {
+        $articles = $articles->map(function ($article) use ($familles, $sousFamilles, $unites, $purchased, $sold) {
             $articleData = $article->toArray();
             
+            // Set calculated stock
+            $ref = $article->reference;
+            $purchasedQty = $purchased->has($ref) ? $purchased[$ref]->total_purchased : 0;
+            $soldQty = $sold->has($ref) ? $sold[$ref]->total_sold : 0;
+            $articleData['stock_actuel'] = $purchasedQty - $soldQty;
+
             // Find famille name
             $articleData['famille_nom'] = null;
             foreach ($familles as $famille) {

@@ -538,9 +538,14 @@
                                                         <span class="font-medium text-blue-600 dark:text-blue-400 text-sm">{{ art.reference }}</span>
                                                         <p class="text-gray-700 dark:text-gray-300 text-sm">{{ art.designation }}</p>
                                                     </div>
-                                                    <span class="text-green-600 dark:text-green-400 font-medium text-sm">
-                                                        {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
-                                                    </span>
+                                                    <div class="text-right">
+                                                        <div class="text-green-600 dark:text-green-400 font-medium text-sm">
+                                                            {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            Stock: <span :class="art.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'">{{ art.stock_actuel }}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -581,9 +586,14 @@
                                                         <span class="font-medium text-blue-600 dark:text-blue-400 text-sm">{{ art.reference }}</span>
                                                         <p class="text-gray-700 dark:text-gray-300 text-sm">{{ art.designation }}</p>
                                                     </div>
-                                                    <span class="text-green-600 dark:text-green-400 font-medium text-sm">
-                                                        {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
-                                                    </span>
+                                                    <div class="text-right">
+                                                        <div class="text-green-600 dark:text-green-400 font-medium text-sm">
+                                                            {{ formatCurrency(art.prix_achat || art.prix_vente || 0) }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            Stock: <span :class="art.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'">{{ art.stock_actuel }}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

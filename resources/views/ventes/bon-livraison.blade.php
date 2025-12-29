@@ -17,6 +17,20 @@ function bonLivraisonApp() {
         editMode: false,
         viewMode: false,
         editingId: null,
+        showPaymentModal: false,
+        hasPayment: false,
+        paymentData: {
+            tresorerieId: '',
+            modeReglement: 'Espèces',
+            montant: 0,
+            reference: '',
+            banque: '',
+            echeance: '',
+            nomTire: '',
+            totalAVentiler: false
+        },
+        banques: [],
+        tresoreries: [],
         formData: {
             date: new Date().toISOString().split('T')[0],
             numero: '',
@@ -113,6 +127,61 @@ function bonLivraisonApp() {
             await this.fetchCommerciales();
             await this.fetchTransports();
             await this.fetchMatricules();
+            await this.fetchBanques();
+            await this.fetchTresoreries();
+        },
+
+        async fetchBanques() {
+            try {
+                const response = await fetch('/api/settings/banques');
+                const data = await response.json();
+                this.banques = data.banques || [];
+            } catch (error) {
+                console.error('Error fetching banques:', error);
+            }
+        },
+
+        async fetchTresoreries() {
+            try {
+                const response = await fetch('/api/reglements-clients/tresoreries');
+                const data = await response.json();
+                this.tresoreries = data || [];
+            } catch (error) {
+                console.error('Error fetching tresoreries:', error);
+            }
+        },
+
+        openPaymentModal() {
+            if (!this.formData.clientId) {
+                alert('Veuillez d\'abord sélectionner un client');
+                return;
+            }
+            if (this.items.length === 0) {
+                alert('Veuillez ajouter au moins un article');
+                return;
+            }
+            
+            // Set default values if not already set
+            if (!this.paymentData.montant || this.paymentData.montant === 0) {
+                this.paymentData.montant = this.totalGeneral;
+            }
+            if (!this.paymentData.nomTire) {
+                this.paymentData.nomTire = this.formData.nomClient;
+            }
+            if (!this.paymentData.echeance) {
+                this.paymentData.echeance = this.formData.date;
+            }
+            
+            this.showPaymentModal = true;
+        },
+
+        savePaymentData() {
+            if (!this.paymentData.tresorerieId && this.paymentData.modeReglement !== 'Crédit') {
+                alert('Veuillez sélectionner un compte de trésorerie');
+                return;
+            }
+            this.hasPayment = true;
+            this.showPaymentModal = false;
         },
         
         searchClients() {
@@ -434,7 +503,8 @@ function bonLivraisonApp() {
                         chauffeur: this.formData.chauffeur,
                         matricule_vehicule: this.formData.matriculeVehicule,
                         observations: this.formData.observations,
-                        items: this.items
+                        items: this.items,
+                        payment: this.hasPayment ? this.paymentData : null
                     })
                 });
 
@@ -549,7 +619,8 @@ function bonLivraisonApp() {
                         chauffeur: this.formData.chauffeur,
                         matricule_vehicule: this.formData.matriculeVehicule,
                         observations: this.formData.observations,
-                        items: this.items
+                        items: this.items,
+                        payment: this.hasPayment ? this.paymentData : null
                     })
                 });
 
@@ -900,7 +971,7 @@ function exportToPDF() {
                     <input type="text" x-model="formData.numero" readonly class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white w-40">
                 </div>
                 <div class="flex gap-2">
-                    <button type="button" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
+                    <button @click="openPaymentModal()" type="button" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                         </svg>
@@ -1130,7 +1201,12 @@ function exportToPDF() {
                                     <span class="text-blue-600 dark:text-blue-400 font-mono text-sm" x-text="article.reference"></span>
                                     <span class="text-gray-700 dark:text-gray-300 ml-2" x-text="article.designation"></span>
                                 </div>
-                                <span class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></span>
+                                <div class="text-right">
+                                    <div class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        Stock: <span :class="article.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'" x-text="article.stock_actuel"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -1313,6 +1389,101 @@ function exportToPDF() {
                     </button>
                     <div class="text-[10px] text-gray-300 text-center">Importer le 1er résultat</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fiche Règlement Modal -->
+    <div x-show="showPaymentModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[60] p-4" @click.self="showPaymentModal = false">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="bg-gray-800 dark:bg-gray-700 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">Fiche Règlement</h3>
+                <button @click="showPaymentModal = false" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Compte Trésorerie -->
+                    <div class="flex items-center gap-4">
+                        <label class="w-1/3 text-sm font-bold text-gray-700 dark:text-gray-300">Compte Trésorerie</label>
+                        <select x-model="paymentData.tresorerieId" class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Sélectionner trésorerie</option>
+                            <template x-for="t in tresoreries" :key="t.id">
+                                <option :value="t.id" x-text="t.libelle + ' (' + t.code + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Mode Règlement -->
+                    <div class="flex items-center gap-4">
+                        <label class="w-1/3 text-sm font-bold text-gray-700 dark:text-gray-300">Mode Règlement</label>
+                        <select x-model="paymentData.modeReglement" class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="Espèces">Espèces</option>
+                            <option value="Chèque">Chèque</option>
+                            <option value="Virement">Virement</option>
+                            <option value="Traite">Traite</option>
+                            <option value="VERSEMENT">VERSEMENT</option>
+                        </select>
+                    </div>
+
+                    <!-- Montant Règlement -->
+                    <div class="flex items-center gap-4">
+                        <label class="w-1/3 text-sm font-bold text-gray-700 dark:text-gray-300">Montant Règlement</label>
+                        <input type="number" x-model.number="paymentData.montant" step="0.01" class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm text-center font-bold focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Référence & Banque -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-bold text-gray-700 dark:text-gray-300">Référence</label>
+                            <input type="text" x-model="paymentData.reference" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-bold text-gray-700 dark:text-gray-300">Banque</label>
+                            <select x-model="paymentData.banque" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Sélectionner</option>
+                                <template x-for="b in banques" :key="b.id">
+                                    <option :value="b.nom" x-text="b.nom"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Echéance -->
+                    <div class="flex items-center gap-4">
+                        <label class="w-1/3 text-sm font-bold text-gray-700 dark:text-gray-300">Echéance</label>
+                        <input type="date" x-model="paymentData.echeance" class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Nom Tiré -->
+                    <div class="flex items-center gap-4">
+                        <label class="w-1/3 text-sm font-bold text-gray-700 dark:text-gray-300">Nom Tiré</label>
+                        <input type="text" x-model="paymentData.nomTire" class="flex-1 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Total à ventiler -->
+                    <div class="flex items-center justify-end gap-4 mt-4">
+                        <label class="text-sm font-bold text-gray-700 dark:text-gray-300">Total à ventiler</label>
+                        <input type="checkbox" x-model="paymentData.totalAVentiler" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <div class="bg-orange-600 text-white px-4 py-2 rounded font-bold min-w-[120px] text-center" x-text="formatCurrency(paymentData.montant) + ' DH'"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-600">
+                <button @click="showPaymentModal = false" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    Annuler
+                </button>
+                <button @click="savePaymentData()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    Valider
+                </button>
             </div>
         </div>
     </div>

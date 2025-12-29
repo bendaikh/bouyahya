@@ -7,6 +7,8 @@ use App\Models\BonLivraisonClient;
 use App\Models\Client;
 use App\Models\Fournisseur;
 use App\Models\Article;
+use App\Models\BonAchatArticle;
+use App\Models\BonLivraisonClientArticle;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +21,29 @@ class BonCommandeClientController extends Controller
         $bonCommandes = BonCommandeClient::with(['client', 'fournisseur'])->orderBy('created_at', 'desc')->get();
         $clients = Client::orderBy('raison_sociale')->get();
         $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
-        $articles = Article::where('actif', true)->orderBy('designation')->get();
+        
+        // Calculate stock for each article as in StockController
+        $purchased = BonAchatArticle::join('bon_achat_fournisseur', 'bon_achat_articles.bon_achat_id', '=', 'bon_achat_fournisseur.id')
+            ->where('bon_achat_fournisseur.statut', 'valide')
+            ->select('bon_achat_articles.ref_article', DB::raw('SUM(bon_achat_articles.qte) as total_purchased'))
+            ->groupBy('bon_achat_articles.ref_article')
+            ->get()
+            ->keyBy('ref_article');
+
+        $sold = BonLivraisonClientArticle::join('bon_livraison_clients', 'bon_livraison_client_articles.bon_livraison_client_id', '=', 'bon_livraison_clients.id')
+            ->where('bon_livraison_clients.statut', 'Livré')
+            ->select('bon_livraison_client_articles.code_article', DB::raw('SUM(bon_livraison_client_articles.quantite) as total_sold'))
+            ->groupBy('bon_livraison_client_articles.code_article')
+            ->get()
+            ->keyBy('code_article');
+
+        $articles = Article::where('actif', true)->orderBy('designation')->get()->map(function($article) use ($purchased, $sold) {
+            $ref = $article->reference;
+            $purchasedQty = $purchased->has($ref) ? $purchased[$ref]->total_purchased : 0;
+            $soldQty = $sold->has($ref) ? $sold[$ref]->total_sold : 0;
+            $article->stock_actuel = $purchasedQty - $soldQty;
+            return $article;
+        });
         
         // Get cities from settings
         $cities = json_decode(Setting::getValue('cities', '[]'), true);

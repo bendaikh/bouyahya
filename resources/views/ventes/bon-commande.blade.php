@@ -431,7 +431,12 @@ function convertToBonLivraison(id, numero) {
                                     <span class="text-blue-600 dark:text-blue-400 font-mono text-sm" x-text="article.reference"></span>
                                     <span class="text-gray-700 dark:text-gray-300 ml-2" x-text="article.designation"></span>
                                 </div>
-                                <span class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></span>
+                                <div class="text-right">
+                                    <div class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        Stock: <span :class="article.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'" x-text="article.stock_actuel"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>

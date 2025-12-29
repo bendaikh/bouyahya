@@ -8,7 +8,11 @@ use App\Models\BonAchatFournisseur;
 use App\Models\Client;
 use App\Models\Fournisseur;
 use App\Models\Article;
+use App\Models\BonAchatArticle;
+use App\Models\BonLivraisonClientArticle;
 use App\Models\Setting;
+use App\Models\ReglementClient;
+use App\Models\ReglementClientLigne;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +27,29 @@ class BonLivraisonClientController extends Controller
             ->get();
         $clients = Client::orderBy('raison_sociale')->get();
         $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
-        $articles = Article::where('actif', true)->orderBy('designation')->get();
+        
+        // Calculate stock for each article as in StockController
+        $purchased = BonAchatArticle::join('bon_achat_fournisseur', 'bon_achat_articles.bon_achat_id', '=', 'bon_achat_fournisseur.id')
+            ->where('bon_achat_fournisseur.statut', 'valide')
+            ->select('bon_achat_articles.ref_article', DB::raw('SUM(bon_achat_articles.qte) as total_purchased'))
+            ->groupBy('bon_achat_articles.ref_article')
+            ->get()
+            ->keyBy('ref_article');
+
+        $sold = BonLivraisonClientArticle::join('bon_livraison_clients', 'bon_livraison_client_articles.bon_livraison_client_id', '=', 'bon_livraison_clients.id')
+            ->where('bon_livraison_clients.statut', 'Livré')
+            ->select('bon_livraison_client_articles.code_article', DB::raw('SUM(bon_livraison_client_articles.quantite) as total_sold'))
+            ->groupBy('bon_livraison_client_articles.code_article')
+            ->get()
+            ->keyBy('code_article');
+
+        $articles = Article::where('actif', true)->orderBy('designation')->get()->map(function($article) use ($purchased, $sold) {
+            $ref = $article->reference;
+            $purchasedQty = $purchased->has($ref) ? $purchased[$ref]->total_purchased : 0;
+            $soldQty = $sold->has($ref) ? $sold[$ref]->total_sold : 0;
+            $article->stock_actuel = $purchasedQty - $soldQty;
+            return $article;
+        });
         
         // Get cities from settings
         $cities = json_decode(Setting::getValue('cities', '[]'), true);
@@ -108,6 +134,37 @@ class BonLivraisonClientController extends Controller
                     'quantite' => $item['quantite'],
                     'prix_unitaire' => $item['prix_unitaire'],
                     'sous_total' => $item['sous_total'],
+                ]);
+            }
+
+            // Handle payment if provided
+            if ($request->has('payment') && !empty($request->payment)) {
+                $paymentData = $request->payment;
+                
+                // Generate the next code_reglement
+                $lastReglement = ReglementClient::orderBy('id', 'desc')->first();
+                $nextNumber = $lastReglement ? intval(substr($lastReglement->code_reglement, 3)) + 1 : 1;
+                $codeReglement = 'RC-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+                $reglement = ReglementClient::create([
+                    'code_reglement' => $codeReglement,
+                    'date_reglement' => $request->date,
+                    'client_id' => $request->client_id,
+                    'type_reglement' => $paymentData['modeReglement'],
+                    'numero_piece' => $paymentData['reference'] ?? null,
+                    'banque' => $paymentData['banque'] ?? null,
+                    'nom_tire' => $paymentData['nomTire'] ?? null,
+                    'tresorerie_id' => $paymentData['tresorerieId'] ?? null,
+                    'montant' => $paymentData['montant'],
+                    'date_encaissement' => $paymentData['echeance'] ?? null,
+                    'statut' => 'paye', // Direct payment is considered paid
+                    'observation' => 'Paiement direct lors de la création du BL',
+                ]);
+
+                ReglementClientLigne::create([
+                    'reglement_id' => $reglement->id,
+                    'bon_livraison_id' => $bonLivraison->id,
+                    'montant_regle' => $paymentData['montant'],
                 ]);
             }
 
@@ -316,6 +373,37 @@ class BonLivraisonClientController extends Controller
                     'quantite' => $item['quantite'],
                     'prix_unitaire' => $item['prix_unitaire'],
                     'sous_total' => $item['sous_total'],
+                ]);
+            }
+
+            // Handle payment if provided during update (only if not already paid or to add new payment)
+            if ($request->has('payment') && !empty($request->payment)) {
+                $paymentData = $request->payment;
+                
+                // Generate the next code_reglement
+                $lastReglement = ReglementClient::orderBy('id', 'desc')->first();
+                $nextNumber = $lastReglement ? intval(substr($lastReglement->code_reglement, 3)) + 1 : 1;
+                $codeReglement = 'RC-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+                $reglement = ReglementClient::create([
+                    'code_reglement' => $codeReglement,
+                    'date_reglement' => $request->date,
+                    'client_id' => $request->client_id,
+                    'type_reglement' => $paymentData['modeReglement'],
+                    'numero_piece' => $paymentData['reference'] ?? null,
+                    'banque' => $paymentData['banque'] ?? null,
+                    'nom_tire' => $paymentData['nomTire'] ?? null,
+                    'tresorerie_id' => $paymentData['tresorerieId'] ?? null,
+                    'montant' => $paymentData['montant'],
+                    'date_encaissement' => $paymentData['echeance'] ?? null,
+                    'statut' => 'paye',
+                    'observation' => 'Paiement direct lors de la modification du BL',
+                ]);
+
+                ReglementClientLigne::create([
+                    'reglement_id' => $reglement->id,
+                    'bon_livraison_id' => $bonLivraison->id,
+                    'montant_regle' => $paymentData['montant'],
                 ]);
             }
 
