@@ -809,15 +809,15 @@ const loadBonsAchatFournisseur = async (fournisseurId, excludeReglementId = null
             // Add selection and imputation fields
             // When filtering by remboursement status:
             //   - Show bons linked to règlements with that statut
-            //   - PLUS show all other available bons (with remaining balance)
+            //   - BUT exclude bons that are already fully paid (solde_restant <= 0)
             // Otherwise, only show unpaid bons
             bonsAchatFournisseur.value = data
                 .filter(bon => {
                     if (form.value.etat_remboursement) {
                         // When filtering by remboursement status:
                         // Show ONLY bons linked to règlements with that statut
-                        // If no règlements exist with that statut, table will be empty
-                        return bon.linked_to_remboursement_statut === true
+                        // AND that still have a remaining balance to pay
+                        return bon.linked_to_remboursement_statut === true && bon.solde_restant > 0
                     } else {
                         // Default: only show unpaid bons
                         return bon.solde_restant > 0
