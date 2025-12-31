@@ -47,7 +47,7 @@
                         Valider
                     </button>
                     <button 
-                        v-if="formMode === 'view' && editingReglementId"
+                        v-if="formMode === 'view' && editingReglementId && form.statut !== 'paye'"
                         @click="formMode = 'edit'" 
                         class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center"
                     >
@@ -451,12 +451,8 @@
                             :disabled="formMode === 'view'"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                         >
-                            <option value="Virement">Virement</option>
-                            <option value="Chèque">Chèque</option>
-                            <option value="Espèces">Espèces</option>
-                            <option value="Traite">Traite</option>
-                            <option value="A VUE">A VUE</option>
-                            <option value="VERSEMENT">VERSEMENT</option>
+                            <option value="">Sélectionner</option>
+                            <option v-for="type in typesReglement" :key="type.id" :value="type.libelle">{{ type.libelle }}</option>
                         </select>
                     </div>
                     <div>
@@ -672,6 +668,7 @@ const reglements = ref([])
 const clients = ref([])
 const tresoreries = ref([])
 const banques = ref([])
+const typesReglement = ref([])
 const bonsLivraisonClient = ref([])
 const loading = ref(false)
 const loadingBonsLivraison = ref(false)
@@ -1695,12 +1692,25 @@ const printReglementPDF = (reglement) => {
     printWindow.document.close()
 }
 
+const loadTypesReglement = async () => {
+    try {
+        const response = await fetch('/api/settings/types-reglement')
+        if (response.ok) {
+            const data = await response.json()
+            typesReglement.value = data.types_reglement || []
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des types règlement:', error)
+    }
+}
+
 // Initialize
 onMounted(() => {
     loadReglements()
     loadClients()
     loadTresoreries()
     loadBanques()
+    loadTypesReglement()
 })
 </script>
 

@@ -28,7 +28,7 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                             Valider
                         </button>
-                        <button v-if="formMode === 'view' && editingBonId" @click="formMode = 'edit'" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center">
+                        <button v-if="formMode === 'view' && editingBonId && canEditCurrentBon" @click="formMode = 'edit'" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             Modifier
                         </button>
@@ -62,12 +62,23 @@
                         />
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                        <input 
-                            type="date"
-                            v-model="filterDate"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
-                        />
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Mois</label>
+                        <div class="relative">
+                            <select 
+                                v-model="filterMonth"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none cursor-pointer"
+                            >
+                                <option value="">Tous les mois</option>
+                                <option v-for="month in months" :key="month.value" :value="month.value">
+                                    {{ month.label }}
+                                </option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fournisseur</label>
@@ -113,6 +124,9 @@
                             </select>
                         </div>
                         <div class="flex gap-1 mt-5">
+                            <button @click="reinitialiserFiltres" class="p-2 bg-gray-500 text-white rounded-md hover:bg-gray-600" title="Réinitialiser les filtres">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
                             <button @click="exportToExcel" class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700" title="Excel"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
                             <button @click="exportToPDF" class="p-2 bg-red-600 text-white rounded-md hover:bg-red-700" title="PDF"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></button>
                         </div>
@@ -286,7 +300,7 @@
                 <button 
                     @click="modifyBon" 
                     class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm"
-                    v-if="formMode === 'view'"
+                    v-if="formMode === 'view' && canEditCurrentBon"
                 >
                     Modifier
                 </button>
@@ -819,11 +833,40 @@ const searchQuery = ref('')
 
 // Filter refs
 const filterNumeroBon = ref('')
-const filterDate = ref('')
+const filterMonth = ref('')
 const filterFournisseur = ref('')
 const filterClientLivre = ref('')
 const filterStatut = ref('')
 const filterEtat = ref('')
+
+// Months for filter
+const months = computed(() => {
+    const currentYear = new Date().getFullYear()
+    return [
+        { value: `${currentYear}-01`, label: 'Janvier ' + currentYear },
+        { value: `${currentYear}-02`, label: 'Février ' + currentYear },
+        { value: `${currentYear}-03`, label: 'Mars ' + currentYear },
+        { value: `${currentYear}-04`, label: 'Avril ' + currentYear },
+        { value: `${currentYear}-05`, label: 'Mai ' + currentYear },
+        { value: `${currentYear}-06`, label: 'Juin ' + currentYear },
+        { value: `${currentYear}-07`, label: 'Juillet ' + currentYear },
+        { value: `${currentYear}-08`, label: 'Août ' + currentYear },
+        { value: `${currentYear}-09`, label: 'Septembre ' + currentYear },
+        { value: `${currentYear}-10`, label: 'Octobre ' + currentYear },
+        { value: `${currentYear}-11`, label: 'Novembre ' + currentYear },
+        { value: `${currentYear}-12`, label: 'Décembre ' + currentYear },
+    ]
+})
+
+// Reinitialize filters
+const reinitialiserFiltres = () => {
+    filterNumeroBon.value = ''
+    filterMonth.value = ''
+    filterFournisseur.value = ''
+    filterClientLivre.value = ''
+    filterStatut.value = ''
+    filterEtat.value = ''
+}
 
 // Status dropdown state
 const openStatusDropdownId = ref(null)
@@ -868,9 +911,9 @@ const filteredBonAchats = computed(() => {
         result = result.filter(bon => (bon.numero_bon || '').toLowerCase().includes(query))
     }
 
-    // Filter by date
-    if (filterDate.value) {
-        result = result.filter(bon => (bon.date || '').startsWith(filterDate.value))
+    // Filter by month
+    if (filterMonth.value) {
+        result = result.filter(bon => (bon.date || '').startsWith(filterMonth.value))
     }
 
     // Filter by fournisseur
@@ -953,6 +996,14 @@ const canDeleteBon = (bon) => {
     }
     return true
 }
+
+// Computed property to check if the currently viewed bon can be edited
+const canEditCurrentBon = computed(() => {
+    if (!editingBonId.value) return false
+    const currentBon = bonAchats.value.find(b => b.id === editingBonId.value)
+    if (!currentBon) return false
+    return canEditBon(currentBon)
+})
 
 const form = ref({
     numero_bon: '',

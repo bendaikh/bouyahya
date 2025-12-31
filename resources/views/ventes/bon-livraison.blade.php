@@ -75,6 +75,8 @@ function bonLivraisonApp() {
         commerciales: [],
         transports: [],
         matricules: [],
+        typesReglement: [],
+        echeancesOptions: [],
         bonLivraisonsList: [],
         filteredBonLivraisonsList: [],
         searchFilters: {
@@ -129,6 +131,8 @@ function bonLivraisonApp() {
             await this.fetchMatricules();
             await this.fetchBanques();
             await this.fetchTresoreries();
+            await this.fetchTypesReglement();
+            await this.fetchEcheancesOptions();
         },
 
         async fetchBanques() {
@@ -148,6 +152,26 @@ function bonLivraisonApp() {
                 this.tresoreries = data || [];
             } catch (error) {
                 console.error('Error fetching tresoreries:', error);
+            }
+        },
+
+        async fetchTypesReglement() {
+            try {
+                const response = await fetch('/api/settings/types-reglement');
+                const data = await response.json();
+                this.typesReglement = data.types_reglement || [];
+            } catch (error) {
+                console.error('Error fetching types reglement:', error);
+            }
+        },
+
+        async fetchEcheancesOptions() {
+            try {
+                const response = await fetch('/api/settings/echeances');
+                const data = await response.json();
+                this.echeancesOptions = data.echeances || [];
+            } catch (error) {
+                console.error('Error fetching echeances:', error);
             }
         },
 
@@ -1014,9 +1038,11 @@ function exportToPDF() {
                     <span x-show="!isSubmitting">Valider</span>
                     <span x-show="isSubmitting">...</span>
                 </button>
-                <button @click="formMode = 'edit'" type="button" x-show="viewMode" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold">
-                    Modifier
-                </button>
+                <template x-if="viewMode && !(parseFloat(bonLivraisonsList.find(bl => bl.id === editingId)?.montant_paye || 0) >= parseFloat(bonLivraisonsList.find(bl => bl.id === editingId)?.total_general || 0) && parseFloat(bonLivraisonsList.find(bl => bl.id === editingId)?.total_general || 0) > 0)">
+                    <button @click="viewMode = false; editMode = true" type="button" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold">
+                        Modifier
+                    </button>
+                </template>
                 <button @click="updateForm()" type="button" x-show="editMode && !viewMode" :disabled="isSubmitting" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
                     Modifier
                 </button>
@@ -1088,11 +1114,10 @@ function exportToPDF() {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type Réglement</label>
                         <select x-model="formData.typeReglement" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="Crédit">Crédit</option>
-                            <option value="Espèces">Espèces</option>
-                            <option value="Chèque">Chèque</option>
-                            <option value="Virement">Virement</option>
-                            <option value="Carte bancaire">Carte bancaire</option>
+                            <option value="">Sélectionner</option>
+                            <template x-for="type in typesReglement" :key="type.id">
+                                <option :value="type.libelle" x-text="type.libelle"></option>
+                            </template>
                         </select>
                     </div>
                     <div>
@@ -1108,11 +1133,9 @@ function exportToPDF() {
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Echéance</label>
                         <select x-model="formData.echeance" class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="">Sélectionner</option>
-                            <option value="30 jours">30 jours</option>
-                            <option value="45 jours">45 jours</option>
-                            <option value="60 jours">60 jours</option>
-                            <option value="75 jours">75 jours</option>
-                            <option value="90 jours">90 jours</option>
+                            <template x-for="ech in echeancesOptions" :key="ech.id">
+                                <option :value="ech.libelle" x-text="ech.libelle"></option>
+                            </template>
                         </select>
                     </div>
                 </div>
@@ -1497,7 +1520,7 @@ function exportToPDF() {
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <!-- Total Quantité Card -->
             <div class="bg-gradient-to-br from-lime-400 to-lime-500 rounded-lg shadow-lg p-6 relative overflow-hidden">
                 <div class="flex items-center justify-between">
@@ -1523,6 +1546,21 @@ function exportToPDF() {
                     <div class="text-white opacity-30">
                         <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solde TTC Card -->
+            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-1">Solde TTC</h3>
+                        <p class="text-3xl font-bold text-white" x-text="formatCurrency(@json($bonLivraisons->sum('total_general') - $bonLivraisons->sum('montant_paye'))) + ' DH'"></p>
+                    </div>
+                    <div class="text-white opacity-30">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
                         </svg>
                     </div>
                 </div>
@@ -1635,10 +1673,11 @@ function exportToPDF() {
         </div>
 
         <!-- Table -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow flex flex-col h-[calc(100vh-450px)] overflow-hidden">
+            <!-- Scrollable Table Section -->
+            <div class="flex-1 overflow-x-auto overflow-y-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                    <thead class="bg-gray-50 dark:bg-slate-900">
+                    <thead class="bg-gray-50 dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">N° de Bon</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">Date</th>

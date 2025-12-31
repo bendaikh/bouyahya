@@ -953,4 +953,274 @@ class SettingsController extends Controller
             'banques' => $banques
         ]);
     }
+
+    // =====================================================
+    // TYPES RÈGLEMENT
+    // =====================================================
+
+    /**
+     * Get all types règlement
+     */
+    public function getTypesReglement()
+    {
+        $types = json_decode(Setting::getValue('types_reglement', '[]'), true);
+        
+        // If empty, initialize with default values
+        if (empty($types)) {
+            $types = [
+                ['id' => 'tr_1', 'code' => 'VIR', 'libelle' => 'Virement'],
+                ['id' => 'tr_2', 'code' => 'CHQ', 'libelle' => 'Chèque'],
+                ['id' => 'tr_3', 'code' => 'ESP', 'libelle' => 'Espèces'],
+                ['id' => 'tr_4', 'code' => 'TRT', 'libelle' => 'Traite'],
+                ['id' => 'tr_5', 'code' => 'AVU', 'libelle' => 'A VUE'],
+                ['id' => 'tr_6', 'code' => 'VRS', 'libelle' => 'VERSEMENT'],
+                ['id' => 'tr_7', 'code' => 'AUT', 'libelle' => 'Autre'],
+            ];
+            Setting::setValue('types_reglement', json_encode($types));
+        }
+        
+        return response()->json(['types_reglement' => $types]);
+    }
+
+    /**
+     * Add a new type règlement
+     */
+    public function addTypeReglement(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $types = json_decode(Setting::getValue('types_reglement', '[]'), true);
+        
+        // Check if code already exists
+        $exists = array_filter($types, fn($t) => isset($t['code']) && strtolower($t['code']) === strtolower($request->code));
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code type règlement existe déjà'], 422);
+        }
+
+        // Generate unique ID
+        $id = uniqid('tr_');
+        
+        $type = [
+            'id' => $id,
+            'code' => $request->code,
+            'libelle' => $request->libelle
+        ];
+
+        $types[] = $type;
+        Setting::setValue('types_reglement', json_encode($types));
+
+        return response()->json([
+            'message' => 'Type règlement ajouté avec succès',
+            'types_reglement' => $types
+        ]);
+    }
+
+    /**
+     * Update a type règlement
+     */
+    public function updateTypeReglement(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $types = json_decode(Setting::getValue('types_reglement', '[]'), true);
+        
+        // Check if code already exists for another type
+        $exists = array_filter($types, fn($t) => 
+            isset($t['id']) && $t['id'] !== $request->id && 
+            isset($t['code']) && strtolower($t['code']) === strtolower($request->code)
+        );
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code type règlement existe déjà'], 422);
+        }
+
+        foreach ($types as &$type) {
+            if (isset($type['id']) && $type['id'] === $request->id) {
+                $type['code'] = $request->code;
+                $type['libelle'] = $request->libelle;
+                break;
+            }
+        }
+        
+        Setting::setValue('types_reglement', json_encode($types));
+
+        return response()->json([
+            'message' => 'Type règlement mis à jour avec succès',
+            'types_reglement' => $types
+        ]);
+    }
+
+    /**
+     * Remove a type règlement
+     */
+    public function removeTypeReglement(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $types = json_decode(Setting::getValue('types_reglement', '[]'), true);
+        $types = array_values(array_filter($types, fn($t) => !isset($t['id']) || $t['id'] !== $request->id));
+        
+        Setting::setValue('types_reglement', json_encode($types));
+
+        return response()->json([
+            'message' => 'Type règlement supprimé avec succès',
+            'types_reglement' => $types
+        ]);
+    }
+
+    // =====================================================
+    // ÉCHÉANCES
+    // =====================================================
+
+    /**
+     * Get all échéances
+     */
+    public function getEcheances()
+    {
+        $echeances = json_decode(Setting::getValue('echeances', '[]'), true);
+        
+        // If empty, initialize with default values
+        if (empty($echeances)) {
+            $echeances = [
+                ['id' => 'ech_1', 'code' => '30J', 'libelle' => '30 jours', 'jours' => 30],
+                ['id' => 'ech_2', 'code' => '45J', 'libelle' => '45 jours', 'jours' => 45],
+                ['id' => 'ech_3', 'code' => '60J', 'libelle' => '60 jours', 'jours' => 60],
+                ['id' => 'ech_4', 'code' => '75J', 'libelle' => '75 jours', 'jours' => 75],
+                ['id' => 'ech_5', 'code' => '90J', 'libelle' => '90 jours', 'jours' => 90],
+            ];
+            Setting::setValue('echeances', json_encode($echeances));
+        }
+        
+        return response()->json(['echeances' => $echeances]);
+    }
+
+    /**
+     * Add a new échéance
+     */
+    public function addEcheance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255',
+            'jours' => 'nullable|integer|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $echeances = json_decode(Setting::getValue('echeances', '[]'), true);
+        
+        // Check if code already exists
+        $exists = array_filter($echeances, fn($e) => isset($e['code']) && strtolower($e['code']) === strtolower($request->code));
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code échéance existe déjà'], 422);
+        }
+
+        // Generate unique ID
+        $id = uniqid('ech_');
+        
+        $echeance = [
+            'id' => $id,
+            'code' => $request->code,
+            'libelle' => $request->libelle,
+            'jours' => $request->jours
+        ];
+
+        $echeances[] = $echeance;
+        Setting::setValue('echeances', json_encode($echeances));
+
+        return response()->json([
+            'message' => 'Échéance ajoutée avec succès',
+            'echeances' => $echeances
+        ]);
+    }
+
+    /**
+     * Update an échéance
+     */
+    public function updateEcheance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255',
+            'jours' => 'nullable|integer|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $echeances = json_decode(Setting::getValue('echeances', '[]'), true);
+        
+        // Check if code already exists for another échéance
+        $exists = array_filter($echeances, fn($e) => 
+            isset($e['id']) && $e['id'] !== $request->id && 
+            isset($e['code']) && strtolower($e['code']) === strtolower($request->code)
+        );
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code échéance existe déjà'], 422);
+        }
+
+        foreach ($echeances as &$echeance) {
+            if (isset($echeance['id']) && $echeance['id'] === $request->id) {
+                $echeance['code'] = $request->code;
+                $echeance['libelle'] = $request->libelle;
+                $echeance['jours'] = $request->jours;
+                break;
+            }
+        }
+        
+        Setting::setValue('echeances', json_encode($echeances));
+
+        return response()->json([
+            'message' => 'Échéance mise à jour avec succès',
+            'echeances' => $echeances
+        ]);
+    }
+
+    /**
+     * Remove an échéance
+     */
+    public function removeEcheance(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $echeances = json_decode(Setting::getValue('echeances', '[]'), true);
+        $echeances = array_values(array_filter($echeances, fn($e) => !isset($e['id']) || $e['id'] !== $request->id));
+        
+        Setting::setValue('echeances', json_encode($echeances));
+
+        return response()->json([
+            'message' => 'Échéance supprimée avec succès',
+            'echeances' => $echeances
+        ]);
+    }
 }

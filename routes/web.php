@@ -289,6 +289,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/banques', function () {
             return view('parametres.banques', ['page_title' => 'Paramètres Banques']);
         })->name('parametres.banques');
+        
+        Route::get('/types-reglement', function () {
+            return view('parametres.types-reglement', ['page_title' => 'Paramètres Types Règlement']);
+        })->name('parametres.types-reglement');
+        
+        Route::get('/echeances', function () {
+            return view('parametres.echeances', ['page_title' => 'Paramètres Échéances']);
+        })->name('parametres.echeances');
     });
 
     // API Routes for Settings
@@ -342,6 +350,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/banques/add', [SettingsController::class, 'addBanque']);
         Route::post('/banques/update', [SettingsController::class, 'updateBanque']);
         Route::post('/banques/remove', [SettingsController::class, 'removeBanque']);
+        
+        // Types Règlement routes
+        Route::get('/types-reglement', [SettingsController::class, 'getTypesReglement']);
+        Route::post('/types-reglement/add', [SettingsController::class, 'addTypeReglement']);
+        Route::post('/types-reglement/update', [SettingsController::class, 'updateTypeReglement']);
+        Route::post('/types-reglement/remove', [SettingsController::class, 'removeTypeReglement']);
+        
+        // Échéances routes
+        Route::get('/echeances', [SettingsController::class, 'getEcheances']);
+        Route::post('/echeances/add', [SettingsController::class, 'addEcheance']);
+        Route::post('/echeances/update', [SettingsController::class, 'updateEcheance']);
+        Route::post('/echeances/remove', [SettingsController::class, 'removeEcheance']);
     });
 
     // API Routes for Articles

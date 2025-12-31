@@ -1,16 +1,18 @@
 <template>
-    <div class="dark:bg-gray-800 rounded-lg">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
         <!-- Main Content Area -->
-        <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex flex-col lg:flex-row gap-4 h-full overflow-hidden">
             <!-- Left Section: Filters + Table -->
-            <div class="flex-1 p-4">
-                <!-- Section Header -->
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                    Etat Règlements Fournisseur
-                </h2>
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Sticky Header Section -->
+                <div class="p-4 pb-2 border-b border-gray-200 dark:border-gray-700 flex-none bg-white dark:bg-gray-800 z-20">
+                    <!-- Section Header -->
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                        Etat Règlements Fournisseur
+                    </h2>
 
-                <!-- Filter Row -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <!-- Filter Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
                     <!-- Mois -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mois</label>
@@ -86,7 +88,7 @@
                 <!-- TTC Display + Actions -->
                 <div class="flex items-center gap-3 mb-4">
                     <button 
-                        class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded text-white font-semibold text-sm"
+                        class="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg text-white font-bold text-xl shadow-md"
                     >
                         {{ formatCurrency(totalTTC) }} TTC
                     </button>
@@ -114,88 +116,91 @@
                 <div class="text-gray-600 dark:text-gray-300 text-sm mb-2 font-medium">
                     Remise Bancaire N° .......
                 </div>
+                </div>
 
-                <!-- Data Table -->
-                <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-600">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">N°</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Fournisseur</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Client</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Type</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Banque</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Nom Tiré</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Montant</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-white dark:text-gray-300 uppercase tracking-wider">Date Encais</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <!-- Loading State -->
-                            <tr v-if="loading">
-                                <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Chargement...
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- Empty State -->
-                            <tr v-else-if="filteredReglements.length === 0">
-                                <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
-                                    Aucun règlement trouvé
-                                </td>
-                            </tr>
-                            <!-- Data Rows -->
-                            <tr 
-                                v-else 
-                                v-for="reglement in filteredReglements" 
-                                :key="reglement.id" 
-                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
-                                    {{ formatDate(reglement.date_reglement) }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
-                                    {{ reglement.numero_piece || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                    {{ reglement.fournisseur?.nom_fournisseur || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                    {{ reglement.nom_beneficiaire || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
-                                    {{ reglement.type_reglement || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                    {{ reglement.banque || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                    {{ reglement.nom_beneficiaire || '-' }}
-                                </td>
-                                <td class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                                    {{ formatCurrency(reglement.montant) }}
-                                </td>
-                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
-                                    {{ formatDate(reglement.date_encaissement) }}
-                                </td>
-                            </tr>
-                            <!-- Empty rows for visual consistency -->
-                            <tr v-for="n in emptyRowsCount" :key="'empty-' + n" class="h-8">
-                                <td colspan="9" class="border-t border-gray-100 dark:border-gray-700"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Scrollable Table Section -->
+                <div class="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+                    <div class="overflow-x-auto overflow-y-auto relative h-full">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                            <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 shadow-sm border-b border-gray-200 dark:border-gray-600">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N°</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Fournisseur</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Client</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Banque</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nom Tiré</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Montant</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Encais</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Loading State -->
+                                <tr v-if="loading">
+                                    <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Chargement...
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Empty State -->
+                                <tr v-else-if="filteredReglements.length === 0">
+                                    <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        Aucun règlement trouvé
+                                    </td>
+                                </tr>
+                                <!-- Data Rows -->
+                                <tr 
+                                    v-else 
+                                    v-for="reglement in filteredReglements" 
+                                    :key="reglement.id" 
+                                    class="transition-colors"
+                                    :class="[
+                                        getRowBackgroundClass(reglement.statut),
+                                        !getRowBackgroundClass(reglement.statut) ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : 'hover:opacity-80'
+                                    ]"
+                                >
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                        {{ formatDate(reglement.date_reglement) }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                        {{ reglement.numero_piece || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                        {{ reglement.fournisseur?.nom_fournisseur || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                        {{ getClientName(reglement) }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                        {{ reglement.type_reglement || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                        {{ reglement.banque || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">
+                                        {{ reglement.nom_beneficiaire || '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                                        {{ formatCurrency(reglement.montant) }}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                        {{ formatDate(reglement.date_encaissement) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Right Section: Calendar -->
-            <div class="w-full lg:w-96 xl:w-[420px] p-6 bg-gray-100 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <div class="w-full lg:w-96 xl:w-[420px] flex-none p-6 bg-gray-100 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-y-auto">
                 <!-- Month Navigation -->
                 <div class="flex items-center justify-center mb-4">
                     <button 
@@ -261,6 +266,7 @@ import { ref, computed, onMounted } from 'vue'
 // =============================================================================
 
 const reglements = ref([])
+const allFournisseurs = ref([])
 const loading = ref(false)
 const currentDate = ref(new Date(2025, 2, 3)) // March 3, 2025
 
@@ -308,26 +314,49 @@ const redDates = [3, 5, 9, 13, 19, 20, 22, 25, 28, 29, 30, 31]
 // =============================================================================
 
 const uniqueFournisseurs = computed(() => {
+    // Use all fournisseurs from API if available, otherwise fallback to reglements data
+    if (allFournisseurs.value.length > 0) {
+        return allFournisseurs.value.map(f => f.nom_fournisseur).filter(Boolean)
+    }
     return [...new Set(reglements.value.map(r => r.fournisseur?.nom_fournisseur).filter(Boolean))]
 })
 
 const uniqueClients = computed(() => {
-    return [...new Set(reglements.value.map(r => r.nom_beneficiaire).filter(Boolean))]
+    // Get client names from bon_achat.client_livre (not nom_beneficiaire which is nom tiré)
+    const clients = []
+    reglements.value.forEach(r => {
+        if (r.lignes && r.lignes.length > 0) {
+            r.lignes.forEach(ligne => {
+                // Laravel serializes relationships in snake_case
+                const bonAchat = ligne.bon_achat || ligne.bonAchat
+                if (bonAchat?.client_livre) {
+                    clients.push(bonAchat.client_livre)
+                }
+            })
+        }
+    })
+    return [...new Set(clients.filter(Boolean))]
 })
 
 const filteredReglements = computed(() => {
     return reglements.value.filter(r => {
-        // Month filter
+        // Month filter - based on date_encaissement (not date_reglement)
         if (filters.value.mois) {
-            const reglementMonth = r.date_reglement ? r.date_reglement.substring(5, 7) : ''
-            if (reglementMonth !== filters.value.mois) return false
+            const encaissementMonth = r.date_encaissement ? r.date_encaissement.substring(5, 7) : ''
+            if (encaissementMonth !== filters.value.mois) return false
         }
         
         // Fournisseur filter
         if (filters.value.nomFournisseur && r.fournisseur?.nom_fournisseur !== filters.value.nomFournisseur) return false
         
-        // Client filter
-        if (filters.value.nomClient && r.nom_beneficiaire !== filters.value.nomClient) return false
+        // Client filter - check client_livre from bon_achat
+        if (filters.value.nomClient) {
+            const hasMatchingClient = r.lignes?.some(ligne => {
+                const bonAchat = ligne.bon_achat || ligne.bonAchat
+                return bonAchat?.client_livre === filters.value.nomClient
+            })
+            if (!hasMatchingClient) return false
+        }
         
         // Statut filter
         if (filters.value.statut && r.statut !== filters.value.statut) return false
@@ -505,12 +534,53 @@ const loadReglements = async () => {
     }
 }
 
+/**
+ * Load all fournisseurs from API
+ */
+const loadFournisseurs = async () => {
+    try {
+        const response = await fetch('/api/fournisseurs')
+        if (response.ok) {
+            allFournisseurs.value = await response.json()
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des fournisseurs:', error)
+    }
+}
+
+/**
+ * Get row background class based on statut
+ */
+const getRowBackgroundClass = (statut) => {
+    switch (statut) {
+        case 'impaye':
+            return 'bg-red-100 dark:bg-red-900/30'
+        case 'devalide':
+            return 'bg-orange-100 dark:bg-orange-900/30'
+        default:
+            return ''
+    }
+}
+
+/**
+ * Get client name from reglement (from bon_achat.client_livre)
+ */
+const getClientName = (reglement) => {
+    if (reglement.lignes && reglement.lignes.length > 0) {
+        const ligne = reglement.lignes[0]
+        const bonAchat = ligne?.bon_achat || ligne?.bonAchat
+        if (bonAchat?.client_livre) return bonAchat.client_livre
+    }
+    return '-'
+}
+
 // =============================================================================
 // LIFECYCLE
 // =============================================================================
 
 onMounted(() => {
     loadReglements()
+    loadFournisseurs()
 })
 </script>
 

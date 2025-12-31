@@ -1,7 +1,7 @@
 <template>
-    <div class="space-y-4">
+    <div class="bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
         <!-- Filters Section -->
-        <div class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
+        <div class="p-4 md:p-6 border-b border-gray-700 flex-none">
             <!-- Filter Inputs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
                 <!-- Date du -->
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Results Section -->
-        <div class="bg-gray-800 rounded-lg shadow-lg">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Header with title and actions -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-700 gap-3">
                 <h3 class="text-lg font-semibold text-gray-200">Résultats</h3>
@@ -111,16 +111,16 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto">
+            <div class="flex-1 overflow-x-auto overflow-y-auto">
                 <table class="min-w-full divide-y divide-gray-700">
-                    <thead class="bg-gray-900">
+                    <thead class="bg-gray-900 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">N° BON</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">CODE Client</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">NOM Client</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date Livraison</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">VILLE</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">GTE</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">QTE</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">MONTANT TTC</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">MONTANT PAYÉ</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">SOLDE</th>
