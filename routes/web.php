@@ -13,6 +13,7 @@ use App\Http\Controllers\BonCommandeFournisseurController;
 use App\Http\Controllers\BonLivraisonClientController;
 use App\Http\Controllers\CompteTresorerieController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\Api\TypesChargesController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -373,6 +374,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [ArticleController::class, 'show']);
         Route::put('/{id}', [ArticleController::class, 'update']);
         Route::delete('/{id}', [ArticleController::class, 'destroy']);
+    });
+
+    // API Routes for Comptes Caisse (Trésorerie)
+    Route::prefix('api/comptes-caisse')->group(function () {
+        Route::get('/', function () {
+            $comptes = \App\Models\CompteTresorerie::orderBy('libelle')->get(['id', 'code', 'libelle', 'type_compte']);
+            return response()->json(['comptes' => $comptes]);
+        });
+    });
+
+    // API Routes for Types de Charges
+    Route::prefix('api/types-charges')->group(function () {
+        // Charge entries CRUD
+        Route::get('/', [TypesChargesController::class, 'index']);
+        Route::get('/types', [TypesChargesController::class, 'getTypes']);
+        Route::post('/', [TypesChargesController::class, 'store']);
+        Route::get('/{id}', [TypesChargesController::class, 'show']);
+        Route::put('/{id}', [TypesChargesController::class, 'update']);
+        Route::delete('/{id}', [TypesChargesController::class, 'destroy']);
+        Route::get('/{id}/print', [TypesChargesController::class, 'print']);
+        
+        // Type charges management
+        Route::get('/manage/types', [TypesChargesController::class, 'indexTypes']);
+        Route::post('/manage/types', [TypesChargesController::class, 'storeType']);
+        Route::put('/manage/types/{id}', [TypesChargesController::class, 'updateType']);
+        Route::delete('/manage/types/{id}', [TypesChargesController::class, 'destroyType']);
     });
 
     // Old routes (kept for backward compatibility)

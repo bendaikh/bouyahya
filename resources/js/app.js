@@ -33,6 +33,7 @@ import ReglementsClients from './components/ventes/ReglementsClients.vue';
 import HistoriqueVentes from './components/ventes/HistoriqueVentes.vue';
 import ReleveCompteClients from './components/ventes/ReleveCompteClients.vue';
 import EcheancierFournisseurs from './components/achats/EcheancierFournisseurs.vue';
+import TypesCharges from './components/tresorerie/TypesCharges.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -68,6 +69,7 @@ app.component('ReglementsClients', ReglementsClients);
 app.component('HistoriqueVentes', HistoriqueVentes);
 app.component('ReleveCompteClients', ReleveCompteClients);
 app.component('EcheancierFournisseurs', EcheancierFournisseurs);
+app.component('TypesCharges', TypesCharges);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {
