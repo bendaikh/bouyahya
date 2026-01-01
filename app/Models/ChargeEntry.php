@@ -64,3 +64,4 @@ class ChargeEntry extends Model
     }
 }
 
+

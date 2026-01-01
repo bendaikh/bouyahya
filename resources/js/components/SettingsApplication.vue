@@ -356,6 +356,102 @@
                 </div>
             </div>
         </section>
+
+        <!-- Opérateurs Section -->
+        <section class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <header class="border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30">
+                            <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Opérateurs</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Gérez les opérateurs disponibles pour les types de charges
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        @click="showOperateurForm = !showOperateurForm"
+                        class="btn-primary text-sm"
+                    >
+                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        {{ showOperateurForm ? 'Annuler' : 'Ajouter' }}
+                    </button>
+                </div>
+            </header>
+            <div class="px-6 py-4">
+                <!-- Add Form -->
+                <div v-if="showOperateurForm" class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
+                            <input
+                                v-model="operateurForm.code"
+                                type="text"
+                                class="input"
+                                placeholder="Ex: OP1"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Libellé</label>
+                            <input
+                                v-model="operateurForm.libelle"
+                                type="text"
+                                class="input"
+                                placeholder="Ex: Opérateur 1"
+                            />
+                        </div>
+                        <div class="flex items-end">
+                            <button
+                                @click="saveOperateur"
+                                :disabled="isSavingOperateur"
+                                class="btn-primary w-full"
+                            >
+                                {{ editingOperateurId ? 'Modifier' : 'Ajouter' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- List -->
+                <div class="flex flex-wrap gap-2">
+                    <div
+                        v-for="op in operateurs"
+                        :key="op.id"
+                        class="flex items-center gap-2 px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-lg text-sm"
+                    >
+                        <span class="font-medium">{{ op.libelle }}</span>
+                        <span class="text-xs text-purple-600 dark:text-purple-400">({{ op.code }})</span>
+                        <button
+                            @click="editOperateur(op)"
+                            class="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
+                            title="Modifier"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button
+                            @click="removeOperateur(op)"
+                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                            title="Supprimer"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div v-if="operateurs.length === 0" class="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        Aucun opérateur configuré
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </template>
 
@@ -393,6 +489,16 @@ const echeanceForm = ref({
     code: '',
     libelle: '',
     jours: null
+})
+
+// Opérateurs
+const operateurs = ref([])
+const showOperateurForm = ref(false)
+const editingOperateurId = ref(null)
+const isSavingOperateur = ref(false)
+const operateurForm = ref({
+    code: '',
+    libelle: ''
 })
 
 const showMessage = (message, isError = false) => {
@@ -722,10 +828,107 @@ const removeEcheance = async (ech) => {
     }
 }
 
+// =====================================================
+// OPÉRATEURS
+// =====================================================
+
+const loadOperateurs = async () => {
+    try {
+        const response = await fetch('/api/settings/operateurs')
+        const data = await response.json()
+        operateurs.value = data.operateurs || []
+    } catch (error) {
+        console.error('Erreur lors du chargement des opérateurs:', error)
+    }
+}
+
+const resetOperateurForm = () => {
+    operateurForm.value = { code: '', libelle: '' }
+    editingOperateurId.value = null
+}
+
+const editOperateur = (op) => {
+    editingOperateurId.value = op.id
+    operateurForm.value = {
+        code: op.code || '',
+        libelle: op.libelle || ''
+    }
+    showOperateurForm.value = true
+}
+
+const saveOperateur = async () => {
+    if (!operateurForm.value.code || !operateurForm.value.libelle) {
+        showMessage('Veuillez remplir le code et le libellé', true)
+        return
+    }
+
+    try {
+        isSavingOperateur.value = true
+        const url = editingOperateurId.value 
+            ? '/api/settings/operateurs/update'
+            : '/api/settings/operateurs/add'
+        
+        const body = editingOperateurId.value
+            ? { ...operateurForm.value, id: editingOperateurId.value }
+            : operateurForm.value
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(body)
+        })
+
+        const data = await response.json()
+        if (response.ok) {
+            operateurs.value = data.operateurs
+            resetOperateurForm()
+            showOperateurForm.value = false
+            showMessage(editingOperateurId.value ? 'Opérateur modifié' : 'Opérateur ajouté')
+        } else {
+            throw new Error(data.message || 'Erreur lors de l\'enregistrement')
+        }
+    } catch (error) {
+        console.error('Erreur:', error)
+        showMessage(error.message || 'Erreur lors de l\'enregistrement', true)
+    } finally {
+        isSavingOperateur.value = false
+    }
+}
+
+const removeOperateur = async (op) => {
+    if (!confirm(`Supprimer "${op.libelle}" ?`)) return
+
+    try {
+        const response = await fetch('/api/settings/operateurs/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ id: op.id })
+        })
+
+        const data = await response.json()
+        if (response.ok) {
+            operateurs.value = data.operateurs
+            showMessage('Opérateur supprimé')
+        } else {
+            throw new Error(data.message || 'Erreur lors de la suppression')
+        }
+    } catch (error) {
+        console.error('Erreur:', error)
+        showMessage('Erreur lors de la suppression', true)
+    }
+}
+
 onMounted(() => {
     loadSettings()
     loadTypesReglement()
     loadEcheances()
+    loadOperateurs()
 })
 </script>
 

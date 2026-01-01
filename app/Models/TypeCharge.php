@@ -29,3 +29,4 @@ class TypeCharge extends Model
     }
 }
 
+

@@ -176,12 +176,21 @@
                         </div>
                         <div>
                             <label class="block text-white text-sm font-semibold mb-2">Opérateur</label>
-                            <input 
-                                type="text" 
-                                v-model="form.operateur" 
-                                :disabled="formMode === 'view'"
-                                class="w-full px-3 py-2 bg-white rounded text-gray-800 text-sm disabled:bg-gray-200"
-                            />
+                            <div class="relative">
+                                <select 
+                                    v-model="form.operateur" 
+                                    :disabled="formMode === 'view'"
+                                    class="appearance-none w-full px-3 py-2 bg-white rounded text-gray-800 text-sm pr-8 disabled:bg-gray-200"
+                                >
+                                    <option value="">Sélectionner...</option>
+                                    <option v-for="op in operateursList" :key="op.id" :value="op.libelle">{{ op.libelle }}</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -326,6 +335,7 @@ import { ref, computed, onMounted } from 'vue'
 // Data
 const charges = ref([])
 const typesList = ref([])
+const operateursList = ref([])
 const comptesCaisse = ref([])
 const loading = ref(false)
 const saving = ref(false)
@@ -595,11 +605,27 @@ const loadCharges = async () => {
 
 const loadTypes = async () => {
     try {
-        const response = await fetch('/api/types-charges/types')
+        // Load types from Types Règlement settings
+        const response = await fetch('/api/settings/types-reglement')
         const data = await response.json()
-        typesList.value = data.types || []
+        // Map types_reglement to have id and libelle for compatibility
+        typesList.value = (data.types_reglement || []).map(t => ({
+            id: t.id,
+            libelle: t.libelle,
+            code: t.code
+        }))
     } catch (error) {
         console.error('Erreur lors du chargement des types:', error)
+    }
+}
+
+const loadOperateurs = async () => {
+    try {
+        const response = await fetch('/api/settings/operateurs')
+        const data = await response.json()
+        operateursList.value = data.operateurs || []
+    } catch (error) {
+        console.error('Erreur lors du chargement des opérateurs:', error)
     }
 }
 
@@ -616,6 +642,7 @@ const loadComptesCaisse = async () => {
 onMounted(() => {
     loadCharges()
     loadTypes()
+    loadOperateurs()
     loadComptesCaisse()
 })
 </script>

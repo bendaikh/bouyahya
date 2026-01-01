@@ -1223,4 +1223,124 @@ class SettingsController extends Controller
             'echeances' => $echeances
         ]);
     }
+
+    // =====================================================
+    // OPÉRATEURS
+    // =====================================================
+
+    /**
+     * Get all opérateurs
+     */
+    public function getOperateurs()
+    {
+        $operateurs = json_decode(Setting::getValue('operateurs', '[]'), true);
+        
+        return response()->json(['operateurs' => $operateurs]);
+    }
+
+    /**
+     * Add a new opérateur
+     */
+    public function addOperateur(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $operateurs = json_decode(Setting::getValue('operateurs', '[]'), true);
+        
+        // Check if code already exists
+        $exists = array_filter($operateurs, fn($o) => isset($o['code']) && strtolower($o['code']) === strtolower($request->code));
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code opérateur existe déjà'], 422);
+        }
+
+        // Generate unique ID
+        $id = uniqid('op_');
+        
+        $operateur = [
+            'id' => $id,
+            'code' => $request->code,
+            'libelle' => $request->libelle
+        ];
+
+        $operateurs[] = $operateur;
+        Setting::setValue('operateurs', json_encode($operateurs));
+
+        return response()->json([
+            'message' => 'Opérateur ajouté avec succès',
+            'operateurs' => $operateurs
+        ]);
+    }
+
+    /**
+     * Update an opérateur
+     */
+    public function updateOperateur(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string',
+            'code' => 'required|string|max:50',
+            'libelle' => 'required|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $operateurs = json_decode(Setting::getValue('operateurs', '[]'), true);
+        
+        // Check if code already exists for another opérateur
+        $exists = array_filter($operateurs, fn($o) => 
+            isset($o['id']) && $o['id'] !== $request->id && 
+            isset($o['code']) && strtolower($o['code']) === strtolower($request->code)
+        );
+        if (!empty($exists)) {
+            return response()->json(['message' => 'Ce code opérateur existe déjà'], 422);
+        }
+
+        foreach ($operateurs as &$operateur) {
+            if (isset($operateur['id']) && $operateur['id'] === $request->id) {
+                $operateur['code'] = $request->code;
+                $operateur['libelle'] = $request->libelle;
+                break;
+            }
+        }
+        
+        Setting::setValue('operateurs', json_encode($operateurs));
+
+        return response()->json([
+            'message' => 'Opérateur mis à jour avec succès',
+            'operateurs' => $operateurs
+        ]);
+    }
+
+    /**
+     * Remove an opérateur
+     */
+    public function removeOperateur(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $operateurs = json_decode(Setting::getValue('operateurs', '[]'), true);
+        $operateurs = array_values(array_filter($operateurs, fn($o) => !isset($o['id']) || $o['id'] !== $request->id));
+        
+        Setting::setValue('operateurs', json_encode($operateurs));
+
+        return response()->json([
+            'message' => 'Opérateur supprimé avec succès',
+            'operateurs' => $operateurs
+        ]);
+    }
 }

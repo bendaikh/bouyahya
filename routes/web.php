@@ -363,6 +363,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/echeances/add', [SettingsController::class, 'addEcheance']);
         Route::post('/echeances/update', [SettingsController::class, 'updateEcheance']);
         Route::post('/echeances/remove', [SettingsController::class, 'removeEcheance']);
+        
+        // Opérateurs routes
+        Route::get('/operateurs', [SettingsController::class, 'getOperateurs']);
+        Route::post('/operateurs/add', [SettingsController::class, 'addOperateur']);
+        Route::post('/operateurs/update', [SettingsController::class, 'updateOperateur']);
+        Route::post('/operateurs/remove', [SettingsController::class, 'removeOperateur']);
     });
 
     // API Routes for Articles
