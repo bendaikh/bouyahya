@@ -14,8 +14,13 @@ class BonLivraisonClient extends Model
         'client_id',
         'bon_commande_id',
         'bon_achat_fournisseur_id',
+        'fournisseur_id',
+        'code_fournisseur',
+        'nom_fournisseur',
+        'bon_fournisseur_numero',
         'mode_paiement',
         'mode_reglement',
+        'type_reglement',
         'delai_reglement',
         'transporteur',
         'commercial',
@@ -54,6 +59,11 @@ class BonLivraisonClient extends Model
     public function bonAchatFournisseur()
     {
         return $this->belongsTo(\App\Models\BonAchatFournisseur::class, 'bon_achat_fournisseur_id');
+    }
+
+    public function fournisseur()
+    {
+        return $this->belongsTo(\App\Models\Fournisseur::class, 'fournisseur_id');
     }
 
     public function articles()

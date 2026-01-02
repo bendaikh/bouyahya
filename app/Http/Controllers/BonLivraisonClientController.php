@@ -72,8 +72,13 @@ class BonLivraisonClientController extends Controller
             'client_id' => 'required|exists:clients,id',
             'bon_commande_id' => 'nullable|exists:bon_commande_clients,id',
             'bon_achat_fournisseur_id' => 'nullable|exists:bon_achat_fournisseur,id',
+            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'code_fournisseur' => 'nullable|string',
+            'nom_fournisseur' => 'nullable|string',
+            'bon_fournisseur_numero' => 'nullable|string',
             'mode_paiement' => 'required|string',
             'mode_reglement' => 'nullable|string',
+            'type_reglement' => 'nullable|string',
             'delai_reglement' => 'nullable|string',
             'transporteur' => 'nullable|string',
             'commercial' => 'nullable|string',
@@ -109,8 +114,13 @@ class BonLivraisonClientController extends Controller
                 'client_id' => $request->client_id,
                 'bon_commande_id' => $request->bon_commande_id,
                 'bon_achat_fournisseur_id' => $request->bon_achat_fournisseur_id,
+                'fournisseur_id' => $request->fournisseur_id,
+                'code_fournisseur' => $request->code_fournisseur,
+                'nom_fournisseur' => $request->nom_fournisseur,
+                'bon_fournisseur_numero' => $request->bon_fournisseur_numero,
                 'mode_paiement' => $request->mode_paiement,
                 'mode_reglement' => $request->mode_reglement,
+                'type_reglement' => $request->type_reglement,
                 'delai_reglement' => $request->delai_reglement,
                 'transporteur' => $request->transporteur,
                 'commercial' => $request->commercial,
@@ -200,7 +210,7 @@ class BonLivraisonClientController extends Controller
 
     public function show($id)
     {
-        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande', 'bonAchatFournisseur'])->findOrFail($id);
+        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande', 'bonAchatFournisseur', 'fournisseur'])->findOrFail($id);
         return response()->json($bonLivraison);
     }
 
@@ -287,6 +297,10 @@ class BonLivraisonClientController extends Controller
             'mode_paiement' => $bonAchat->type_paiement,
             'echeance' => $bonAchat->echeance,
             'ville_livraison' => $bonAchat->ville,
+            'fournisseur_id' => $bonAchat->fournisseur_id,
+            'code_fournisseur' => $bonAchat->fournisseur ? $bonAchat->fournisseur->code_fournisseur : null,
+            'nom_fournisseur' => $bonAchat->fournisseur ? $bonAchat->fournisseur->nom_fournisseur : null,
+            'type_reglement' => $bonAchat->type_paiement,
             'items' => $bonAchat->articles->map(function($article) {
                 return [
                     'code_article' => $article->ref_article,
@@ -307,8 +321,13 @@ class BonLivraisonClientController extends Controller
             'client_id' => 'required|exists:clients,id',
             'bon_commande_id' => 'nullable|exists:bon_commande_clients,id',
             'bon_achat_fournisseur_id' => 'nullable|exists:bon_achat_fournisseur,id',
+            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'code_fournisseur' => 'nullable|string',
+            'nom_fournisseur' => 'nullable|string',
+            'bon_fournisseur_numero' => 'nullable|string',
             'mode_paiement' => 'required|string',
             'mode_reglement' => 'nullable|string',
+            'type_reglement' => 'nullable|string',
             'delai_reglement' => 'nullable|string',
             'transporteur' => 'nullable|string',
             'commercial' => 'nullable|string',
@@ -346,8 +365,13 @@ class BonLivraisonClientController extends Controller
                 'client_id' => $request->client_id,
                 'bon_commande_id' => $request->bon_commande_id,
                 'bon_achat_fournisseur_id' => $request->bon_achat_fournisseur_id,
+                'fournisseur_id' => $request->fournisseur_id,
+                'code_fournisseur' => $request->code_fournisseur,
+                'nom_fournisseur' => $request->nom_fournisseur,
+                'bon_fournisseur_numero' => $request->bon_fournisseur_numero,
                 'mode_paiement' => $request->mode_paiement,
                 'mode_reglement' => $request->mode_reglement,
+                'type_reglement' => $request->type_reglement,
                 'delai_reglement' => $request->delai_reglement,
                 'transporteur' => $request->transporteur,
                 'commercial' => $request->commercial,

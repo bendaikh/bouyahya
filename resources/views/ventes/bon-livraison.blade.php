@@ -29,6 +29,7 @@ function bonLivraisonApp() {
             nomTire: '',
             totalAVentiler: false
         },
+        paymentLines: [],
         banques: [],
         tresoreries: [],
         formData: {
@@ -204,8 +205,43 @@ function bonLivraisonApp() {
                 alert('Veuillez sélectionner un compte de trésorerie');
                 return;
             }
+            // Add to payment lines array
+            const newPaymentLine = {
+                id: Date.now(),
+                reference: this.paymentData.reference || '',
+                type: this.paymentData.modeReglement,
+                numero: this.paymentData.reference || '',
+                montant: this.paymentData.montant,
+                banque: this.paymentData.banque || '',
+                nomTire: this.paymentData.nomTire || '',
+                echeance: this.paymentData.echeance || '',
+                tresorerieId: this.paymentData.tresorerieId
+            };
+            this.paymentLines.push(newPaymentLine);
             this.hasPayment = true;
             this.showPaymentModal = false;
+            // Reset payment data for next entry
+            this.paymentData = {
+                tresorerieId: '',
+                modeReglement: 'Espèces',
+                montant: 0,
+                reference: '',
+                banque: '',
+                echeance: '',
+                nomTire: this.formData.nomClient || '',
+                totalAVentiler: false
+            };
+        },
+
+        removePaymentLine(index) {
+            this.paymentLines.splice(index, 1);
+            if (this.paymentLines.length === 0) {
+                this.hasPayment = false;
+            }
+        },
+
+        get totalPayments() {
+            return this.paymentLines.reduce((sum, line) => sum + parseFloat(line.montant || 0), 0);
         },
         
         searchClients() {
@@ -376,6 +412,11 @@ function bonLivraisonApp() {
                 this.formData.modePaiement = data.mode_paiement || 'Espèces';
                 this.formData.echeance = data.echeance || '';
                 this.formData.villeLivraison = data.ville_livraison || '';
+                // Set fournisseur fields from imported data
+                this.formData.fournisseurId = data.fournisseur_id ? String(data.fournisseur_id) : '';
+                this.formData.codeFournisseur = data.code_fournisseur || '';
+                this.formData.nomFournisseur = data.nom_fournisseur || '';
+                this.formData.typeReglement = data.type_reglement || data.mode_paiement || '';
                 this.items = (data.items || []).map(item => ({
                     ...item,
                     quantite: parseFloat(item.quantite) || 0,
@@ -514,8 +555,13 @@ function bonLivraisonApp() {
                         client_id: this.formData.clientId,
                         bon_commande_id: this.formData.bonCommandeId,
                         bon_achat_fournisseur_id: this.formData.bonAchatFournisseurId,
+                        fournisseur_id: this.formData.fournisseurId || null,
+                        code_fournisseur: this.formData.codeFournisseur || null,
+                        nom_fournisseur: this.formData.nomFournisseur || null,
+                        bon_fournisseur_numero: this.formData.bonFournisseurNumero || null,
                         mode_paiement: this.formData.modePaiement,
                         mode_reglement: this.formData.modeReglement,
+                        type_reglement: this.formData.typeReglement || null,
                         delai_reglement: this.formData.delaiReglement,
                         transporteur: this.formData.transporteur,
                         commercial: this.formData.commercial,
@@ -528,7 +574,8 @@ function bonLivraisonApp() {
                         matricule_vehicule: this.formData.matriculeVehicule,
                         observations: this.formData.observations,
                         items: this.items,
-                        payment: this.hasPayment ? this.paymentData : null
+                        payment: this.paymentLines.length > 0 ? this.paymentLines[0] : null,
+                        paymentLines: this.paymentLines
                     })
                 });
 
@@ -565,10 +612,14 @@ function bonLivraisonApp() {
                     this.formData.bonCommandeId = data.bon_commande_id;
                     this.formData.bonAchatFournisseurId = data.bon_achat_fournisseur_id;
                     this.formData.bonCommandeNumero = data.bon_commande ? data.bon_commande.numero_bon : (data.bon_achat_fournisseur ? data.bon_achat_fournisseur.numero_bon : '');
-                    this.formData.bonFournisseurNumero = data.bon_achat_fournisseur ? data.bon_achat_fournisseur.numero_bon : '';
+                    // Load fournisseur fields - convert to string for dropdown matching
+                    this.formData.fournisseurId = data.fournisseur_id ? String(data.fournisseur_id) : '';
+                    this.formData.codeFournisseur = data.code_fournisseur || '';
+                    this.formData.nomFournisseur = data.nom_fournisseur || '';
+                    this.formData.bonFournisseurNumero = data.bon_fournisseur_numero || (data.bon_achat_fournisseur ? data.bon_achat_fournisseur.numero_bon : '');
                     this.formData.modePaiement = data.mode_paiement;
                     this.formData.modeReglement = data.mode_reglement || 'Crédit';
-                    this.formData.typeReglement = data.mode_reglement || 'Crédit';
+                    this.formData.typeReglement = data.type_reglement || data.mode_reglement || 'Crédit';
                     this.formData.delaiReglement = data.delai_reglement || '0 Jours';
                     this.formData.transporteur = data.transporteur || '';
                     this.formData.commercial = data.commercial || (this.commerciales.length > 0 ? this.commerciales[0] : '');
@@ -630,8 +681,13 @@ function bonLivraisonApp() {
                         client_id: this.formData.clientId,
                         bon_commande_id: this.formData.bonCommandeId,
                         bon_achat_fournisseur_id: this.formData.bonAchatFournisseurId,
+                        fournisseur_id: this.formData.fournisseurId || null,
+                        code_fournisseur: this.formData.codeFournisseur || null,
+                        nom_fournisseur: this.formData.nomFournisseur || null,
+                        bon_fournisseur_numero: this.formData.bonFournisseurNumero || null,
                         mode_paiement: this.formData.modePaiement,
                         mode_reglement: this.formData.modeReglement,
+                        type_reglement: this.formData.typeReglement || null,
                         delai_reglement: this.formData.delaiReglement,
                         transporteur: this.formData.transporteur,
                         commercial: this.formData.commercial,
@@ -644,7 +700,8 @@ function bonLivraisonApp() {
                         matricule_vehicule: this.formData.matriculeVehicule,
                         observations: this.formData.observations,
                         items: this.items,
-                        payment: this.hasPayment ? this.paymentData : null
+                        payment: this.paymentLines.length > 0 ? this.paymentLines[0] : null,
+                        paymentLines: this.paymentLines
                     })
                 });
 
@@ -1197,113 +1254,181 @@ function exportToPDF() {
             </div>
         </div>
 
-        <!-- Détail Commande Section -->
-        <div class="mb-6">
-            <h3 class="text-sm font-semibold text-amber-600 dark:text-yellow-400 mb-4">Détail Commande</h3>
-            
+        <!-- Détail Commande and Détails Paiement Sections in Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            <!-- Détail Commande Section (Left - 3 columns) -->
+            <div class="lg:col-span-3">
+                <h3 class="text-sm font-semibold text-amber-600 dark:text-yellow-400 mb-4">Détail Commande</h3>
+                
                 <!-- Article Search -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rechercher un article</label>
-            <div class="relative">
-                <input 
-                    type="text" 
-                    x-model="searchArticle" 
-                    @input="searchArticles()"
-                    @keydown.escape="filteredArticles = []"
-                    placeholder="Rechercher par code ou désignation..."
-                    class="w-full md:w-96 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-                >
-                <div x-show="filteredArticles.length > 0" class="absolute z-50 w-full md:w-96 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <template x-for="(article, index) in filteredArticles" :key="article.id">
-                        <div 
-                            @click="selectArticle(article)"
-                            class="px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rechercher un article</label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            x-model="searchArticle" 
+                            @input="searchArticles()"
+                            @keydown.escape="filteredArticles = []"
+                            placeholder="Rechercher par code ou désignation..."
+                            class="w-full md:w-80 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-blue-600 dark:text-blue-400 font-mono text-sm" x-text="article.reference"></span>
-                                    <span class="text-gray-700 dark:text-gray-300 ml-2" x-text="article.designation"></span>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        Stock: <span :class="article.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'" x-text="article.stock_actuel"></span>
+                        <div x-show="filteredArticles.length > 0" class="absolute z-50 w-full md:w-80 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <template x-for="(article, index) in filteredArticles" :key="article.id">
+                                <div 
+                                    @click="selectArticle(article)"
+                                    class="px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                                >
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="text-blue-600 dark:text-blue-400 font-mono text-sm" x-text="article.reference"></span>
+                                            <span class="text-gray-700 dark:text-gray-300 ml-2" x-text="article.designation"></span>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-green-600 dark:text-green-400 font-semibold" x-text="article.prix_vente + ' DH'"></div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                Stock: <span :class="article.stock_actuel <= 0 ? 'text-red-500 font-bold' : 'text-blue-500'" x-text="article.stock_actuel"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </template>
                         </div>
-                    </template>
+                    </div>
+                    <!-- Totals Row -->
+                    <div class="flex items-center gap-4 mt-3">
+                        <span class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Quantité Total</span>
+                        <span class="px-4 py-1 bg-blue-500 rounded-lg text-white font-bold text-sm" x-text="totalQuantites"></span>
+                        <span class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Total TTC</span>
+                        <span class="px-4 py-1 bg-yellow-400 rounded-lg text-gray-900 font-bold text-sm" x-text="formatCurrency(totalGeneral) + ' DH'"></span>
+                    </div>
                 </div>
-            </div>
-            </div>
 
                 <!-- Items Table -->
-            <div class="overflow-x-auto mb-4">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CODE ARTICLE</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">DÉSIGNATION</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">QTÉ</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">P.U. TTC</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SOUS-TOTAL</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
-                        </tr>
-                    </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    <template x-for="(item, index) in items" :key="index">
-                        <tr>
-                            <td class="px-4 py-3">
-                                <input type="text" x-model="item.code_article" class="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
-                            </td>
-                            <td class="px-4 py-3">
-                                <input type="text" x-model="item.designation" class="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
-                            </td>
-                            <td class="px-4 py-3">
-                                <input type="number" x-model="item.quantite" @input="updateSousTotal(item)" min="1" class="w-20 px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
-                            </td>
-                            <td class="px-4 py-3">
-                                <input type="number" x-model="item.prix_unitaire" @input="updateSousTotal(item)" min="0" step="0.01" class="w-28 px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white" x-text="(parseFloat(item.sous_total || 0)).toFixed(2) + ' DH'"></td>
-                            <td class="px-4 py-3">
-                                <button @click="removeItem(index)" class="text-red-600 hover:text-red-900 dark:text-red-400">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-                    <tr x-show="items.length === 0">
-                        <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucun article ajouté</td>
-                    </tr>
-                </tbody>
-            </table>
+                <div class="overflow-x-auto mb-4">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CODE ARTICLE</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">DÉSIGNATION</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">QTÉ</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">P.U. TTC</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SOUS-TOTAL</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <template x-for="(item, index) in items" :key="index">
+                                <tr>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="item.code_article" class="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="item.designation" class="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" x-model="item.quantite" @input="updateSousTotal(item)" min="1" class="w-16 px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" x-model="item.prix_unitaire" @input="updateSousTotal(item)" min="0" step="0.01" class="w-24 px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm">
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white whitespace-nowrap" x-text="(parseFloat(item.sous_total || 0)).toFixed(2) + ' DH'"></td>
+                                    <td class="px-3 py-2">
+                                        <button @click="removeItem(index)" class="text-red-600 hover:text-red-900 dark:text-red-400">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="items.length === 0">
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucun article ajouté</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add Item Button -->
+                <div class="mb-4">
+                    <button @click="addEmptyItem()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium text-sm flex items-center">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        + Ajouter une ligne
+                    </button>
+                </div>
             </div>
 
-            <!-- Add Item Button -->
-            <div class="mb-6">
-                <button @click="addEmptyItem()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium text-sm flex items-center">
-                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    + Ajouter une ligne
-                </button>
+            <!-- Détails Paiement Section (Right - 2 columns) -->
+            <div class="lg:col-span-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Détails Paiement</h3>
+                
+                <div class="bg-gray-100 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-200 dark:bg-gray-600">
+                                <tr>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Réf</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">N°</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Montant</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Banque</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Tiré</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">Échéance</th>
+                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <template x-for="(payment, index) in paymentLines" :key="payment.id">
+                                    <tr>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.reference || '-'"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.type"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.numero || '-'"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center font-semibold" x-text="formatCurrency(payment.montant) + ' DH'"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.banque || '-'"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.nomTire || '-'"></td>
+                                        <td class="px-2 py-2 text-xs text-gray-900 dark:text-white text-center" x-text="payment.echeance || '-'"></td>
+                                        <td class="px-2 py-2">
+                                            <button @click="removePaymentLine(index)" class="text-red-600 hover:text-red-900 dark:text-red-400">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr x-show="paymentLines.length === 0">
+                                    <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">Aucun paiement ajouté</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Add Payment Button -->
+                    <div class="p-3 border-t border-gray-200 dark:border-gray-600" x-show="!viewMode">
+                        <button @click="openPaymentModal()" type="button" class="w-full flex items-center justify-center text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium text-sm py-2 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            + Ajouter un paiement
+                        </button>
+                    </div>
+                    
+                    <!-- Payment Total -->
+                    <div class="p-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700" x-show="paymentLines.length > 0">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Paiements:</span>
+                            <span class="text-sm font-bold text-green-600 dark:text-green-400" x-text="formatCurrency(totalPayments) + ' DH'"></span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Reste à payer:</span>
+                            <span class="text-sm font-bold" :class="(totalGeneral - totalPayments) > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" x-text="formatCurrency(Math.max(0, totalGeneral - totalPayments)) + ' DH'"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Summary Section - Positioned at bottom right -->
-        <div class="flex justify-end items-center mb-6 gap-6">
-            <div class="flex items-center gap-3">
-                <label class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Quantité Total</label>
-                <input type="text" :value="totalQuantites" readonly class="px-4 py-2 bg-blue-500 border-0 rounded-lg text-white w-32 text-center font-bold">
-            </div>
-            <div class="flex items-center gap-3">
-                <label class="text-sm font-semibold text-yellow-500 dark:text-yellow-400">Total TTC</label>
-                <input type="text" :value="formatCurrency(totalGeneral) + ' DH'" readonly class="px-4 py-2 bg-yellow-400 border-0 rounded-lg text-gray-900 w-40 text-center font-bold">
-            </div>
-        </div>
         </fieldset>
 
         <!-- Additional Action Buttons at bottom -->
