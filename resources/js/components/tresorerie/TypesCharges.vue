@@ -605,15 +605,10 @@ const loadCharges = async () => {
 
 const loadTypes = async () => {
     try {
-        // Load types from Types Règlement settings
-        const response = await fetch('/api/settings/types-reglement')
+        // Load types from types_charges table
+        const response = await fetch('/api/types-charges/types')
         const data = await response.json()
-        // Map types_reglement to have id and libelle for compatibility
-        typesList.value = (data.types_reglement || []).map(t => ({
-            id: t.id,
-            libelle: t.libelle,
-            code: t.code
-        }))
+        typesList.value = data.types || []
     } catch (error) {
         console.error('Erreur lors du chargement des types:', error)
     }
