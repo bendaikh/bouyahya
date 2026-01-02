@@ -1068,10 +1068,11 @@ function exportToPDF() {
             </div>
         </div>
 
-        <!-- Import Section and Action Buttons Row -->
+        </fieldset>
+        <!-- Import Section and Action Buttons Row - Outside fieldset so buttons work in view mode -->
         <div class="flex justify-between items-start mb-6">
             <!-- Import Section -->
-            <div>
+            <div x-show="!viewMode">
                 <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">Importateur depuis</p>
                 <div class="flex gap-3">
                     <button @click="openImportModal('bon-commande')" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
@@ -1090,7 +1091,7 @@ function exportToPDF() {
             </div>
 
             <!-- Action Buttons - Positioned on the right -->
-            <div class="flex gap-3">
+            <div class="flex gap-3 ml-auto">
                 <button @click="editMode ? updateForm() : submitForm()" type="button" :disabled="isSubmitting" x-show="!viewMode" class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
                     <span x-show="!isSubmitting">Valider</span>
                     <span x-show="isSubmitting">...</span>
@@ -1111,6 +1112,7 @@ function exportToPDF() {
                 </button>
             </div>
         </div>
+        <fieldset :disabled="viewMode" class="border-0 p-0 m-0 min-w-0 w-full">
 
         <!-- Info Client Livré and Info Livraison Sections -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
