@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TypeCharge;
 use App\Models\ChargeEntry;
 use App\Models\CompteTresorerie;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,11 +17,21 @@ class TypesChargesController extends Controller
      */
     public function index()
     {
-        $charges = ChargeEntry::with(['type', 'compteCaisse'])
+        // Get types from settings (types_reglement)
+        $typesReglement = json_decode(Setting::getValue('types_reglement', '[]'), true);
+        $typesMap = collect($typesReglement)->keyBy('id');
+
+        $charges = ChargeEntry::with(['compteCaisse'])
             ->orderBy('date', 'desc')
             ->orderBy('heure', 'desc')
             ->get()
-            ->map(function ($charge) {
+            ->map(function ($charge) use ($typesMap) {
+                // Lookup type libelle from settings
+                $typeLibelle = null;
+                if ($charge->type_id && isset($typesMap[$charge->type_id])) {
+                    $typeLibelle = $typesMap[$charge->type_id]['libelle'] ?? null;
+                }
+
                 return [
                     'id' => $charge->id,
                     'reference' => $charge->reference,
@@ -30,7 +41,7 @@ class TypesChargesController extends Controller
                     'compte_caisse_id' => $charge->compte_caisse_id,
                     'compte_caisse_libelle' => $charge->compteCaisse?->libelle,
                     'type_id' => $charge->type_id,
-                    'type_libelle' => $charge->type?->libelle,
+                    'type_libelle' => $typeLibelle,
                     'numero' => $charge->numero,
                     'libelle' => $charge->libelle,
                     'beneficiaire' => $charge->beneficiaire,
@@ -63,7 +74,7 @@ class TypesChargesController extends Controller
         $validator = Validator::make($request->all(), [
             'operateur' => 'nullable|string|max:255',
             'compte_caisse_id' => 'nullable|exists:compte_tresoreries,id',
-            'type_id' => 'nullable|exists:types_charges,id',
+            'type_id' => 'nullable|string|max:255', // Type from settings (types_reglement)
             'numero' => 'nullable|string|max:255',
             'libelle' => 'required|string|max:255',
             'beneficiaire' => 'nullable|string|max:255',
@@ -115,7 +126,7 @@ class TypesChargesController extends Controller
         $validator = Validator::make($request->all(), [
             'operateur' => 'nullable|string|max:255',
             'compte_caisse_id' => 'nullable|exists:compte_tresoreries,id',
-            'type_id' => 'nullable|exists:types_charges,id',
+            'type_id' => 'nullable|string|max:255', // Type from settings (types_reglement)
             'numero' => 'nullable|string|max:255',
             'libelle' => 'required|string|max:255',
             'beneficiaire' => 'nullable|string|max:255',
