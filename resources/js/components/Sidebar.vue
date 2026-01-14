@@ -41,6 +41,7 @@
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <MenuItem 
+                    v-if="hasPermission('view dashboard')"
                     :item="menuItems.dashboard" 
                     :is-collapsed="isCollapsed"
                     :is-active="currentRoute === menuItems.dashboard.route"
@@ -48,6 +49,7 @@
 
                 <!-- Gestion des Clients -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage clients')"
                     :item="menuItems.clients" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.clients"
@@ -56,6 +58,7 @@
 
                 <!-- Gestion des Fournisseurs -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage fournisseurs')"
                     :item="menuItems.fournisseurs" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.fournisseurs"
@@ -64,6 +67,7 @@
 
                 <!-- Gestion des Achats -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage achats')"
                     :item="menuItems.achats" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.achats"
@@ -72,6 +76,7 @@
 
                 <!-- Gestion des Ventes -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage ventes')"
                     :item="menuItems.ventes" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.ventes"
@@ -80,6 +85,7 @@
 
                 <!-- Gestion du Stock -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage stock')"
                     :item="menuItems.stock" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.stock"
@@ -88,14 +94,25 @@
 
                 <!-- Gestion Trésorerie -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage tresorerie')"
                     :item="menuItems.tresorerie" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.tresorerie"
                     @toggle="toggleMenu('tresorerie')"
                 />
 
+                <!-- Gestion des Utilisateurs -->
+                <CollapsibleMenuItem 
+                    v-if="hasPermission('manage users')"
+                    :item="menuItems.utilisateurs" 
+                    :is-collapsed="isCollapsed"
+                    :is-open="openMenus.utilisateurs"
+                    @toggle="toggleMenu('utilisateurs')"
+                />
+
                 <!-- Paramètres -->
                 <CollapsibleMenuItem 
+                    v-if="hasPermission('manage settings')"
                     :item="menuItems.parametres" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.parametres"
@@ -130,9 +147,27 @@ import CollapsibleMenuItem from './CollapsibleMenuItem.vue'
 
 const emit = defineEmits(['collapse-change'])
 
+const props = defineProps({
+    user: {
+        type: Object,
+        default: () => ({})
+    }
+})
+
 const isCollapsed = ref(false)
 const isMobileOpen = ref(false)
 const isMobile = ref(false)
+
+const hasPermission = (permission) => {
+    if (!props.user || !props.user.roles) return false
+    
+    // Superadmin has all permissions
+    if (props.user.roles.some(role => role.name === 'superadmin')) return true
+    
+    // Check direct permissions or role permissions
+    const userPermissions = props.user.roles.flatMap(role => role.permissions.map(p => p.name))
+    return userPermissions.includes(permission)
+}
 
 const openMenus = ref({
     achats: false,
@@ -141,6 +176,7 @@ const openMenus = ref({
     fournisseurs: false,
     stock: false,
     tresorerie: false,
+    utilisateurs: false,
     parametres: false
 })
 
@@ -159,6 +195,14 @@ const menuItems = {
         title: 'Tableau de bord',
         icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
         route: '/dashboard'
+    },
+    utilisateurs: {
+        title: 'Gestion des Utilisateurs',
+        icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+        children: [
+            { title: 'Utilisateurs', route: '/utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+            { title: 'Rôles et Permissions', route: '/utilisateurs/roles', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
+        ]
     },
     parametres: {
         title: 'Paramètres',
@@ -281,6 +325,8 @@ onMounted(() => {
         openMenus.value.stock = true
     } else if (currentPath.startsWith('/tresorerie')) {
         openMenus.value.tresorerie = true
+    } else if (currentPath.startsWith('/utilisateurs')) {
+        openMenus.value.utilisateurs = true
     } else if (currentPath.startsWith('/parametres')) {
         openMenus.value.parametres = true
     }

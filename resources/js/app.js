@@ -34,6 +34,8 @@ import HistoriqueVentes from './components/ventes/HistoriqueVentes.vue';
 import ReleveCompteClients from './components/ventes/ReleveCompteClients.vue';
 import EcheancierFournisseurs from './components/achats/EcheancierFournisseurs.vue';
 import TypesCharges from './components/tresorerie/TypesCharges.vue';
+import UsersList from './components/utilisateurs/UsersList.vue';
+import RolesList from './components/utilisateurs/RolesList.vue';
 
 // Initialize Vue app with root component
 const app = createApp(App);
@@ -70,6 +72,8 @@ app.component('HistoriqueVentes', HistoriqueVentes);
 app.component('ReleveCompteClients', ReleveCompteClients);
 app.component('EcheancierFournisseurs', EcheancierFournisseurs);
 app.component('TypesCharges', TypesCharges);
+app.component('UsersList', UsersList);
+app.component('RolesList', RolesList);
 
 // Mount Vue app to elements with id="app"
 document.addEventListener('DOMContentLoaded', () => {

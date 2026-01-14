@@ -1,7 +1,7 @@
 <template>
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Component -->
-        <Sidebar @collapse-change="onSidebarCollapseChange"></Sidebar>
+        <Sidebar :user="user" @collapse-change="onSidebarCollapseChange"></Sidebar>
         
         <!-- Main Content Area -->
         <div 

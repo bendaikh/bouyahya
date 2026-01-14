@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // La gestion des achats
-    Route::prefix('achats')->group(function () {
+    Route::prefix('achats')->middleware('can:manage achats')->group(function () {
         Route::get('/bon-achat-fournisseur', function () {
             return view('achats.bon-achat-fournisseur', ['page_title' => 'Bon d\'achat Fournisseur']);
         })->name('achats.bon-achat-fournisseur');
@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
 });
 
     // La gestion des ventes
-    Route::prefix('ventes')->group(function () {
+    Route::prefix('ventes')->middleware('can:manage ventes')->group(function () {
         // Bon de Commande Client routes
         Route::get('/bon-commande', [BonCommandeClientController::class, 'index'])->name('ventes.bon-commande');
         Route::post('/bon-commande', [BonCommandeClientController::class, 'store'])->name('ventes.bon-commande.store');
@@ -122,7 +122,7 @@ Route::middleware('auth')->group(function () {
 });
 
     // La gestion du stock
-    Route::prefix('stock')->group(function () {
+    Route::prefix('stock')->middleware('can:manage stock')->group(function () {
         Route::get('/articles', function () {
             return view('stock.articles', ['page_title' => 'Articles', 'vue_component' => 'ArticlesList']);
         })->name('stock.articles');
@@ -136,7 +136,7 @@ Route::middleware('auth')->group(function () {
 });
 
     // La gestion trésorerie
-    Route::prefix('tresorerie')->group(function () {
+    Route::prefix('tresorerie')->middleware('can:manage tresorerie')->group(function () {
         Route::get('/etat-journalier', function () {
             return view('tresorerie.etat-journalier', ['page_title' => 'État journalier']);
         })->name('tresorerie.etat-journalier');
@@ -168,7 +168,7 @@ Route::middleware('auth')->group(function () {
 });
 
     // Gestion des clients
-    Route::prefix('clients')->group(function () {
+    Route::prefix('clients')->middleware('can:manage clients')->group(function () {
         Route::get('/', function () {
             return view('clients.index', ['page_title' => 'Liste des clients']);
         })->name('clients.index');
@@ -179,7 +179,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Gestion des fournisseurs
-    Route::prefix('fournisseurs')->group(function () {
+    Route::prefix('fournisseurs')->middleware('can:manage fournisseurs')->group(function () {
         Route::get('/', function () {
             return view('fournisseurs.index', ['page_title' => 'Liste des fournisseurs']);
         })->name('fournisseurs.index');
@@ -256,8 +256,39 @@ Route::middleware('auth')->group(function () {
         Route::get('/historique', [\App\Http\Controllers\Api\HistoriqueVentesController::class, 'index']);
     });
 
+    // Gestion des utilisateurs
+    Route::prefix('utilisateurs')->middleware('can:manage users')->group(function () {
+        Route::get('/', function () {
+            return view('utilisateurs.index', ['page_title' => 'Liste des utilisateurs']);
+        })->name('utilisateurs.index');
+
+        Route::get('/roles', function () {
+            return view('utilisateurs.roles', ['page_title' => 'Gestion des rôles']);
+        })->name('utilisateurs.roles');
+    });
+
+    // API Routes for Users and Roles
+    Route::prefix('api')->middleware('can:manage users')->group(function () {
+        Route::prefix('users')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\UserController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\UserController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\UserController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\UserController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
+        });
+
+        Route::prefix('roles')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\RoleController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\RoleController::class, 'store']);
+            Route::get('/permissions', [\App\Http\Controllers\Api\RoleController::class, 'permissions']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\RoleController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\RoleController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\RoleController::class, 'destroy']);
+        });
+    });
+
     // Paramètres (Settings)
-    Route::prefix('parametres')->group(function () {
+    Route::prefix('parametres')->middleware('can:manage settings')->group(function () {
         // Redirect /parametres to /parametres/application
         Route::get('/', function () {
             return redirect()->route('parametres.application');
