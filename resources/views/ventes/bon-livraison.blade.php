@@ -964,7 +964,30 @@ function bonLivraisonApp() {
             if (montantPaye >= totalTtc && totalTtc > 0) return ''; // Payé
             if (montantPaye > 0 && montantPaye < totalTtc) return 'bg-orange-100 dark:bg-orange-900/30'; // En cours
             return 'bg-red-100 dark:bg-red-900/30'; // Impayé
-        }
+        },
+
+        getBonEtat(bon) {
+            const totalTtc = parseFloat(bon.total_general) || 0;
+            const montantPaye = parseFloat(bon.montant_paye) || 0;
+            
+            if (montantPaye >= totalTtc && totalTtc > 0) return 'paye';
+            if (montantPaye > 0 && montantPaye < totalTtc) return 'encours';
+            return 'impaye';
+        },
+
+        getEtatText(bon) {
+            const etat = this.getBonEtat(bon);
+            if (etat === 'paye') return 'Payé';
+            if (etat === 'encours') return 'En cours';
+            return 'Impayé';
+        },
+
+        getEtatClass(bon) {
+            const etat = this.getBonEtat(bon);
+            if (etat === 'paye') return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            if (etat === 'encours') return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        },
     };
 }
 </script>
@@ -1935,11 +1958,7 @@ function exportToPDF() {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 text-xs font-semibold rounded-full" 
-                                        :class="(parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0) 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                        x-text="(parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0) ? 'Payé' : 'Impayé'">
+                                    <span :class="getEtatClass(bonLivraison)" class="px-3 py-1 text-xs font-semibold rounded-full" x-text="getEtatText(bonLivraison)">
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
