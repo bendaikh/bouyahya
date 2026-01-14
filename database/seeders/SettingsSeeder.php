@@ -13,8 +13,8 @@ class SettingsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Default app name
-        Setting::updateOrCreate(
+        // Default app name - Use firstOrCreate to avoid overwriting user changes
+        Setting::firstOrCreate(
             ['key' => 'app_name'],
             ['value' => 'Bouyahya']
         );
@@ -32,13 +32,13 @@ class SettingsSeeder extends Seeder
             'Tetouan'
         ];
         
-        Setting::updateOrCreate(
+        Setting::firstOrCreate(
             ['key' => 'cities'],
             ['value' => json_encode($defaultCities)]
         );
 
-        // App logo (null by default, to be uploaded by user)
-        Setting::updateOrCreate(
+        // App logo
+        Setting::firstOrCreate(
             ['key' => 'app_logo'],
             ['value' => null]
         );

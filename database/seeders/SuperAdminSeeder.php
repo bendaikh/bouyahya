@@ -12,7 +12,7 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::updateOrCreate(
+        $admin = \App\Models\User::updateOrCreate(
             ['email' => 'admin@bouyahya.com'],
             [
                 'name' => 'Super Admin',
@@ -22,6 +22,11 @@ class SuperAdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Assign superadmin role if it exists
+        if (\Spatie\Permission\Models\Role::where('name', 'superadmin')->exists()) {
+            $admin->assignRole('superadmin');
+        }
 
         echo "Superadmin user created successfully!\n";
         echo "Email: admin@bouyahya.com\n";

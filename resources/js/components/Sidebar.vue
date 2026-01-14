@@ -159,13 +159,20 @@ const isMobileOpen = ref(false)
 const isMobile = ref(false)
 
 const hasPermission = (permission) => {
-    if (!props.user || !props.user.roles) return false
+    if (!props.user) return false
+    
+    // Fallback for legacy superadmin role column
+    if (props.user.role === 'superadmin') return true
+    
+    if (!props.user.roles) return false
     
     // Superadmin has all permissions
     if (props.user.roles.some(role => role.name === 'superadmin')) return true
     
-    // Check direct permissions or role permissions
-    const userPermissions = props.user.roles.flatMap(role => role.permissions.map(p => p.name))
+    // Check role permissions
+    const userPermissions = props.user.roles.flatMap(role => 
+        role.permissions ? role.permissions.map(p => p.name) : []
+    )
     return userPermissions.includes(permission)
 }
 
