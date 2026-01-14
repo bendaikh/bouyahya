@@ -210,7 +210,7 @@ class BonLivraisonClientController extends Controller
 
     public function show($id)
     {
-        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande', 'bonAchatFournisseur', 'fournisseur'])->findOrFail($id);
+        $bonLivraison = BonLivraisonClient::with(['articles', 'client', 'bonCommande', 'bonAchatFournisseur', 'fournisseur', 'reglementLignes.reglement'])->findOrFail($id);
         return response()->json($bonLivraison);
     }
 

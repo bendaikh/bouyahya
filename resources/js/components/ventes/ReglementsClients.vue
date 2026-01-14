@@ -1,7 +1,7 @@
 <template>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 h-[calc(100vh-130px)] flex flex-col overflow-hidden">
         <!-- Header -->
-        <div class="mb-6 flex justify-between items-center">
+        <div class="mb-6 flex justify-between items-center flex-none">
             <div>
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
                     consultation règlements des
@@ -61,9 +61,9 @@
         </div>
 
         <!-- List View -->
-        <div v-if="!showForm">
+        <div v-if="!showForm" class="flex-1 flex flex-col overflow-hidden">
             <!-- Stat blocks -->
-            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 flex-none">
                 <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
                     <div class="text-sm font-semibold">Total Règlements Clients</div>
                     <div class="mt-1 text-xl font-bold">
@@ -85,7 +85,7 @@
             </div>
 
             <!-- Export Buttons -->
-            <div class="mb-4 flex justify-end space-x-2">
+            <div class="mb-4 flex justify-end space-x-2 flex-none">
                 <button 
                     @click="exportToExcel" 
                     class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center text-sm"
@@ -107,7 +107,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4 flex-none">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">État Règlement</label>
                     <select 
@@ -168,9 +168,9 @@
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
+            <div class="flex-1 overflow-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>

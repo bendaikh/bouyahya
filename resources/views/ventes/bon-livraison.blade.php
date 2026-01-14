@@ -642,6 +642,23 @@ function bonLivraisonApp() {
                             sous_total: quantite * prixUnitaire
                         };
                     });
+
+                    // Load payment details
+                    this.paymentLines = (data.reglement_lignes || []).map(ligne => {
+                        const reg = ligne.reglement;
+                        return {
+                            id: reg ? reg.id : Date.now() + Math.random(),
+                            tresorerieId: reg ? reg.tresorerie_id : '',
+                            modeReglement: reg ? reg.type_reglement : '',
+                            montant: parseFloat(ligne.montant_regle) || 0,
+                            reference: reg ? reg.numero_piece : '',
+                            banque: reg ? reg.banque : '',
+                            echeance: reg ? (reg.date_encaissement ? reg.date_encaissement.split('T')[0] : '') : '',
+                            nomTire: reg ? reg.nom_tire : '',
+                            date: reg ? (reg.date_reglement ? reg.date_reglement.split('T')[0] : '') : ''
+                        };
+                    });
+                    this.hasPayment = this.paymentLines.length > 0;
                 })
                 .catch(error => {
                     alert('Erreur lors du chargement: ' + error.message);
@@ -773,8 +790,12 @@ function bonLivraisonApp() {
                 const ville = this.searchFilters.ville.toLowerCase();
                 
                 // Check month filter
-                if (mois && !this.formatDate(bl.date).toLowerCase().includes(mois)) {
-                    return false;
+                if (mois) {
+                    const blDate = new Date(bl.date);
+                    const blMonth = (blDate.getMonth() + 1).toString().padStart(2, '0');
+                    if (blMonth !== mois) {
+                        return false;
+                    }
                 }
                 
                 // Check code filter (client code or bon number)
@@ -934,6 +955,15 @@ function bonLivraisonApp() {
             } catch (error) {
                 alert('Erreur: ' + error.message);
             }
+        },
+
+        getEtatRowBgClass(bon) {
+            const totalTtc = parseFloat(bon.total_general) || 0;
+            const montantPaye = parseFloat(bon.montant_paye) || 0;
+            
+            if (montantPaye >= totalTtc && totalTtc > 0) return ''; // Payé
+            if (montantPaye > 0 && montantPaye < totalTtc) return 'bg-orange-100 dark:bg-orange-900/30'; // En cours
+            return 'bg-red-100 dark:bg-red-900/30'; // Impayé
         }
     };
 }
@@ -1710,16 +1740,30 @@ function exportToPDF() {
                 <!-- Mois Filter -->
                 <div>
                     <div class="relative">
-                        <input 
-                            type="text" 
+                        <select 
                             x-model="searchFilters.mois"
-                            @input="filterBonLivraisons()"
-                            placeholder="Mois" 
-                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            @change="filterBonLivraisons()"
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                         >
-                        <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+                            <option value="">Tous les mois</option>
+                            <option value="01">Janvier</option>
+                            <option value="02">Février</option>
+                            <option value="03">Mars</option>
+                            <option value="04">Avril</option>
+                            <option value="05">Mai</option>
+                            <option value="06">Juin</option>
+                            <option value="07">Juillet</option>
+                            <option value="08">Août</option>
+                            <option value="09">Septembre</option>
+                            <option value="10">Octobre</option>
+                            <option value="11">Novembre</option>
+                            <option value="12">Décembre</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-slate-400">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 7.293 8.172 5.858 9.607l3.435 3.343z"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -1821,7 +1865,9 @@ function exportToPDF() {
                     </thead>
                     <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                         <template x-for="bonLivraison in filteredBonLivraisonsList" :key="bonLivraison.id">
-                            <tr x-show="bonLivraison.numero_bon" class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                            <tr x-show="bonLivraison.numero_bon" 
+                                :class="getEtatRowBgClass(bonLivraison)"
+                                class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-mono" x-text="bonLivraison.numero_bon"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="formatDate(bonLivraison.date)"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-slate-300" x-text="bonLivraison.client?.code_client || '-'"></td>
