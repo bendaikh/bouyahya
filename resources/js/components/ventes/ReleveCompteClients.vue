@@ -1,36 +1,31 @@
 <template>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
+    <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
         <!-- Sticky Top Section -->
-        <div class="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-none bg-white dark:bg-gray-800 z-20 space-y-4">
+        <div class="p-4 pb-4 border-b border-gray-700 flex-none bg-gray-800 dark:bg-gray-900 z-20 space-y-4">
             <!-- Top Filter Row -->
-            <div class="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg p-4">
             <div class="flex flex-wrap items-end gap-3">
                 <!-- Date de -->
-                <div class="min-w-[130px]">
+                <div class="min-w-[120px]">
                     <label class="block text-xs text-gray-400 mb-1">Date de</label>
-                    <div class="relative">
-                        <input 
-                            type="date" 
-                            v-model="filters.dateDebut"
-                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
+                    <input 
+                        type="date" 
+                        v-model="filters.dateDebut"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
                 
                 <!-- Date au -->
-                <div class="min-w-[130px]">
+                <div class="min-w-[120px]">
                     <label class="block text-xs text-gray-400 mb-1">Date au</label>
-                    <div class="relative">
-                        <input 
-                            type="date" 
-                            v-model="filters.dateFin"
-                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
+                    <input 
+                        type="date" 
+                        v-model="filters.dateFin"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
                 
                 <!-- Période Prédéfinie -->
-                <div class="min-w-[130px]">
+                <div class="min-w-[140px]">
                     <label class="block text-xs text-gray-400 mb-1">Période Prédéfinie</label>
                     <select 
                         v-model="filters.periodePredefinee"
@@ -48,29 +43,27 @@
                 </div>
                 
                 <!-- Code Client -->
-                <div class="min-w-[120px]">
+                <div class="min-w-[100px]">
                     <label class="block text-xs text-gray-400 mb-1">Code</label>
-                    <div class="relative">
-                        <select 
-                            v-model="filters.clientId"
-                            @change="onClientChange"
-                            class="w-full px-3 py-2 pr-8 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Tous</option>
-                            <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.code_client || c.id }}</option>
-                        </select>
-                    </div>
+                    <select 
+                        v-model="filters.clientId"
+                        @change="onClientChange"
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Tous</option>
+                        <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.code_client || c.id }}</option>
+                    </select>
                 </div>
                 
                 <!-- Nom Client -->
-                <div class="min-w-[140px]">
+                <div class="min-w-[160px] flex-1">
                     <label class="block text-xs text-gray-400 mb-1">Nom Client</label>
                     <input 
                         type="text" 
                         :value="selectedClientName"
                         readonly
-                        placeholder="—"
-                        class="w-full px-3 py-2 bg-gray-600 border border-gray-600 rounded text-gray-300 text-sm"
+                        placeholder=""
+                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm"
                     />
                 </div>
                 
@@ -78,10 +71,10 @@
                 <div class="flex items-end">
                     <button 
                         @click="refreshData"
-                        class="px-3 py-2 bg-blue-600 hover:bg-blue-700 border border-blue-500 rounded text-white text-sm transition-colors flex items-center gap-2"
+                        class="p-2 bg-transparent hover:bg-gray-700 rounded text-cyan-400 transition-colors"
                         title="Actualiser"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
@@ -91,159 +84,144 @@
                 <div class="flex items-end">
                     <button 
                         @click="resetFilters"
-                        class="px-3 py-2 bg-red-600 hover:bg-red-700 border border-red-500 rounded text-white text-sm transition-colors flex items-center gap-2"
+                        class="p-2 bg-transparent hover:bg-gray-700 rounded text-red-400 transition-colors"
                         title="Réinitialiser"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
+                    </button>
+                </div>
+
+                <!-- Status Filter Buttons -->
+                <button 
+                    @click="toggleStatusFilter('impaye')"
+                    :class="[
+                        'px-6 py-2 rounded-full text-sm font-semibold transition-colors',
+                        statusFilters.impaye 
+                            ? 'bg-yellow-500 text-gray-900' 
+                            : 'bg-yellow-500/80 text-gray-900 hover:bg-yellow-500'
+                    ]"
+                >
+                    Impayé
+                </button>
+                <button 
+                    @click="toggleStatusFilter('devalide')"
+                    :class="[
+                        'px-6 py-2 rounded-full text-sm font-semibold transition-colors',
+                        statusFilters.devalide 
+                            ? 'bg-red-600 text-white' 
+                            : 'bg-red-600/80 text-white hover:bg-red-600'
+                    ]"
+                >
+                    Dévalidé
+                </button>
+                <button 
+                    @click="toggleStatusFilter('reporte')"
+                    :class="[
+                        'px-6 py-2 rounded-full text-sm font-semibold transition-colors',
+                        statusFilters.reporte 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-blue-500/80 text-white hover:bg-blue-500'
+                    ]"
+                >
+                    Reporté
+                </button>
+            </div>
+
+            <!-- Summary Cards and Export Buttons Row -->
+            <div class="flex flex-wrap gap-3 items-stretch">
+                <!-- Débit (Green) -->
+                <div class="bg-green-600 rounded-lg px-6 py-3 min-w-[180px] flex items-center gap-3 border-2 border-green-500">
+                    <div>
+                        <p class="text-sm font-semibold text-green-100">Débit</p>
+                        <p class="text-2xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.debit) }}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-auto">
+                        <span class="text-4xl">💵</span>
+                    </div>
+                </div>
+                
+                <!-- Crédit (Blue) -->
+                <div class="bg-blue-700 rounded-lg px-6 py-3 min-w-[180px] flex items-center gap-3 border-2 border-blue-500">
+                    <div>
+                        <p class="text-sm font-semibold text-blue-100">Crédit</p>
+                        <p class="text-2xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.credit) }}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-auto">
+                        <span class="text-4xl">🏛️</span>
+                    </div>
+                </div>
+                
+                <!-- Solde (Red) -->
+                <div class="bg-red-700 rounded-lg px-6 py-3 min-w-[180px] flex items-center gap-3 border-2 border-red-500">
+                    <div>
+                        <p class="text-sm font-semibold text-red-100">Solde</p>
+                        <p class="text-2xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.solde) }}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-auto">
+                        <span class="text-4xl">⚖️</span>
+                    </div>
+                </div>
+                
+                <!-- Quantité (Yellow) -->
+                <div class="bg-yellow-500 rounded-lg px-6 py-3 min-w-[180px] flex items-center gap-3 border-2 border-yellow-400">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">Quantité</p>
+                        <p class="text-2xl font-bold text-gray-900 whitespace-nowrap">{{ formatNumber(totals.quantite) }}</p>
+                    </div>
+                    <div class="flex-shrink-0 ml-auto">
+                        <span class="text-4xl">🛒</span>
+                    </div>
+                </div>
+
+                <!-- Export/Print Buttons -->
+                <div class="flex items-center gap-2 ml-auto">
+                    <button 
+                        @click="printReleve"
+                        class="px-4 py-2 bg-blue-600 border border-blue-400 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                        Imprimer
+                    </button>
+                    <button 
+                        @click="exportPDF"
+                        class="px-4 py-2 bg-cyan-600 border border-cyan-400 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm font-medium"
+                    >
+                        PDF
+                    </button>
+                    <button 
+                        @click="exportExcel"
+                        class="px-4 py-2 bg-blue-500 border border-blue-400 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                    >
+                        Excel
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Large Summary Cards Row -->
-        <div class="flex flex-wrap gap-4 items-center">
-            <!-- Débit (Green) -->
-            <div class="bg-green-600 rounded-lg px-8 py-4 min-w-[240px] flex items-center gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-green-100">Débit</p>
-                    <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.debit) }}</p>
-                </div>
-            </div>
-            
-            <!-- Crédit (Blue) -->
-            <div class="bg-blue-600 rounded-lg px-8 py-4 min-w-[240px] flex items-center gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-blue-100">Crédit</p>
-                    <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.credit) }}</p>
-                </div>
-            </div>
-            
-            <!-- Solde (Red) -->
-            <div class="bg-red-600 rounded-lg px-8 py-4 min-w-[240px] flex items-center gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-red-100">Solde</p>
-                    <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.solde) }}</p>
-                </div>
-            </div>
-            
-            <!-- Quantité (Yellow) -->
-            <div class="bg-yellow-500 rounded-lg px-8 py-4 min-w-[240px] flex items-center gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-8 h-8 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-yellow-900">Quantité</p>
-                    <p class="text-4xl font-bold text-yellow-900 whitespace-nowrap">{{ formatNumber(totals.quantite) }}</p>
-                </div>
-            </div>
-            
-        </div>
-
-        <!-- Status Filter Buttons Row -->
-        <div class="flex gap-2">
-            <button 
-                @click="toggleStatusFilter('impaye')"
-                :class="[
-                    'px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
-                    statusFilters.impaye ? 'bg-red-800 text-white' : 'bg-red-800/70 text-red-200 hover:bg-red-900'
-                ]"
-            >
-                Impayé
-            </button>
-            <button 
-                @click="toggleStatusFilter('devalide')"
-                :class="[
-                    'px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
-                    statusFilters.devalide ? 'bg-purple-600 text-white' : 'bg-purple-600/70 text-purple-200 hover:bg-purple-700'
-                ]"
-            >
-                Dévalidé
-            </button>
-            <button 
-                @click="toggleStatusFilter('reporte')"
-                :class="[
-                    'px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
-                    statusFilters.reporte ? 'bg-green-800 text-white' : 'bg-green-800/70 text-green-200 hover:bg-green-900'
-                ]"
-            >
-                Reporté
-            </button>
-        </div>
-
-        <!-- Export/Print Section -->
-        <div class="flex gap-2">
-            <button 
-                @click="printReleve"
-                class="px-4 py-2 bg-blue-600 border border-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
-            >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Imprimer
-            </button>
-            <button 
-                @click="exportPDF"
-                class="px-4 py-2 bg-blue-600 border border-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
-            >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                PDF
-            </button>
-            <button 
-                @click="exportExcel"
-                class="px-4 py-2 bg-blue-600 border border-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
-            >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Excel
-            </button>
-        </div>
-        </div>
-
         <!-- Scrollable Content Section -->
-        <div class="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
-            <div class="p-0 h-full">
-                <div class="overflow-x-auto overflow-y-auto relative h-full bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
+        <div class="flex-1 overflow-hidden bg-gray-900">
+            <div class="h-full">
+                <div class="overflow-x-auto overflow-y-auto relative h-full bg-gray-800">
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-700 sticky top-0 z-10 shadow-sm border-b border-gray-600">
                         <tr>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Pièce</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Date</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">N°</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Nom Client</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Ville Livraison</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Quantité</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Débit</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Crédit</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Solde</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Réglement</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Banque</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Echéance</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Payé</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-red-400 uppercase tracking-wider">Impayé</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-red-400 uppercase tracking-wider">Dévalidé</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Reporté</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Pièce</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Date</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">N°</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Nom Client</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Ville Livraison</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Quantité</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Débit</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Crédit</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Solde</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Règlement</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Banque</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Echéance</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Payé</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-yellow-400 tracking-wider">Impayé</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-red-400 tracking-wider">Dévalidé</th>
+                            <th class="px-3 py-3 text-center text-xs font-semibold text-blue-400 tracking-wider">Reporté</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -258,41 +236,65 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr v-else-if="!filters.clientId">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
-                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <p>Veuillez sélectionner un client pour afficher le relevé</p>
-                            </td>
+                        <!-- Placeholder row when no client is selected -->
+                        <tr v-else-if="!filters.clientId" class="bg-gray-800">
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">Livraison</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">... / ... / ...</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">BL-...</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                         </tr>
-                        <tr v-else-if="filteredData.length === 0">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
-                                Aucune donnée trouvée pour les filtres sélectionnés.
-                            </td>
+                        <tr v-else-if="filteredData.length === 0" class="bg-gray-800">
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">Livraison</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">... / ... / ...</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400">BL-...</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                         </tr>
                         <template v-else>
                             <tr v-for="(row, index) in paginatedData" :key="index" 
-                                class="hover:bg-gray-700/50 transition-colors"
+                                class="bg-gray-800 hover:bg-gray-700/50 transition-colors"
                             >
                                 <!-- Pièce -->
-                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type === 'livraison' ? 'Livraison' : 'Rég' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type === 'livraison' ? 'Livraison' : 'Règlement' }}</td>
                                 <!-- Date -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ formatDate(row.date) }}</td>
                                 <!-- N° -->
-                                <td class="px-3 py-2 whitespace-nowrap text-blue-400 font-medium">{{ row.numero || '-' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.numero || '-' }}</td>
                                 <!-- Nom Client -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.nom_client || '-' }}</td>
                                 <!-- Ville Livraison -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.ville || '-' }}</td>
                                 <!-- Quantité -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.quantite ? formatNumber(row.quantite) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-gray-300">{{ row.quantite ? formatNumber(row.quantite) : '' }}</td>
                                 <!-- Débit -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.debit ? formatCurrency(row.debit) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-gray-300">{{ row.debit ? formatCurrency(row.debit) : '' }}</td>
                                 <!-- Crédit -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.credit ? formatCurrency(row.credit) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-gray-300">{{ row.credit ? formatCurrency(row.credit) : '' }}</td>
                                 <!-- Solde (cumulative) -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right font-medium" :class="getSoldeClass(row.solde_cumule)">
+                                <td class="px-3 py-2 whitespace-nowrap text-center font-medium" :class="getSoldeClass(row.solde_cumule)">
                                     {{ formatCurrency(row.solde_cumule) }}
                                 </td>
                                 <!-- Règlement -->
@@ -302,13 +304,13 @@
                                 <!-- Echéance -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.echeance ? formatDate(row.echeance) : '' }}</td>
                                 <!-- Payé -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.paye ? formatCurrency(row.paye) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-green-400">{{ row.paye ? formatCurrency(row.paye) : '' }}</td>
                                 <!-- Impayé -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-red-400 font-medium">{{ row.impaye ? formatCurrency(row.impaye) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-yellow-400 font-medium">{{ row.impaye ? formatCurrency(row.impaye) : '' }}</td>
                                 <!-- Dévalidé -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-red-400 font-medium">{{ row.devalide ? formatCurrency(row.devalide) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-red-400 font-medium">{{ row.devalide ? formatCurrency(row.devalide) : '' }}</td>
                                 <!-- Reporté -->
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-gray-300">{{ row.reporte ? formatCurrency(row.reporte) : '' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-blue-400">{{ row.reporte ? formatCurrency(row.reporte) : '' }}</td>
                             </tr>
                         </template>
                         </tbody>
@@ -316,46 +318,46 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="filteredData.length > 0" class="flex justify-between items-center px-4 py-3 border-t border-gray-700 bg-gray-800 dark:bg-gray-900">
-                <p class="text-sm text-gray-400">
-                    Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredData.length }} entrées
-                </p>
-                
-                <div class="flex items-center space-x-1">
-                    <button 
-                        @click="previousPage"
-                        :disabled="currentPage === 1"
-                        class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
+                <div v-if="filteredData.length > 0" class="flex justify-between items-center px-4 py-3 border-t border-gray-700 bg-gray-800">
+                    <p class="text-sm text-gray-400">
+                        Affichage de {{ paginationStart }}-{{ paginationEnd }} sur {{ filteredData.length }} entrées
+                    </p>
                     
-                    <button 
-                        v-for="page in displayedPages" 
-                        :key="page"
-                        @click="goToPage(page)"
-                        :class="[
-                            'px-3 py-1 border rounded transition-colors',
-                            page === currentPage 
-                                ? 'bg-green-600 border-green-600 text-white' 
-                                : 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                        ]"
-                    >
-                        {{ page }}
-                    </button>
-                    
-                    <button 
-                        @click="nextPage"
-                        :disabled="currentPage === totalPages"
-                        class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-                </div>
+                    <div class="flex items-center space-x-1">
+                        <button 
+                            @click="previousPage"
+                            :disabled="currentPage === 1"
+                            class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        
+                        <button 
+                            v-for="page in displayedPages" 
+                            :key="page"
+                            @click="goToPage(page)"
+                            :class="[
+                                'px-3 py-1 border rounded transition-colors',
+                                page === currentPage 
+                                    ? 'bg-blue-600 border-blue-600 text-white' 
+                                    : 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                            ]"
+                        >
+                            {{ page }}
+                        </button>
+                        
+                        <button 
+                            @click="nextPage"
+                            :disabled="currentPage === totalPages"
+                            class="px-3 py-1 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
