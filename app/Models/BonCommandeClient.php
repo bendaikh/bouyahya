@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class BonCommandeClient extends Model
 {
@@ -27,6 +28,28 @@ class BonCommandeClient extends Model
         'total_quantites' => 'integer',
         'total_general' => 'decimal:2',
     ];
+
+    /**
+     * Normalize the statut attribute to fix encoding issues
+     */
+    protected function statut(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                // Map of corrupted encodings to correct values
+                $statusMap = [
+                    'ValidÃ©' => 'Validé',
+                    'ConvertÃ©' => 'Converti',
+                    'AnnulÃ©' => 'Annulé',
+                    'Validã©' => 'Validé',
+                    'Convertã©' => 'Converti',
+                    'Annulã©' => 'Annulé',
+                ];
+                
+                return $statusMap[$value] ?? $value;
+            },
+        );
+    }
 
     public function client()
     {

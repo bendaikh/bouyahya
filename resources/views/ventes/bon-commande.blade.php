@@ -7,7 +7,7 @@
     window.bonCommandeArticles = @json($articles ?? []);
 </script>
 
-<div x-data="bonCommandeApp()" class="space-y-6">
+<div x-data="bonCommandeApp()" @open-new-form.window="openNewForm()" class="space-y-6">
 
 <script>
 function bonCommandeApp() {
@@ -532,17 +532,72 @@ function convertToBonLivraison(id, numero) {
     </div>
 
     <!-- List View -->
-    <div x-show="!showForm" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div x-show="!showForm" x-data="bonCommandeListApp()" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="mb-6">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Bon de commande</h2>
             <p class="text-gray-600 dark:text-gray-400">Gérer les bons de commande clients</p>
         </div>
         
         <div class="space-y-4">
-            <div class="flex justify-end">
-                <button @click="openNewForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Nouveau bon de commande
-                </button>
+            <!-- Filters Row -->
+            <div class="flex flex-wrap items-end gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <!-- Date From -->
+                <div class="min-w-[140px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date de</label>
+                    <input 
+                        type="date" 
+                        x-model="filters.dateFrom"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                
+                <!-- Date To -->
+                <div class="min-w-[140px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date au</label>
+                    <input 
+                        type="date" 
+                        x-model="filters.dateTo"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="min-w-[160px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
+                    <select 
+                        x-model="filters.statut"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Tous les statuts</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Validé">Validé</option>
+                        <option value="Converti">Converti</option>
+                        <option value="Annulé">Annulé</option>
+                    </select>
+                </div>
+                
+                <!-- Reset Filters Button -->
+                <div class="flex items-end">
+                    <button 
+                        @click="resetFilters()"
+                        class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors text-sm"
+                        title="Réinitialiser les filtres"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Spacer -->
+                <div class="flex-1"></div>
+                
+                <!-- New Bon de Commande Button -->
+                <div class="flex items-end">
+                    <button @click="$dispatch('open-new-form')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Nouveau bon de commande
+                    </button>
+                </div>
             </div>
             
             <div class="overflow-x-auto">
@@ -559,7 +614,13 @@ function convertToBonLivraison(id, numero) {
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($bonCommandes as $bonCommande)
-                            <tr>
+                            <tr 
+                                x-show="filterRow('{{ $bonCommande->date->format('Y-m-d') }}', '{{ $bonCommande->statut }}')"
+                                x-transition
+                                class="bon-commande-row"
+                                data-date="{{ $bonCommande->date->format('Y-m-d') }}"
+                                data-statut="{{ $bonCommande->statut }}"
+                            >
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->numero_bon }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->client->raison_sociale }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->date->format('d/m/Y') }}</td>
@@ -576,6 +637,13 @@ function convertToBonLivraison(id, numero) {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
+                                        <!-- View Details Icon -->
+                                        <button onclick="viewBonCommandeDetails({{ $bonCommande->id }})" class="text-cyan-600 hover:text-cyan-900 dark:text-cyan-400 dark:hover:text-cyan-200" title="Voir détails">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
                                         <button onclick="printBonCommande({{ $bonCommande->id }})" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="Imprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
@@ -615,7 +683,241 @@ function convertToBonLivraison(id, numero) {
                     </tbody>
                 </table>
             </div>
+            
+            <!-- No results message -->
+            <div x-show="getVisibleRowsCount() === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                Aucun bon de commande ne correspond aux critères de recherche
+            </div>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div id="viewDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity" onclick="closeViewDetailsModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                            Détails du bon de commande
+                        </h3>
+                        <button onclick="closeViewDetailsModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="viewDetailsContent" class="mt-4">
+                        <!-- Content will be loaded here -->
+                        <div class="flex justify-center items-center py-8">
+                            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="ml-2 text-gray-600 dark:text-gray-400">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button onclick="closeViewDetailsModal()" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Fermer
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+function bonCommandeListApp() {
+    return {
+        filters: {
+            dateFrom: '',
+            dateTo: '',
+            statut: ''
+        },
+        
+        filterRow(rowDate, rowStatut) {
+            // Date from filter
+            if (this.filters.dateFrom && rowDate < this.filters.dateFrom) {
+                return false;
+            }
+            
+            // Date to filter
+            if (this.filters.dateTo && rowDate > this.filters.dateTo) {
+                return false;
+            }
+            
+            // Status filter
+            if (this.filters.statut && rowStatut !== this.filters.statut) {
+                return false;
+            }
+            
+            return true;
+        },
+        
+        resetFilters() {
+            this.filters.dateFrom = '';
+            this.filters.dateTo = '';
+            this.filters.statut = '';
+        },
+        
+        getVisibleRowsCount() {
+            const rows = document.querySelectorAll('.bon-commande-row');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                if (row.style.display !== 'none' && !row.hasAttribute('hidden')) {
+                    visibleCount++;
+                }
+            });
+            return visibleCount;
+        }
+    };
+}
+
+function viewBonCommandeDetails(id) {
+    const modal = document.getElementById('viewDetailsModal');
+    const content = document.getElementById('viewDetailsContent');
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Show loading
+    content.innerHTML = `
+        <div class="flex justify-center items-center py-8">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="ml-2 text-gray-600 dark:text-gray-400">Chargement...</span>
+        </div>
+    `;
+    
+    // Fetch details
+    fetch(`/ventes/bon-commande/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const date = data.date ? new Date(data.date).toLocaleDateString('fr-FR') : '-';
+            const echeance = data.echeance ? new Date(data.echeance).toLocaleDateString('fr-FR') : '-';
+            
+            let articlesHtml = '';
+            if (data.articles && data.articles.length > 0) {
+                data.articles.forEach((article, index) => {
+                    articlesHtml += `
+                        <tr class="${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}">
+                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">${article.code_article || '-'}</td>
+                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">${article.designation || '-'}</td>
+                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white text-center">${article.quantite || 0}</td>
+                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white text-right">${formatCurrency(article.prix_unitaire)} DH</td>
+                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-white text-right">${formatCurrency(article.sous_total)} DH</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                articlesHtml = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">Aucun article</td></tr>';
+            }
+            
+            let statutClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            if (data.statut === 'Validé') {
+                statutClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            } else if (data.statut === 'Converti') {
+                statutClass = 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            } else if (data.statut === 'Annulé') {
+                statutClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">N° Bon de commande</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">${data.numero_bon || '-'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Date</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">${date}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Statut</p>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${statutClass}">${data.statut || '-'}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Client Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Client</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">${data.client ? data.client.raison_sociale : '-'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Mode de paiement</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">${data.mode_paiement || '-'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Ville de livraison</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">${data.ville_livraison || '-'}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Articles Table -->
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-3">Articles</h4>
+                        <div class="overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-100 dark:bg-gray-600">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Code</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Désignation</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Qté</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">P.U. TTC</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Sous-Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    ${articlesHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Totals -->
+                    <div class="flex justify-end">
+                        <div class="w-full md:w-1/3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Quantités</span>
+                                <span class="font-semibold text-gray-900 dark:text-white">${data.total_quantites || 0}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-base font-semibold text-gray-800 dark:text-gray-200">Total Général TTC</span>
+                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400">${formatCurrency(data.total_general)} DH</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <p>Erreur lors du chargement des détails</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+        });
+}
+
+function closeViewDetailsModal() {
+    document.getElementById('viewDetailsModal').classList.add('hidden');
+}
+
+function formatCurrency(value) {
+    if (value === null || value === undefined) return '0,00';
+    return new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
+</script>
 @endsection

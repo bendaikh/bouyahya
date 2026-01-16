@@ -19,6 +19,42 @@ use Illuminate\Support\Facades\Validator;
 
 class BonLivraisonClientController extends Controller
 {
+    /**
+     * API endpoint to get bon livraison clients filtered by client_id
+     */
+    public function apiIndex(Request $request)
+    {
+        $query = BonLivraisonClient::with(['client', 'articles']);
+        
+        // Filter by client_id if provided
+        if ($request->has('client_id') && $request->client_id) {
+            $query->where('client_id', $request->client_id);
+        }
+        
+        $bonLivraisons = $query->orderBy('date', 'desc')->get();
+        
+        // Transform data to include client name and calculated fields
+        $result = $bonLivraisons->map(function($bl) {
+            return [
+                'id' => $bl->id,
+                'numero_bon' => $bl->numero_bon,
+                'numero' => $bl->numero_bon,
+                'date' => $bl->date,
+                'client_id' => $bl->client_id,
+                'nom_client' => $bl->client ? $bl->client->raison_sociale : '',
+                'ville_livraison' => $bl->ville_livraison,
+                'ville' => $bl->ville_livraison,
+                'total_qte' => $bl->total_quantites,
+                'total_ttc' => $bl->total_general,
+                'statut' => $bl->statut,
+                'date_echeance' => $bl->date_echeance,
+                'echeance' => $bl->echeance,
+            ];
+        });
+        
+        return response()->json($result);
+    }
+
     public function index()
     {
         $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])

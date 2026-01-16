@@ -251,6 +251,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Api\ReglementClientController::class, 'destroy']);
     });
 
+    // API Routes for Bon Livraison Clients (for ReleveCompteClients)
+    Route::prefix('api/bon-livraison-clients')->group(function () {
+        Route::get('/', [BonLivraisonClientController::class, 'apiIndex']);
+    });
+
     // API Routes for Historique Ventes
     Route::prefix('api/ventes')->group(function () {
         Route::get('/historique', [\App\Http\Controllers\Api\HistoriqueVentesController::class, 'index']);

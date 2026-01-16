@@ -394,7 +394,7 @@ const statusFilters = ref({
 const selectedClientName = computed(() => {
     if (!filters.value.clientId) return ''
     const c = clients.value.find(c => c.id == filters.value.clientId)
-    return c ? (c.nom_client || c.nom || '') : ''
+    return c ? (c.raison_sociale || '') : ''
 })
 
 // Computed: Combined and sorted data
@@ -580,10 +580,18 @@ const loadDataForClient = async () => {
     loading.value = true
     try {
         // Load livraisons (bon de livraison clients)
-        const livResponse = await fetch(`/api/bon-livraison-client?client_id=${filters.value.clientId}`)
+        const livResponse = await fetch(`/api/bon-livraison-clients?client_id=${filters.value.clientId}`)
         if (livResponse.ok) {
             const livData = await livResponse.json()
-            livraisons.value = livData.filter(liv => liv.statut === 'valide' || liv.statut === 'livre')
+            // Accept different status variations
+            livraisons.value = livData.filter(liv => 
+                liv.statut === 'valide' || 
+                liv.statut === 'Validé' ||
+                liv.statut === 'Valide' ||
+                liv.statut === 'livre' ||
+                liv.statut === 'Livré' ||
+                liv.statut === 'Livre'
+            )
         }
         
         // Load règlements clients

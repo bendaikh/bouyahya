@@ -13,13 +13,18 @@ use Illuminate\Support\Facades\DB;
 class ReglementClientController extends Controller
 {
     /**
-     * Liste tous les règlements clients
+     * Liste tous les règlements clients (optionnellement filtrés par client_id)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $reglements = ReglementClient::with(['client', 'tresorerie', 'lignes.bonLivraison'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = ReglementClient::with(['client', 'tresorerie', 'lignes.bonLivraison']);
+        
+        // Filter by client_id if provided
+        if ($request->has('client_id') && $request->client_id) {
+            $query->where('client_id', $request->client_id);
+        }
+        
+        $reglements = $query->orderBy('date_reglement', 'desc')->get();
         
         return response()->json($reglements);
     }
