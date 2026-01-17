@@ -1,44 +1,66 @@
 <template>
     <aside 
         :class="[
-            'fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-100 dark:bg-slate-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out shadow-lg',
-            isCollapsed ? 'w-20' : 'w-64',
+            'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-out',
+            isCollapsed ? 'w-20' : 'w-72',
             isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         ]"
     >
-        <!-- Sidebar Header -->
-        <div class="flex-shrink-0 flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800">
-            <div v-if="!isCollapsed" class="flex items-center space-x-2">
-                <div class="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                </div>
-                <span class="text-xl font-bold text-gray-800 dark:text-white">Bouyahya</span>
-            </div>
-            <button 
-                @click="toggleCollapse"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-                v-if="!isMobile"
-            >
-                <svg :class="['w-5 h-5 transition-transform', isCollapsed ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-            </button>
-            <button 
-                @click="closeMobile"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 lg:hidden"
-                v-if="isMobile"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+        <!-- Sidebar Background with gradient -->
+        <div class="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900 to-violet-950"></div>
+        
+        <!-- Decorative elements -->
+        <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
         </div>
+        
+        <!-- Content -->
+        <div class="relative z-10 flex flex-col h-full">
+            <!-- Sidebar Header -->
+            <div class="flex-shrink-0 flex items-center justify-between h-20 px-4 border-b border-white/5">
+                <div v-if="!isCollapsed" class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-rose-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-lg font-bold text-white tracking-tight">Bouyahya</span>
+                        <p class="text-xs text-gray-500">Gestion d'entreprise</p>
+                    </div>
+                </div>
+                <div v-else class="flex items-center justify-center w-full">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-rose-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </div>
+                </div>
+                <button 
+                    @click="toggleCollapse"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors hidden lg:flex"
+                    v-if="!isMobile"
+                >
+                    <svg :class="['w-5 h-5 transition-transform duration-300', isCollapsed ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button 
+                    @click="closeMobile"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors lg:hidden"
+                    v-if="isMobile"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
 
-        <!-- Navigation Menu -->
-        <nav class="flex-1 min-h-0 overflow-y-auto py-4 px-2">
-            <div class="space-y-1">
+            <!-- Navigation Menu -->
+            <nav class="flex-1 min-h-0 overflow-y-auto py-6 px-3 space-y-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 <!-- Dashboard -->
                 <MenuItem 
                     v-if="hasPermission('view dashboard')"
@@ -46,6 +68,11 @@
                     :is-collapsed="isCollapsed"
                     :is-active="currentRoute === menuItems.dashboard.route"
                 />
+
+                <!-- Section Label -->
+                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                    <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Principal</span>
+                </div>
 
                 <!-- Gestion des Clients -->
                 <CollapsibleMenuItem 
@@ -64,6 +91,11 @@
                     :is-open="openMenus.fournisseurs"
                     @toggle="toggleMenu('fournisseurs')"
                 />
+
+                <!-- Section Label -->
+                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                    <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Opérations</span>
+                </div>
 
                 <!-- Gestion des Achats -->
                 <CollapsibleMenuItem 
@@ -92,6 +124,11 @@
                     @toggle="toggleMenu('stock')"
                 />
 
+                <!-- Section Label -->
+                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                    <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Finance</span>
+                </div>
+
                 <!-- Gestion Trésorerie -->
                 <CollapsibleMenuItem 
                     v-if="hasPermission('manage tresorerie')"
@@ -100,6 +137,11 @@
                     :is-open="openMenus.tresorerie"
                     @toggle="toggleMenu('tresorerie')"
                 />
+
+                <!-- Section Label -->
+                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                    <span class="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Système</span>
+                </div>
 
                 <!-- Gestion des Utilisateurs -->
                 <CollapsibleMenuItem 
@@ -118,23 +160,41 @@
                     :is-open="openMenus.parametres"
                     @toggle="toggleMenu('parametres')"
                 />
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="flex-shrink-0 p-4 border-t border-white/5">
+                <div v-if="!isCollapsed" class="flex items-center gap-3 px-2">
+                    <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                        {{ user?.name?.charAt(0).toUpperCase() || 'U' }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">{{ user?.name || 'Utilisateur' }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ user?.email || '' }}</p>
+                    </div>
+                </div>
+                <div v-else class="flex justify-center">
+                    <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                        {{ user?.name?.charAt(0).toUpperCase() || 'U' }}
+                    </div>
+                </div>
             </div>
-        </nav>
+        </div>
     </aside>
 
     <!-- Mobile Overlay -->
     <div 
         v-if="isMobile && isMobileOpen"
         @click="closeMobile"
-        class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
     ></div>
 
     <!-- Mobile Menu Toggle Button -->
     <button 
         @click="openMobile"
-        class="fixed top-4 left-4 z-50 p-2 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg shadow-lg lg:hidden border border-gray-200 dark:border-gray-700"
+        class="fixed top-5 left-5 z-50 p-3 bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-xl lg:hidden border border-white/10 group transition-all hover:bg-gray-800"
     >
-        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-white group-hover:text-violet-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
     </button>
@@ -204,10 +264,10 @@ const menuItems = {
         route: '/dashboard'
     },
     utilisateurs: {
-        title: 'Gestion des Utilisateurs',
+        title: 'Utilisateurs',
         icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
         children: [
-            { title: 'Utilisateurs', route: '/utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+            { title: 'Liste utilisateurs', route: '/utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
             { title: 'Rôles et Permissions', route: '/utilisateurs/roles', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
         ]
     },
@@ -225,7 +285,7 @@ const menuItems = {
         ]
     },
     achats: {
-        title: 'La gestion des achats',
+        title: 'Achats',
         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
         children: [
             { title: 'Bon de commande', route: '/achats/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
@@ -237,7 +297,7 @@ const menuItems = {
         ]
     },
     ventes: {
-        title: 'La gestion des ventes',
+        title: 'Ventes',
         icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
         children: [
             { title: 'Bon de commande', route: '/ventes/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
@@ -248,7 +308,7 @@ const menuItems = {
         ]
     },
     clients: {
-        title: 'Gestion des clients',
+        title: 'Clients',
         icon: 'M17 20h5V8H2v12h5m10 0V8m0 12v2m-10-2v2m0-2H2m10 0h10M2 8l10-6 10 6',
         children: [
             { title: 'Liste des clients', route: '/clients', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
@@ -256,7 +316,7 @@ const menuItems = {
         ]
     },
     fournisseurs: {
-        title: 'Gestion des Fournisseurs',
+        title: 'Fournisseurs',
         icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
         children: [
             { title: 'Liste des fournisseurs', route: '/fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
@@ -264,7 +324,7 @@ const menuItems = {
         ]
     },
     stock: {
-        title: 'La gestion du stock',
+        title: 'Stock',
         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
         children: [
             { title: 'Articles', route: '/stock/articles', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
@@ -273,7 +333,7 @@ const menuItems = {
         ]
     },
     tresorerie: {
-        title: 'La gestion trésorerie',
+        title: 'Trésorerie',
         icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
         children: [
             { title: 'Types de charges', route: '/tresorerie/types-charges', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
@@ -344,4 +404,3 @@ onUnmounted(() => {
     window.removeEventListener('popstate', updateRoute)
 })
 </script>
-

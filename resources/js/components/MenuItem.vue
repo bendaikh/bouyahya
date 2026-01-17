@@ -2,41 +2,54 @@
     <a
         :href="item.route"
         :class="[
-            'flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200',
+            'group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
             isActive 
-                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
-            isCollapsed && 'justify-center px-2'
+                ? 'bg-gradient-to-r from-violet-500/20 to-violet-500/5 text-white' 
+                : 'text-gray-400 hover:bg-white/5 hover:text-white',
+            isCollapsed && 'justify-center px-3'
         ]"
         :title="isCollapsed ? item.title : ''"
     >
-        <svg 
-            class="flex-shrink-0 w-5 h-5" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-        >
-            <path 
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                :stroke-width="isActive ? '2' : '1.5'" 
-                :d="item.icon" 
-            />
-        </svg>
+        <!-- Icon container with glow effect when active -->
+        <div :class="[
+            'relative flex-shrink-0 flex items-center justify-center',
+            isActive && 'text-violet-400'
+        ]">
+            <svg 
+                :class="[
+                    'w-5 h-5 transition-transform duration-200',
+                    !isCollapsed && 'group-hover:scale-110'
+                ]"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+            >
+                <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    :stroke-width="isActive ? '2' : '1.5'" 
+                    :d="item.icon" 
+                />
+            </svg>
+            <!-- Glow effect for active state -->
+            <div 
+                v-if="isActive" 
+                class="absolute inset-0 bg-violet-500/30 blur-lg rounded-full"
+            ></div>
+        </div>
+        
         <span 
             v-if="!isCollapsed" 
-            class="ml-3 truncate"
+            class="flex-1 truncate"
         >
             {{ item.title }}
         </span>
-        <span 
+        
+        <!-- Active indicator -->
+        <div 
             v-if="isActive && !isCollapsed" 
-            class="ml-auto"
-        >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
-        </span>
+            class="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-lg shadow-violet-500/50"
+        ></div>
     </a>
 </template>
 
@@ -56,4 +69,3 @@ defineProps({
     }
 })
 </script>
-

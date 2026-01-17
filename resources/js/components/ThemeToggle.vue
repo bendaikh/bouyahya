@@ -1,14 +1,17 @@
 <template>
     <button
         @click="toggleTheme"
-        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-        :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-        :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+        class="relative p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50 group overflow-hidden"
+        :aria-label="isDark ? 'Passer en mode clair' : 'Passer en mode sombre'"
+        :title="isDark ? 'Passer en mode clair' : 'Passer en mode sombre'"
     >
-        <!-- Sun Icon (Light Mode) -->
+        <!-- Background glow on hover -->
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-rose-400/20 dark:from-violet-400/20 dark:to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        
+        <!-- Sun Icon (shown in dark mode) -->
         <svg
             v-if="isDark"
-            class="w-5 h-5 transition-all duration-300"
+            class="relative w-5 h-5 text-amber-400 transition-transform duration-500 group-hover:rotate-45"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -22,10 +25,10 @@
             />
         </svg>
         
-        <!-- Moon Icon (Dark Mode) -->
+        <!-- Moon Icon (shown in light mode) -->
         <svg
             v-else
-            class="w-5 h-5 transition-all duration-300"
+            class="relative w-5 h-5 text-violet-600 transition-transform duration-500 group-hover:-rotate-12"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -56,10 +59,8 @@ const applyTheme = () => {
     const html = document.documentElement
     if (isDark.value) {
         html.classList.add('dark')
-        console.log('Dark mode enabled - dark class added to html')
     } else {
         html.classList.remove('dark')
-        console.log('Light mode enabled - dark class removed from html')
     }
     // Force a repaint to ensure styles update
     void html.offsetHeight
@@ -77,4 +78,3 @@ onMounted(() => {
     applyTheme()
 })
 </script>
-
