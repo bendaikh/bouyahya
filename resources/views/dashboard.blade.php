@@ -241,7 +241,7 @@
                 <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Mouvements Achats Ventes {{ $currentYear }}
+                Mouvements Achats Ventes
             </h3>
             <div class="h-80">
                 <canvas id="mouvementsChart"></canvas>
@@ -413,22 +413,39 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Wait for both DOM and Chart.js to be ready
+function initMouvementsChart() {
     const ctx = document.getElementById('mouvementsChart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    // Check if Chart is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not loaded');
+        setTimeout(initMouvementsChart, 100);
+        return;
+    }
     
     const isDark = document.documentElement.classList.contains('dark');
     const textColor = isDark ? '#9ca3af' : '#6b7280';
     const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
     
+    // Destroy existing chart if any
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+    
     new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: {!! json_encode($mouvementsData['labels']) !!},
+            labels: @json($mouvementsData['labels']),
             datasets: [
                 {
                     label: 'Achats',
-                    data: {!! json_encode($mouvementsData['achats']) !!},
+                    data: @json($mouvementsData['achats']),
                     backgroundColor: 'rgba(59, 130, 246, 0.85)',
                     borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1,
@@ -437,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 {
                     label: 'Ventes',
-                    data: {!! json_encode($mouvementsData['ventes']) !!},
+                    data: @json($mouvementsData['ventes']),
                     backgroundColor: 'rgba(249, 115, 22, 0.85)',
                     borderColor: 'rgba(249, 115, 22, 1)',
                     borderWidth: 1,
@@ -510,6 +527,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
+
+// Multiple initialization attempts to ensure chart loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initMouvementsChart, 100);
+    });
+} else {
+    setTimeout(initMouvementsChart, 100);
+}
+
+// Also try on window load as fallback
+window.addEventListener('load', function() {
+    setTimeout(initMouvementsChart, 200);
 });
 </script>
 @endsection
