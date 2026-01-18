@@ -130,6 +130,7 @@ class DashboardController extends Controller
         $months = [];
         $achatsData = [];
         $ventesData = [];
+        $chargesData = [];
         
         $monthNames = [
             1 => 'JANVIER', 2 => 'FÉV', 3 => 'MARS', 4 => 'AVRIL', 
@@ -143,16 +144,19 @@ class DashboardController extends Controller
             
             $achats = BonAchatFournisseur::whereBetween('date', [$startDate, $endDate])->sum('total_ttc') ?? 0;
             $ventes = BonLivraisonClient::whereBetween('date', [$startDate, $endDate])->sum('total_general') ?? 0;
+            $charges = \App\Models\ChargeEntry::whereBetween('date', [$startDate, $endDate])->sum('montant') ?? 0;
             
             $months[] = $monthNames[$month];
             $achatsData[] = floatval($achats);
             $ventesData[] = floatval($ventes);
+            $chargesData[] = floatval($charges);
         }
         
         return [
             'labels' => $months,
             'achats' => $achatsData,
             'ventes' => $ventesData,
+            'charges' => $chargesData,
         ];
     }
     

@@ -72,7 +72,7 @@
     </div>
 
     <!-- Main Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 xl:gap-10 fade-in delay-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8 xl:gap-10 fade-in delay-100">
         <!-- Ventes Card -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 p-6 lg:p-7 text-white shadow-xl shadow-rose-500/20 gradient-animate">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -85,7 +85,7 @@
                     </div>
                     <span class="text-sm font-semibold opacity-90">Ventes</span>
                 </div>
-                <p class="text-3xl font-bold tracking-tight">{{ number_format($totalVentes, 2, ',', ' ') }}</p>
+                <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($totalVentes, 2, ',', ' ') }}</p>
             </div>
         </div>
 
@@ -101,7 +101,7 @@
                     </div>
                     <span class="text-sm font-semibold opacity-90">Achats</span>
                 </div>
-                <p class="text-3xl font-bold tracking-tight">{{ number_format($totalAchats, 2, ',', ' ') }}</p>
+                <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($totalAchats, 2, ',', ' ') }}</p>
             </div>
         </div>
 
@@ -117,7 +117,7 @@
                     </div>
                     <span class="text-sm font-semibold opacity-90">Solde Clients</span>
                 </div>
-                <p class="text-3xl font-bold tracking-tight">{{ number_format($soldeClients, 2, ',', ' ') }}</p>
+                <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($soldeClients, 2, ',', ' ') }}</p>
             </div>
         </div>
 
@@ -133,7 +133,23 @@
                     </div>
                     <span class="text-sm font-semibold opacity-90">Solde Fournisseurs</span>
                 </div>
-                <p class="text-3xl font-bold tracking-tight">{{ number_format($soldeFournisseurs, 2, ',', ' ') }}</p>
+                <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($soldeFournisseurs, 2, ',', ' ') }}</p>
+            </div>
+        </div>
+
+        <!-- Charges Card -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 via-red-600 to-rose-700 p-6 lg:p-7 text-white shadow-xl shadow-red-500/20">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-semibold opacity-90">Charges</span>
+                </div>
+                <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($charges, 2, ',', ' ') }}</p>
             </div>
         </div>
     </div>
@@ -241,7 +257,7 @@
                 <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Mouvements Achats Ventes
+                Mouvements Achats, Ventes & Charges
             </h3>
             <div class="h-80">
                 <canvas id="mouvementsChart"></canvas>
@@ -249,11 +265,15 @@
             <div class="flex justify-center gap-6 mt-4">
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded bg-blue-500"></span>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">achats</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Achats</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-4 h-4 rounded bg-orange-500"></span>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">ventes</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Ventes</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded bg-red-500"></span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Charges</span>
                 </div>
             </div>
         </div>
@@ -457,6 +477,15 @@ function initMouvementsChart() {
                     data: @json($mouvementsData['ventes']),
                     backgroundColor: 'rgba(249, 115, 22, 0.85)',
                     borderColor: 'rgba(249, 115, 22, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                },
+                {
+                    label: 'Charges',
+                    data: @json($mouvementsData['charges']),
+                    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
                     borderWidth: 1,
                     borderRadius: 6,
                     borderSkipped: false,
