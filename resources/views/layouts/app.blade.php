@@ -25,6 +25,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 min-h-screen antialiased">
     <!-- Hidden logout form template for Vue to use -->

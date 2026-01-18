@@ -14,6 +14,7 @@ use App\Http\Controllers\BonLivraisonClientController;
 use App\Http\Controllers\CompteTresorerieController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\Api\TypesChargesController;
+use App\Http\Controllers\DashboardController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -31,9 +32,7 @@ Route::get('/', function () {
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // La gestion des achats
     Route::prefix('achats')->middleware('can:manage achats')->group(function () {
