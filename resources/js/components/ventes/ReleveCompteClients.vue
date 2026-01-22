@@ -42,29 +42,27 @@
                     </select>
                 </div>
                 
-                <!-- Code Client -->
-                <div class="min-w-[100px]">
-                    <label class="block text-xs text-gray-400 mb-1">Code</label>
-                    <select 
-                        v-model="filters.clientId"
-                        @change="onClientChange"
-                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="">Tous</option>
-                        <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.code_client || c.id }}</option>
-                    </select>
-                </div>
-                
-                <!-- Nom Client -->
-                <div class="min-w-[160px] flex-1">
-                    <label class="block text-xs text-gray-400 mb-1">Nom Client</label>
-                    <input 
-                        type="text" 
-                        :value="selectedClientName"
-                        readonly
-                        placeholder=""
-                        class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm"
-                    />
+                <!-- Client (Code & Nom) -->
+                <div class="min-w-[250px] flex-1">
+                    <label class="block text-xs text-gray-400 mb-1">Client (Code ou Nom)</label>
+                    <div class="relative">
+                        <input 
+                            type="text"
+                            v-model="clientSearch"
+                            list="clients-datalist"
+                            @input="handleClientSearch"
+                            placeholder="Rechercher par code ou nom..."
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <datalist id="clients-datalist">
+                            <option v-for="c in clients" :key="c.id" :value="`${c.code_client || c.id} | ${c.raison_sociale || ''}`"></option>
+                        </datalist>
+                        <span v-if="clientSearch" @click="clearClientSelection" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </span>
+                    </div>
                 </div>
                 
                 <!-- Refresh Button -->
@@ -216,6 +214,8 @@
                             <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Crédit</th>
                             <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Solde</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Règlement</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">N° Chèque</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Nom Tirée</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Banque</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 tracking-wider">Echéance</th>
                             <th class="px-3 py-3 text-center text-xs font-semibold text-gray-300 tracking-wider">Payé</th>
@@ -226,7 +226,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                            <td colspan="18" class="px-4 py-8 text-center text-gray-400">
                                 <div class="flex justify-center items-center">
                                     <svg class="animate-spin h-6 w-6 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -250,6 +250,8 @@
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
@@ -265,6 +267,8 @@
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-center text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
                             <td class="px-3 py-2 whitespace-nowrap text-gray-400"></td>
@@ -299,6 +303,10 @@
                                 </td>
                                 <!-- Règlement -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type_reglement || '' }}</td>
+                                <!-- N° Chèque -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.numero_piece || '' }}</td>
+                                <!-- Nom Tirée -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.nom_beneficiaire || '' }}</td>
                                 <!-- Banque -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.banque || '' }}</td>
                                 <!-- Echéance -->
@@ -370,6 +378,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 // State
 const loading = ref(false)
 const clients = ref([])
+const clientSearch = ref('')
 const livraisons = ref([])
 const reglements = ref([])
 const currentPage = ref(1)
@@ -440,6 +449,8 @@ const combinedData = computed(() => {
             debit: isEffectivePayment ? montant : 0,
             credit: 0,
             type_reglement: reg.type_reglement || reg.type,
+            numero_piece: reg.numero_piece,
+            nom_beneficiaire: reg.nom_tire,
             echeance: reg.date_encaissement || reg.echeance,
             banque: reg.banque || '',
             paye: reg.statut === 'paye' ? montant : 0,
@@ -611,6 +622,23 @@ const onClientChange = () => {
     loadDataForClient()
 }
 
+const handleClientSearch = () => {
+    const selected = clients.value.find(c => `${c.code_client || c.id} | ${c.raison_sociale || ''}` === clientSearch.value)
+    if (selected) {
+        filters.value.clientId = selected.id
+        onClientChange()
+    } else if (clientSearch.value === '') {
+        filters.value.clientId = ''
+        onClientChange()
+    }
+}
+
+const clearClientSelection = () => {
+    clientSearch.value = ''
+    filters.value.clientId = ''
+    onClientChange()
+}
+
 const resetFilters = () => {
     const currentYear = new Date().getFullYear()
     filters.value = {
@@ -619,6 +647,7 @@ const resetFilters = () => {
         periodePredefinee: '',
         clientId: ''
     }
+    clientSearch.value = ''
     statusFilters.value = {
         impaye: false,
         devalide: false,
@@ -777,6 +806,8 @@ const printReleve = () => {
                         <th class="text-right">Crédit</th>
                         <th class="text-right">Solde</th>
                         <th>Règlement</th>
+                        <th>N° Chèque</th>
+                        <th>Nom Tirée</th>
                         <th>Banque</th>
                         <th>Echéance</th>
                         <th class="text-right">Payé</th>
@@ -798,6 +829,8 @@ const printReleve = () => {
                             <td class="text-right">${row.credit ? formatCurrency(row.credit) : ''}</td>
                             <td class="text-right ${row.solde_cumule >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(row.solde_cumule)}</td>
                             <td>${row.type_reglement || ''}</td>
+                            <td>${row.numero_piece || ''}</td>
+                            <td>${row.nom_beneficiaire || ''}</td>
                             <td>${row.banque || ''}</td>
                             <td>${row.echeance ? formatDate(row.echeance) : ''}</td>
                             <td class="text-right">${row.paye ? formatCurrency(row.paye) : ''}</td>

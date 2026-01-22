@@ -237,6 +237,8 @@
                             <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Crédit</th>
                             <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Solde</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Règlement</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">N° Chèque</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Nom Tirée</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Echéance</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Banque</th>
                             <th class="px-3 py-3 text-right text-xs font-semibold text-gray-300 uppercase tracking-wider">Payé</th>
@@ -247,7 +249,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-700">
                         <tr v-if="loading">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                            <td colspan="18" class="px-4 py-8 text-center text-gray-400">
                                 <div class="flex justify-center items-center">
                                     <svg class="animate-spin h-6 w-6 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -258,7 +260,7 @@
                             </td>
                         </tr>
                         <tr v-else-if="!filters.fournisseurId">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                            <td colspan="18" class="px-4 py-8 text-center text-gray-400">
                                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
@@ -266,7 +268,7 @@
                             </td>
                         </tr>
                         <tr v-else-if="filteredData.length === 0">
-                            <td colspan="16" class="px-4 py-8 text-center text-gray-400">
+                            <td colspan="18" class="px-4 py-8 text-center text-gray-400">
                                 Aucune donnée trouvée pour les filtres sélectionnés.
                             </td>
                         </tr>
@@ -303,6 +305,10 @@
                                 </td>
                                 <!-- Règlement -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.type_reglement || '' }}</td>
+                                <!-- N° Chèque -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.numero_piece || '' }}</td>
+                                <!-- Nom Tirée -->
+                                <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.nom_beneficiaire || '' }}</td>
                                 <!-- Echéance -->
                                 <td class="px-3 py-2 whitespace-nowrap text-gray-300">{{ row.echeance ? formatDate(row.echeance) : (row.type === 'achat' ? 'Invalid Date' : '') }}</td>
                                 <!-- Banque -->
@@ -455,6 +461,8 @@ const combinedData = computed(() => {
             debit: isEffectivePayment ? montant : 0, // Only effective payments reduce the balance
             credit: 0,
             type_reglement: reg.type_reglement,
+            numero_piece: reg.numero_piece,
+            nom_beneficiaire: reg.nom_beneficiaire,
             echeance: reg.date_encaissement,
             banque: reg.banque,
             paye: reg.statut === 'paye' ? montant : 0,
@@ -831,6 +839,8 @@ const printReleve = () => {
                         <th class="text-right">Crédit</th>
                         <th class="text-right">Solde</th>
                         <th>Règlement</th>
+                        <th>N° Chèque</th>
+                        <th>Nom Tirée</th>
                         <th>Echéance</th>
                         <th>Banque</th>
                         <th class="text-right">Payé</th>
@@ -852,6 +862,8 @@ const printReleve = () => {
                             <td class="text-right">${row.credit ? formatCurrency(row.credit) : ''}</td>
                             <td class="text-right ${row.solde_cumule >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(row.solde_cumule)}</td>
                             <td>${row.type_reglement || ''}</td>
+                            <td>${row.numero_piece || ''}</td>
+                            <td>${row.nom_beneficiaire || ''}</td>
                             <td>${row.echeance ? formatDate(row.echeance) : ''}</td>
                             <td>${row.banque || ''}</td>
                             <td class="text-right">${row.paye ? formatCurrency(row.paye) : ''}</td>
