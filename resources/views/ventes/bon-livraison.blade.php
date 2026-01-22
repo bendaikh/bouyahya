@@ -81,6 +81,7 @@ function bonLivraisonApp() {
         bonLivraisonsList: [],
         filteredBonLivraisonsList: [],
         searchFilters: {
+            annee: new Date().getFullYear().toString(),
             mois: '',
             code: '',
             nomClient: '',
@@ -783,11 +784,21 @@ function bonLivraisonApp() {
         
         filterBonLivraisons() {
             this.filteredBonLivraisonsList = this.bonLivraisonsList.filter(bl => {
+                const annee = this.searchFilters.annee;
                 const mois = this.searchFilters.mois.toLowerCase();
                 const code = this.searchFilters.code.toLowerCase();
                 const nomClient = this.searchFilters.nomClient.toLowerCase();
                 const commercial = this.searchFilters.commercial.toLowerCase();
                 const ville = this.searchFilters.ville.toLowerCase();
+                
+                // Check year filter
+                if (annee) {
+                    const blDate = new Date(bl.date);
+                    const blYear = blDate.getFullYear().toString();
+                    if (blYear !== annee) {
+                        return false;
+                    }
+                }
                 
                 // Check month filter
                 if (mois) {
@@ -1759,7 +1770,30 @@ function exportToPDF() {
 
         <!-- Search Filters -->
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow p-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <!-- Année Filter -->
+                <div>
+                    <div class="relative">
+                        <select 
+                            x-model="searchFilters.annee"
+                            @change="filterBonLivraisons()"
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                        >
+                            <option value="">Toutes les années</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-slate-400">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 7.293 8.172 5.858 9.607l3.435 3.343z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Mois Filter -->
                 <div>
                     <div class="relative">
