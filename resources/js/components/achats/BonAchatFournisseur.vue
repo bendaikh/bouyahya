@@ -1,36 +1,33 @@
 <template>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">
-        <!-- Sticky Top Section -->
-        <div class="p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-none bg-white dark:bg-gray-800 z-20">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] min-h-[400px] overflow-hidden">
+        <!-- Top Section - scrollable on small screens -->
+        <div class="p-3 sm:p-4 lg:p-6 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800 z-20 max-h-[40vh] overflow-y-auto lg:max-h-none lg:overflow-visible">
             <!-- Header -->
-            <div class="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                        consultation bon d'achat fournisseur
+            <div class="mb-2 sm:mb-4 flex flex-row justify-between items-center gap-2">
+                <div class="min-w-0">
+                    <h2 class="text-sm sm:text-lg lg:text-xl font-semibold text-gray-800 dark:text-white truncate">
+                        Bon d'achat fournisseur
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400">
-                        consultation bon d'achat fournisseur
-                    </p>
                 </div>
 
-                <div class="flex flex-wrap justify-end gap-2">
-                    <button v-if="!showForm" @click="openCreateForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        Nouveau bon d'achat
+                <div class="flex flex-wrap justify-end gap-1 sm:gap-2 flex-shrink-0">
+                    <button v-if="!showForm" @click="openCreateForm" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-xs sm:text-sm">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        <span class="hidden sm:inline">Nouveau bon</span>
                     </button>
 
                     <template v-else>
-                        <button @click="cancelForm" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                            Quitter
+                        <button @click="cancelForm" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm flex items-center">
+                            <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <span class="hidden sm:inline">Quitter</span>
                         </button>
-                        <button v-if="formMode !== 'view'" @click="saveBon" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                            Valider
+                        <button v-if="formMode !== 'view'" @click="saveBon" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center">
+                            <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            <span class="hidden sm:inline">Valider</span>
                         </button>
-                        <button v-if="formMode === 'view' && editingBonId && canEditCurrentBon" @click="formMode = 'edit'" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            Modifier
+                        <button v-if="formMode === 'view' && editingBonId && canEditCurrentBon" @click="formMode = 'edit'" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-xs sm:text-sm flex items-center">
+                            <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <span class="hidden sm:inline">Modifier</span>
                         </button>
                     </template>
                 </div>
@@ -39,70 +36,74 @@
             <!-- List View Top: Stats & Filters -->
             <div v-if="!showForm">
                 <!-- Stat blocks -->
-                <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="rounded-lg px-4 py-3 bg-blue-600 text-white shadow">
-                        <div class="text-sm font-semibold">Total Qté</div>
-                        <div class="mt-1 text-xl font-bold">{{ totalQteSum }}</div>
+                <div class="mb-3 sm:mb-4 grid grid-cols-2 gap-2 sm:gap-4">
+                    <div class="rounded-lg px-2 sm:px-4 py-1.5 sm:py-3 bg-blue-600 text-white shadow">
+                        <div class="text-[10px] sm:text-sm font-semibold">Total Qté</div>
+                        <div class="text-base sm:text-xl font-bold">{{ totalQteSum }}</div>
                     </div>
-                    <div class="rounded-lg px-4 py-3 bg-green-600 text-white shadow">
-                        <div class="text-sm font-semibold">Total TTC</div>
-                        <div class="mt-1 text-xl font-bold">{{ formatCurrency(totalTTCSum) }}</div>
+                    <div class="rounded-lg px-2 sm:px-4 py-1.5 sm:py-3 bg-green-600 text-white shadow">
+                        <div class="text-[10px] sm:text-sm font-semibold">Total TTC</div>
+                        <div class="text-base sm:text-xl font-bold">{{ formatCurrency(totalTTCSum) }}</div>
                     </div>
                 </div>
 
+                <!-- Toggle Filters Button (Mobile) -->
+                <button 
+                    @click="showFilters = !showFilters" 
+                    class="lg:hidden mb-2 w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs font-medium flex items-center justify-between"
+                >
+                    <span>{{ showFilters ? 'Masquer les filtres' : 'Afficher les filtres' }}</span>
+                    <svg :class="showFilters ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
                 <!-- Export Buttons & Filters Row -->
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                <div :class="showFilters ? 'grid' : 'hidden lg:grid'" class="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-end">
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">N° de bon</label>
+                        <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">N° de bon</label>
                         <input 
                             type="text"
                             v-model="filterNumeroBon"
                             placeholder="Filtrer..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                            class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
                         />
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Mois</label>
-                        <div class="relative">
-                            <select 
-                                v-model="filterMonth"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none cursor-pointer"
-                            >
-                                <option value="">Tous les mois</option>
-                                <option v-for="month in months" :key="month.value" :value="month.value">
-                                    {{ month.label }}
-                                </option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
+                        <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Mois</label>
+                        <select 
+                            v-model="filterMonth"
+                            class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
+                        >
+                            <option value="">Tous</option>
+                            <option v-for="month in months" :key="month.value" :value="month.value">
+                                {{ month.label }}
+                            </option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fournisseur</label>
+                        <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Fournisseur</label>
                         <input 
                             type="text"
                             v-model="filterFournisseur"
                             placeholder="Filtrer..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                            class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
                         />
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Client livré</label>
+                        <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Client livré</label>
                         <input 
                             type="text"
                             v-model="filterClientLivre"
                             placeholder="Filtrer..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                            class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
                         />
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
+                        <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Statut</label>
                         <select 
                             v-model="filterStatut"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                            class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
                         >
                             <option value="">Tous</option>
                             <option value="brouillon">Brouillon</option>
@@ -110,12 +111,12 @@
                             <option value="livre">Livré</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-end gap-1">
                         <div class="flex-1">
-                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Etat</label>
+                            <label class="block text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">Etat</label>
                             <select 
                                 v-model="filterEtat"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
+                                class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-[10px] sm:text-xs"
                             >
                                 <option value="">Tous</option>
                                 <option value="paye">Payé</option>
@@ -123,12 +124,12 @@
                                 <option value="impaye">Impayé</option>
                             </select>
                         </div>
-                        <div class="flex gap-1 mt-5">
-                            <button @click="reinitialiserFiltres" class="p-2 bg-gray-500 text-white rounded-md hover:bg-gray-600" title="Réinitialiser les filtres">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        <div class="flex gap-1">
+                            <button @click="reinitialiserFiltres" class="p-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600" title="Réinitialiser">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </button>
-                            <button @click="exportToExcel" class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700" title="Excel"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
-                            <button @click="exportToPDF" class="p-2 bg-red-600 text-white rounded-md hover:bg-red-700" title="PDF"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></button>
+                            <button @click="exportToExcel" class="p-1.5 bg-green-600 text-white rounded-md hover:bg-green-700" title="Excel"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
+                            <button @click="exportToPDF" class="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700" title="PDF"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></button>
                         </div>
                     </div>
                 </div>
@@ -136,52 +137,52 @@
         </div>
 
         <!-- Scrollable Content Section -->
-        <div class="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+        <div class="flex-1 bg-gray-50 dark:bg-gray-900/40 min-h-[200px] overflow-hidden">
             <!-- List View Table -->
-            <div v-if="!showForm" class="p-0 h-full">
-                <div class="overflow-x-auto overflow-y-auto relative h-full">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <div v-if="!showForm" class="h-full w-full overflow-auto">
+                <div class="min-w-full overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+                    <table class="min-w-[800px] divide-y divide-gray-200 dark:divide-gray-700 w-full table-auto">
                         <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 shadow-sm border-b border-gray-200 dark:border-gray-600">
                             <tr>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">N° de bon</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fournisseur</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client livré</th>
-                                <th class="px-6 py-3 text-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Qté</th>
-                                <th class="px-6 py-3 text-right text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total TTC</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Statut</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Etat</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fiche de paie</th>
-                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">N° de bon</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fournisseur</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client livré</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-center text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Qté</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-right text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total TTC</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Statut</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Etat</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fiche de paie</th>
+                                <th class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-if="loading">
-                        <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="10" class="px-2 sm:px-4 lg:px-6 py-4 sm:py-6 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             Chargement...
                         </td>
                     </tr>
                     <tr v-else-if="filteredBonAchats.length === 0">
-                        <td colspan="10" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="10" class="px-2 sm:px-4 lg:px-6 py-4 sm:py-6 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             Aucun bon d'achat trouvé
                         </td>
                     </tr>
                     <tr v-else v-for="bon in filteredBonAchats" :key="bon.id" :class="getEtatRowBgClass(bon)">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.numero_bon }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatDate(bon.date) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.fournisseur?.nom_fournisseur || 'N/A' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ bon.client_livre || '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900 dark:text-white">{{ bon.total_qte || 0 }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">{{ formatCurrency(bon.total_ttc) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap relative">
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">{{ bon.numero_bon }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">{{ formatDate(bon.date) }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">{{ bon.fournisseur?.nom_fournisseur || 'N/A' }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">{{ bon.client_livre || '-' }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-center font-medium text-gray-900 dark:text-white">{{ bon.total_qte || 0 }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-right text-gray-900 dark:text-white">{{ formatCurrency(bon.total_ttc) }}</td>
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap relative">
                             <!-- Status Badge - Click to toggle dropdown -->
                             <span 
                                 @click.stop="toggleStatusDropdown(bon.id)"
                                 :class="getStatusClass(bon.statut)" 
-                                class="px-2 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+                                class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-0.5 sm:gap-1"
                                 title="Cliquer pour modifier le statut">
                                 <span>{{ getStatusText(bon.statut) }}</span>
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </span>
@@ -190,7 +191,7 @@
                             <div 
                                 v-show="openStatusDropdownId === bon.id"
                                 @click.away="openStatusDropdownId = null"
-                                class="absolute z-50 mt-1 left-0 w-36 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden"
+                                class="absolute z-50 mt-1 left-0 sm:left-auto sm:right-0 w-32 sm:w-36 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden"
                                 style="display: none;"
                                 :style="{ display: openStatusDropdownId === bon.id ? 'block' : 'none' }">
                                 
@@ -222,52 +223,52 @@
                                 </button>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span :class="getEtatClass(bon)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap">
+                            <span :class="getEtatClass(bon)" class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full">
                                 {{ getEtatText(bon) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                             <button 
                                 @click="showPaymentDetails(bon)" 
                                 class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors" 
                                 title="Voir fiche de paiement"
                             >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </button>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex items-center gap-3">
+                        <td class="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
+                            <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
                                 <button @click="viewBon(bon)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Voir">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </button>
                                 <button v-if="canEditBon(bon)" @click="editBon(bon)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors" title="Modifier">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </button>
                                 <button v-if="bon.statut === 'brouillon'" @click="validateBon(bon)" class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors" title="Valider">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
                                 <button @click="exportSingleToExcel(bon)" class="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors" title="Exporter Excel">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </button>
                                 <button @click="exportSingleToPDF(bon)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Exporter PDF">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </button>
                                 <button v-if="canDeleteBon(bon)" @click="deleteBon(bon)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Supprimer">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </button>
@@ -827,6 +828,7 @@ const cities = ref([])
 const allArticles = ref([]) // All articles from database
 const loading = ref(false)
 const showForm = ref(false)
+const showFilters = ref(false) // For mobile filter toggle
 const formMode = ref('create') // 'create', 'edit', 'view'
 const editingBonId = ref(null)
 const searchQuery = ref('')
@@ -2205,4 +2207,37 @@ onMounted(() => {
     loadAllArticles()
 })
 </script>
+
+<style scoped>
+/* Ensure table container is scrollable on all screen sizes */
+.overflow-x-auto::-webkit-scrollbar {
+    height: 12px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+    background: rgb(243 244 246);
+    border-radius: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background: rgb(156 163 175);
+    border-radius: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: rgb(107 114 128);
+}
+
+.dark .overflow-x-auto::-webkit-scrollbar-track {
+    background: rgb(17 24 39);
+}
+
+.dark .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: rgb(75 85 99);
+}
+
+.dark .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: rgb(107 114 128);
+}
+</style>
 
