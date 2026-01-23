@@ -237,6 +237,74 @@ class BonCommandeClientController extends Controller
         ]);
     }
 
+    public function printCharge(Request $request)
+    {
+        $request->validate([
+            'bon_commande_ids' => 'required|array|min:1',
+            'bon_commande_ids.*' => 'exists:bon_commande_clients,id',
+        ]);
+
+        $bonCommandes = BonCommandeClient::with(['client', 'articles'])
+            ->whereIn('id', $request->bon_commande_ids)
+            ->get();
+
+        if ($bonCommandes->isEmpty()) {
+            return redirect()->back()->with('error', 'Aucun bon de commande trouvé');
+        }
+
+        // Group articles by designation (product name) - this creates sections like "FIL D'ATTACHE JP08"
+        $groupedItems = [];
+        foreach ($bonCommandes as $bonCommande) {
+            foreach ($bonCommande->articles as $article) {
+                // Use designation as the key to group by product type
+                $key = $article->designation;
+                if (!isset($groupedItems[$key])) {
+                    $groupedItems[$key] = [
+                        'reference' => $article->code_article, // Reference like F/A, P06, P08
+                        'designation' => $article->designation, // Product name like "FIL D'ATTACHE JP08"
+                        'items' => []
+                    ];
+                }
+                
+                // Add item with client and ville info
+                $groupedItems[$key]['items'][] = [
+                    'client' => $bonCommande->client->raison_sociale,
+                    'quantite' => $article->quantite,
+                    'unite' => 'KG', // Default unit
+                    'ville' => $bonCommande->ville_livraison ?? '',
+                    'telephone' => $bonCommande->client->telephone ?? '',
+                ];
+            }
+        }
+
+        // Calculate totals per group
+        foreach ($groupedItems as $key => $group) {
+            $groupedItems[$key]['total'] = array_sum(array_column($group['items'], 'quantite'));
+        }
+
+        // Generate bon de charge number (format: BC2026/144)
+        $year = date('Y');
+        // Try to find existing bon de charge numbers or use a simple increment
+        $lastBon = BonCommandeClient::where('numero_bon', 'like', "BC-{$year}%")
+            ->orderBy('numero_bon', 'desc')
+            ->first();
+        
+        if ($lastBon) {
+            preg_match('/BC-\d{4}\/(\d+)/', $lastBon->numero_bon, $matches);
+            $nextNumber = isset($matches[1]) ? (int)$matches[1] + 1 : 144;
+        } else {
+            $nextNumber = 144; // Default starting number
+        }
+        $numeroBonCharge = "BC{$year}/" . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        return view('ventes.bon-charge-print', [
+            'bonCommandes' => $bonCommandes,
+            'groupedItems' => $groupedItems,
+            'numeroBonCharge' => $numeroBonCharge,
+            'date' => now(),
+        ]);
+    }
+
     /**
      * Validate a Bon de commande
      */

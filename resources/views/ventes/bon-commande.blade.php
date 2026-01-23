@@ -576,6 +576,34 @@ function convertToBonLivraison(id, numero) {
                     </select>
                 </div>
                 
+                <!-- Client Filter -->
+                <div class="min-w-[180px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client</label>
+                    <select 
+                        x-model="filters.clientId"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Tous les clients</option>
+                        @foreach($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->raison_sociale }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <!-- Ville de Livraison Filter -->
+                <div class="min-w-[180px]">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ville de livraison</label>
+                    <select 
+                        x-model="filters.villeLivraison"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Toutes les villes</option>
+                        @foreach($cities as $city)
+                            <option value="{{ $city }}">{{ $city }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
                 <!-- Reset Filters Button -->
                 <div class="flex items-end">
                     <button 
@@ -600,10 +628,37 @@ function convertToBonLivraison(id, numero) {
                 </div>
             </div>
             
+            <!-- Print Bon de Charge Button -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <button 
+                        @click="printBonDeCharge()"
+                        :disabled="selectedItems.length === 0"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Imprimer bon de charge
+                        <span x-show="selectedItems.length > 0" class="ml-1 bg-white text-green-600 rounded-full px-2 py-0.5 text-xs font-semibold" x-text="selectedItems.length"></span>
+                    </button>
+                </div>
+                <div x-show="selectedItems.length > 0" class="text-sm text-gray-600 dark:text-gray-400">
+                    <span x-text="selectedItems.length"></span> élément(s) sélectionné(s)
+                </div>
+            </div>
+            
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <input 
+                                    type="checkbox" 
+                                    @change="toggleSelectAll($event)"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">N°</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Client</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
@@ -615,12 +670,22 @@ function convertToBonLivraison(id, numero) {
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($bonCommandes as $bonCommande)
                             <tr 
-                                x-show="filterRow('{{ $bonCommande->date->format('Y-m-d') }}', '{{ $bonCommande->statut }}')"
+                                x-show="filterRow('{{ $bonCommande->date->format('Y-m-d') }}', '{{ $bonCommande->statut }}', '{{ (string)$bonCommande->client_id }}', '{{ addslashes($bonCommande->ville_livraison ?? '') }}')"
                                 x-transition
                                 class="bon-commande-row"
                                 data-date="{{ $bonCommande->date->format('Y-m-d') }}"
                                 data-statut="{{ $bonCommande->statut }}"
+                                data-client-id="{{ $bonCommande->client_id }}"
+                                data-ville-livraison="{{ $bonCommande->ville_livraison ?? '' }}"
                             >
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input 
+                                        type="checkbox" 
+                                        value="{{ $bonCommande->id }}"
+                                        @change="toggleItem({{ $bonCommande->id }}, $event)"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->numero_bon }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->client->raison_sociale }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ $bonCommande->date->format('d/m/Y') }}</td>
@@ -677,7 +742,7 @@ function convertToBonLivraison(id, numero) {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Aucun bon de commande trouvé</td>
+                                <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Aucun bon de commande trouvé</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -734,10 +799,13 @@ function bonCommandeListApp() {
         filters: {
             dateFrom: '',
             dateTo: '',
-            statut: ''
+            statut: '',
+            clientId: '',
+            villeLivraison: ''
         },
+        selectedItems: [],
         
-        filterRow(rowDate, rowStatut) {
+        filterRow(rowDate, rowStatut, rowClientId, rowVilleLivraison) {
             // Date from filter
             if (this.filters.dateFrom && rowDate < this.filters.dateFrom) {
                 return false;
@@ -753,6 +821,16 @@ function bonCommandeListApp() {
                 return false;
             }
             
+            // Client filter - convert both to strings for comparison
+            if (this.filters.clientId && String(rowClientId) !== String(this.filters.clientId)) {
+                return false;
+            }
+            
+            // Ville de livraison filter
+            if (this.filters.villeLivraison && rowVilleLivraison !== this.filters.villeLivraison) {
+                return false;
+            }
+            
             return true;
         },
         
@@ -760,6 +838,68 @@ function bonCommandeListApp() {
             this.filters.dateFrom = '';
             this.filters.dateTo = '';
             this.filters.statut = '';
+            this.filters.clientId = '';
+            this.filters.villeLivraison = '';
+        },
+        
+        toggleItem(id, event) {
+            if (event.target.checked) {
+                if (!this.selectedItems.includes(id)) {
+                    this.selectedItems.push(id);
+                }
+            } else {
+                this.selectedItems = this.selectedItems.filter(item => item !== id);
+            }
+        },
+        
+        toggleSelectAll(event) {
+            const checkboxes = document.querySelectorAll('.bon-commande-row input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked !== event.target.checked) {
+                    checkbox.checked = event.target.checked;
+                    const id = parseInt(checkbox.value);
+                    if (event.target.checked) {
+                        if (!this.selectedItems.includes(id)) {
+                            this.selectedItems.push(id);
+                        }
+                    } else {
+                        this.selectedItems = this.selectedItems.filter(item => item !== id);
+                    }
+                }
+            });
+        },
+        
+        printBonDeCharge() {
+            if (this.selectedItems.length === 0) {
+                alert('Veuillez sélectionner au moins un bon de commande');
+                return;
+            }
+            
+            // Create a form to submit the selected items
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("ventes.bon-commande.print-charge") }}';
+            form.target = '_blank';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+            
+            // Add selected items
+            this.selectedItems.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'bon_commande_ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
         },
         
         getVisibleRowsCount() {

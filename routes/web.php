@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/bon-commande/{id}', [BonCommandeClientController::class, 'update'])->name('ventes.bon-commande.update');
         Route::delete('/bon-commande/{id}', [BonCommandeClientController::class, 'destroy'])->name('ventes.bon-commande.destroy');
         Route::get('/bon-commande/{id}/print', [BonCommandeClientController::class, 'print'])->name('ventes.bon-commande.print');
+        Route::post('/bon-commande/print-charge', [BonCommandeClientController::class, 'printCharge'])->name('ventes.bon-commande.print-charge');
         Route::post('/bon-commande/{id}/validate', [BonCommandeClientController::class, 'validateBon'])->name('ventes.bon-commande.validate');
         Route::post('/bon-commande/{id}/cancel', [BonCommandeClientController::class, 'cancel'])->name('ventes.bon-commande.cancel');
         Route::post('/bon-commande/{id}/convert-to-bon-livraison', [BonCommandeClientController::class, 'convertToBonLivraison'])->name('ventes.bon-commande.convert');
