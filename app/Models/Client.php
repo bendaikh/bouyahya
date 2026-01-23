@@ -11,6 +11,7 @@ class Client extends Model
         'raison_sociale',
         'nom_gerant',
         'ville',
+        'telephone',
         'type_client',
         'mode_paiement',
         'echeance',

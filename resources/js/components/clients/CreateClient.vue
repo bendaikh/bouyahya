@@ -58,6 +58,11 @@
                     </div>
 
                     <div>
+                        <label class="label" for="telephone">Téléphone</label>
+                        <input id="telephone" v-model="form.telephone" type="text" class="input" placeholder="Ex: +212 6XX XXX XXX" />
+                    </div>
+
+                    <div>
                         <label class="label" for="typeClient">Type client *</label>
                         <select id="typeClient" v-model="form.typeClient" class="input">
                             <option value="">Sélectionnez un type</option>
@@ -214,6 +219,7 @@ const createEmptyForm = () => ({
     raisonSociale: '',
     nomGerant: '',
     ville: '',
+    telephone: '',
     typeClient: '',
     modePaiement: '',
     echeance: '',
