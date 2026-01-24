@@ -53,6 +53,7 @@
                             <th scope="col" class="px-6 py-3">Code client</th>
                             <th scope="col" class="px-6 py-3">Raison sociale</th>
                             <th scope="col" class="px-6 py-3">Ville</th>
+                            <th scope="col" class="px-6 py-3">Téléphone</th>
                             <th scope="col" class="px-6 py-3">Type client</th>
                             <th scope="col" class="px-6 py-3">Mode paiement</th>
                             <th scope="col" class="px-6 py-3">Échéance</th>
@@ -71,6 +72,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-gray-700 dark:text-gray-200">{{ client.ville || '—' }}</td>
+                            <td class="px-6 py-4 text-gray-700 dark:text-gray-200">{{ client.telephone || '—' }}</td>
                             <td class="px-6 py-4">
                                 <span
                                     class="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
@@ -102,7 +104,7 @@
                             </td>
                         </tr>
                         <tr v-if="!paginatedClients.length">
-                            <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="8" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Aucun client ne correspond à votre recherche.
                             </td>
                         </tr>
@@ -160,6 +162,10 @@
                                 </option>
                             </select>
                             <p v-if="editErrors.ville" class="error">{{ editErrors.ville }}</p>
+                        </div>
+                        <div>
+                            <label class="label" for="editTelephone">Téléphone</label>
+                            <input id="editTelephone" v-model="editForm.telephone" type="text" class="input" placeholder="Ex: +212 6XX XXX XXX" />
                         </div>
                         <div>
                             <label class="label" for="editTypeClient">Type client *</label>
@@ -239,6 +245,7 @@
 <script setup>
 import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useClients } from '../../composables/useClients'
+import { useSettings } from '../../composables/useSettings'
 
 const props = defineProps({
     newClientUrl: {
@@ -248,6 +255,7 @@ const props = defineProps({
 })
 
 const { clients, isLoading, fetchClients, deleteClient, updateClient } = useClients()
+const { fetchCities } = useSettings()
 
 const searchTerm = ref('')
 const pageSize = ref(10)
@@ -263,6 +271,7 @@ const editForm = reactive({
     raisonSociale: '',
     nomGerant: '',
     ville: '',
+    telephone: '',
     typeClient: '',
     modePaiement: '',
     echeance: '',
@@ -273,17 +282,7 @@ const editForm = reactive({
 })
 const editErrors = reactive({})
 
-const villeOptions = [
-    'Casablanca',
-    'Rabat',
-    'Marrakech',
-    'Fès',
-    'Agadir',
-    'Tanger',
-    'Kenitra',
-    'Oujda',
-    'Tetouan'
-]
+const villeOptions = ref([])
 const typeOptions = ['REV', 'PROMO', 'ENTR', 'CON.FI']
 const modePaiementOptions = ['Espèces', 'Virement', 'Chèque', 'Traite']
 const echeanceOptions = ['0j', '30j', '45j', '60j', '90j']
@@ -356,6 +355,9 @@ const handleDelete = (client) => {
 
 const openEditModal = (client) => {
     Object.assign(editForm, client)
+    if (client.ville && !villeOptions.value.includes(client.ville)) {
+        villeOptions.value = [client.ville, ...villeOptions.value]
+    }
     isEditModalOpen.value = true
 }
 
@@ -367,6 +369,7 @@ const closeEditModal = () => {
         raisonSociale: '',
         nomGerant: '',
         ville: '',
+        telephone: '',
         typeClient: '',
         modePaiement: '',
         echeance: '',
@@ -419,7 +422,26 @@ const handleUpdate = () => {
 
 onMounted(async () => {
     await fetchClients()
-    
+
+    try {
+        villeOptions.value = await fetchCities()
+        if (villeOptions.value.length === 0) {
+            villeOptions.value = [
+                'Casablanca',
+                'Rabat',
+                'Marrakech',
+                'Fès',
+                'Agadir',
+                'Tanger',
+                'Kenitra',
+                'Oujda',
+                'Tetouan'
+            ]
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des villes:', error)
+    }
+
     const searchParams = new URLSearchParams(window.location.search)
     if (searchParams.get('created') === '1') {
         setFeedback('Client créé avec succès.')
