@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class BonCommandeFournisseur extends Model
 {
+    use BelongsToUser;
+
     protected $table = 'bon_commande_fournisseurs';
 
     protected $fillable = [
+        'user_id',
         'numero_bon',
         'date',
         'fournisseur_id',

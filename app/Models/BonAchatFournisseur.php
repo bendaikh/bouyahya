@@ -4,12 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ReglementFournisseurLigne;
+use App\Traits\BelongsToUser;
 
 class BonAchatFournisseur extends Model
 {
+    use BelongsToUser;
+
     protected $table = 'bon_achat_fournisseur';
     
     protected $fillable = [
+        'user_id',
         'numero_bon',
         'date',
         'fournisseur_id',

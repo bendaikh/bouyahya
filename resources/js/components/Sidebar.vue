@@ -184,25 +184,25 @@
             <nav class="flex-1 min-h-0 overflow-y-auto py-6 px-3 space-y-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 <!-- Dashboard -->
                 <MenuItem 
-                    v-if="hasPermission('view dashboard')"
-                    :item="menuItems.dashboard" 
+                    v-if="authorizedMenuItems.dashboard"
+                    :item="authorizedMenuItems.dashboard" 
                     :is-collapsed="isCollapsed"
-                    :is-active="currentRoute === menuItems.dashboard.route"
+                    :is-active="currentRoute === authorizedMenuItems.dashboard?.route"
                     icon-color="orange"
                 />
 
                 <!-- Section Label -->
-                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                <div v-if="!isCollapsed && (authorizedMenuItems.clients || authorizedMenuItems.fournisseurs)" class="pt-6 pb-2 px-4">
                     <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500/80">Principal</span>
                 </div>
-                <div v-else class="pt-4 pb-2 flex justify-center">
+                <div v-else-if="authorizedMenuItems.clients || authorizedMenuItems.fournisseurs" class="pt-4 pb-2 flex justify-center">
                     <div class="w-6 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 </div>
 
                 <!-- Gestion des Clients -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage clients')"
-                    :item="menuItems.clients" 
+                    v-if="authorizedMenuItems.clients"
+                    :item="authorizedMenuItems.clients" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.clients"
                     @toggle="toggleMenu('clients')"
@@ -211,8 +211,8 @@
 
                 <!-- Gestion des Fournisseurs -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage fournisseurs')"
-                    :item="menuItems.fournisseurs" 
+                    v-if="authorizedMenuItems.fournisseurs"
+                    :item="authorizedMenuItems.fournisseurs" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.fournisseurs"
                     @toggle="toggleMenu('fournisseurs')"
@@ -220,17 +220,17 @@
                 />
 
                 <!-- Section Label -->
-                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                <div v-if="!isCollapsed && (authorizedMenuItems.achats || authorizedMenuItems.ventes || authorizedMenuItems.stock)" class="pt-6 pb-2 px-4">
                     <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500/80">Operations</span>
                 </div>
-                <div v-else class="pt-4 pb-2 flex justify-center">
+                <div v-else-if="authorizedMenuItems.achats || authorizedMenuItems.ventes || authorizedMenuItems.stock" class="pt-4 pb-2 flex justify-center">
                     <div class="w-6 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 </div>
 
                 <!-- Gestion des Achats -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage achats')"
-                    :item="menuItems.achats" 
+                    v-if="authorizedMenuItems.achats"
+                    :item="authorizedMenuItems.achats" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.achats"
                     @toggle="toggleMenu('achats')"
@@ -239,8 +239,8 @@
 
                 <!-- Gestion des Ventes -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage ventes')"
-                    :item="menuItems.ventes" 
+                    v-if="authorizedMenuItems.ventes"
+                    :item="authorizedMenuItems.ventes" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.ventes"
                     @toggle="toggleMenu('ventes')"
@@ -249,8 +249,8 @@
 
                 <!-- Gestion du Stock -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage stock')"
-                    :item="menuItems.stock" 
+                    v-if="authorizedMenuItems.stock"
+                    :item="authorizedMenuItems.stock" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.stock"
                     @toggle="toggleMenu('stock')"
@@ -258,17 +258,17 @@
                 />
 
                 <!-- Section Label -->
-                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                <div v-if="!isCollapsed && authorizedMenuItems.tresorerie" class="pt-6 pb-2 px-4">
                     <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500/80">Finance</span>
                 </div>
-                <div v-else class="pt-4 pb-2 flex justify-center">
+                <div v-else-if="authorizedMenuItems.tresorerie" class="pt-4 pb-2 flex justify-center">
                     <div class="w-6 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 </div>
 
                 <!-- Gestion Trésorerie -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage tresorerie')"
-                    :item="menuItems.tresorerie" 
+                    v-if="authorizedMenuItems.tresorerie"
+                    :item="authorizedMenuItems.tresorerie" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.tresorerie"
                     @toggle="toggleMenu('tresorerie')"
@@ -276,17 +276,17 @@
                 />
 
                 <!-- Section Label -->
-                <div v-if="!isCollapsed" class="pt-6 pb-2 px-4">
+                <div v-if="!isCollapsed && (authorizedMenuItems.utilisateurs || authorizedMenuItems.parametres)" class="pt-6 pb-2 px-4">
                     <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500/80">Systeme</span>
                 </div>
-                <div v-else class="pt-4 pb-2 flex justify-center">
+                <div v-else-if="authorizedMenuItems.utilisateurs || authorizedMenuItems.parametres" class="pt-4 pb-2 flex justify-center">
                     <div class="w-6 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 </div>
 
                 <!-- Gestion des Utilisateurs -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage users')"
-                    :item="menuItems.utilisateurs" 
+                    v-if="authorizedMenuItems.utilisateurs"
+                    :item="authorizedMenuItems.utilisateurs" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.utilisateurs"
                     @toggle="toggleMenu('utilisateurs')"
@@ -295,8 +295,8 @@
 
                 <!-- Paramètres -->
                 <CollapsibleMenuItem 
-                    v-if="hasPermission('manage settings')"
-                    :item="menuItems.parametres" 
+                    v-if="authorizedMenuItems.parametres"
+                    :item="authorizedMenuItems.parametres" 
                     :is-collapsed="isCollapsed"
                     :is-open="openMenus.parametres"
                     @toggle="toggleMenu('parametres')"
@@ -362,7 +362,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import MenuItem from './MenuItem.vue'
 import CollapsibleMenuItem from './CollapsibleMenuItem.vue'
 
@@ -387,14 +387,49 @@ const hasPermission = (permission) => {
     
     if (!props.user.roles) return false
     
-    // Superadmin has all permissions
+    // Superadmin role name check
     if (props.user.roles.some(role => role.name === 'superadmin')) return true
     
-    // Check role permissions
-    const userPermissions = props.user.roles.flatMap(role => 
-        role.permissions ? role.permissions.map(p => p.name) : []
-    )
-    return userPermissions.includes(permission)
+    // Extract all permission names
+    const userPermissions = (props.user?.roles || []).flatMap(role => {
+        if (!role || !role.permissions) return []
+        return role.permissions.map(p => typeof p === 'string' ? p : (p?.name || ''))
+    })
+
+    const checkSingle = (p) => {
+        if (!p) return true
+        
+        // Direct match
+        if (userPermissions.includes(p)) return true
+        
+        // Granular to legacy/module mapping (e.g. user has 'manage achats', we check 'achats.view')
+        if (p.startsWith('achats.') && userPermissions.includes('manage achats')) return true
+        if (p.startsWith('ventes.') && userPermissions.includes('manage ventes')) return true
+        if (p.startsWith('stock.') && userPermissions.includes('manage stock')) return true
+        if (p.startsWith('tresorerie.') && userPermissions.includes('manage tresorerie')) return true
+        if (p.startsWith('contacts.clients.') && userPermissions.includes('manage clients')) return true
+        if (p.startsWith('contacts.fournisseurs.') && userPermissions.includes('manage fournisseurs')) return true
+        if ((p.startsWith('admin.users.') || p.startsWith('admin.roles.')) && userPermissions.includes('manage users')) return true
+        if (p.startsWith('admin.settings.') && userPermissions.includes('manage settings')) return true
+
+        // Legacy/Module to granular mapping (e.g. user has 'achats.view', we check 'manage achats')
+        if (p === 'manage achats' && userPermissions.some(up => up.startsWith('achats.'))) return true
+        if (p === 'manage ventes' && userPermissions.some(up => up.startsWith('ventes.'))) return true
+        if (p === 'manage stock' && userPermissions.some(up => up.startsWith('stock.'))) return true
+        if (p === 'manage tresorerie' && userPermissions.some(up => up.startsWith('tresorerie.'))) return true
+        if (p === 'manage clients' && userPermissions.some(up => up.startsWith('contacts.clients.'))) return true
+        if (p === 'manage fournisseurs' && userPermissions.some(up => up.startsWith('contacts.fournisseurs.'))) return true
+        if (p === 'manage users' && userPermissions.some(up => up.startsWith('admin.users.') || up.startsWith('admin.roles.'))) return true
+        if (p === 'manage settings' && userPermissions.some(up => up.startsWith('admin.settings.'))) return true
+        
+        return false
+    }
+
+    if (Array.isArray(permission)) {
+        return permission.some(p => checkSingle(p))
+    }
+    
+    return checkSingle(permission)
 }
 
 const getUserRole = () => {
@@ -431,90 +466,147 @@ const menuItems = {
     dashboard: {
         title: 'Tableau de bord',
         icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-        route: '/dashboard'
+        route: '/dashboard',
+        permission: 'view dashboard'
     },
     utilisateurs: {
         title: 'Utilisateurs',
         icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+        permission: 'manage users',
         children: [
-            { title: 'Liste utilisateurs', route: '/utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-            { title: 'Roles et Permissions', route: '/utilisateurs/roles', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
+            { title: 'Liste utilisateurs', route: '/utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', permission: 'admin.users.view' },
+            { title: 'Roles et Permissions', route: '/utilisateurs/roles', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', permission: 'admin.roles.view' }
         ]
     },
     parametres: {
         title: 'Parametres',
         icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+        permission: 'manage settings',
         children: [
-            { title: 'Application', route: '/parametres/application', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
-            { title: 'Villes', route: '/parametres/villes', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
-            { title: 'Articles', route: '/parametres/articles', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
-            { title: 'Commerciales', route: '/parametres/commerciales', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-            { title: 'Transports', route: '/parametres/transports', icon: 'M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2' },
-            { title: 'Matricules', route: '/parametres/matricules', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
-            { title: 'Banques', route: '/parametres/banques', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' }
+            { title: 'Application', route: '/parametres/application', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', permission: 'admin.settings.view' },
+            { title: 'Villes', route: '/parametres/villes', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', permission: 'admin.settings.view' },
+            { title: 'Articles', route: '/parametres/articles', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', permission: 'admin.settings.view' },
+            { title: 'Commerciales', route: '/parametres/commerciales', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', permission: 'admin.settings.view' },
+            { title: 'Transports', route: '/parametres/transports', icon: 'M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2', permission: 'admin.settings.view' },
+            { title: 'Matricules', route: '/parametres/matricules', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4', permission: 'admin.settings.view' },
+            { title: 'Banques', route: '/parametres/banques', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', permission: 'admin.settings.view' }
         ]
     },
     achats: {
         title: 'Achats',
         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+        permission: 'manage achats',
         children: [
-            { title: 'Bon de commande', route: '/achats/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-            { title: 'Bon d\'achat Fournisseur', route: '/achats/bon-achat-fournisseur', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
-            { title: 'Reglements fournisseurs', route: '/achats/reglements-fournisseurs', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Historique achats', route: '/achats/historique', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Releve compte fournisseurs', route: '/achats/releve-compte-fournisseurs', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-            { title: 'Echeancier fournisseurs', route: '/achats/echeancier-fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }
+            { title: 'Bon de commande', route: '/achats/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'achats.bon-commande.view' },
+            { title: 'Bon d\'achat Fournisseur', route: '/achats/bon-achat-fournisseur', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', permission: 'achats.bon-achat.view' },
+            { title: 'Reglements fournisseurs', route: '/achats/reglements-fournisseurs', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', permission: 'achats.reglement.view' },
+            { title: 'Historique achats', route: '/achats/historique', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', permission: 'achats.historique.view' },
+            { title: 'Releve compte fournisseurs', route: '/achats/releve-compte-fournisseurs', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'achats.releve.view' },
+            { title: 'Echeancier fournisseurs', route: '/achats/echeancier-fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', permission: 'achats.echeancier.view' }
         ]
     },
     ventes: {
         title: 'Ventes',
         icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+        permission: 'manage ventes',
         children: [
-            { title: 'Bon de commande', route: '/ventes/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-            { title: 'Bon de livraison', route: '/ventes/bon-livraison', icon: 'M5 13l4 4L19 7' },
-            { title: 'Reglements clients', route: '/ventes/reglements-clients-gestion', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Historique ventes', route: '/ventes/historique', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Releve compte clients', route: '/ventes/releve-compte-clients', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
+            { title: 'Bon de commande', route: '/ventes/bon-commande', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'ventes.bon-commande.view' },
+            { title: 'Bon de livraison', route: '/ventes/bon-livraison', icon: 'M5 13l4 4L19 7', permission: 'ventes.bon-livraison.view' },
+            { title: 'Reglements clients', route: '/ventes/reglements-clients-gestion', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', permission: 'ventes.reglement.view' },
+            { title: 'Historique ventes', route: '/ventes/historique', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', permission: 'ventes.historique.view' },
+            { title: 'Releve compte clients', route: '/ventes/releve-compte-clients', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'ventes.releve.view' }
         ]
     },
     clients: {
         title: 'Clients',
         icon: 'M17 20h5V8H2v12h5m10 0V8m0 12v2m-10-2v2m0-2H2m10 0h10M2 8l10-6 10 6',
+        permission: 'manage clients',
         children: [
-            { title: 'Liste des clients', route: '/clients', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-            { title: 'Nouveau client', route: '/clients/create', icon: 'M12 4v16m8-8H4' }
+            { title: 'Liste des clients', route: '/clients', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', permission: 'contacts.clients.view' },
+            { title: 'Nouveau client', route: '/clients/create', icon: 'M12 4v16m8-8H4', permission: 'contacts.clients.create' }
         ]
     },
     fournisseurs: {
         title: 'Fournisseurs',
         icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        permission: 'manage fournisseurs',
         children: [
-            { title: 'Liste des fournisseurs', route: '/fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-            { title: 'Nouveau fournisseur', route: '/fournisseurs/create', icon: 'M12 4v16m8-8H4' }
+            { title: 'Liste des fournisseurs', route: '/fournisseurs', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', permission: 'contacts.fournisseurs.view' },
+            { title: 'Nouveau fournisseur', route: '/fournisseurs/create', icon: 'M12 4v16m8-8H4', permission: 'contacts.fournisseurs.create' }
         ]
     },
     stock: {
         title: 'Stock',
         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+        permission: 'manage stock',
         children: [
-            { title: 'Articles', route: '/stock/articles', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-            { title: 'Mouvement stock', route: '/stock/mouvement', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
-            { title: 'Les stocks', route: '/stock/stocks', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' }
+            { title: 'Articles', route: '/stock/articles', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', permission: 'stock.articles.view' },
+            { title: 'Mouvement stock', route: '/stock/mouvement', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4', permission: 'stock.mouvement.view' },
+            { title: 'Les stocks', route: '/stock/stocks', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', permission: 'stock.etat.view' }
         ]
     },
     tresorerie: {
         title: 'Tresorerie',
         icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+        permission: 'manage tresorerie',
         children: [
-            { title: 'Types de charges', route: '/tresorerie/types-charges', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-            { title: 'Releve reglements', route: '/tresorerie/releve-reglements', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-            { title: 'Balance caisse', route: '/tresorerie/balance-caisse', icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
-            { title: 'Liste reg impots', route: '/tresorerie/liste-impots', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-            { title: 'Compte tresorerie', route: '/tresorerie/compte-bancaire', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
-            { title: 'Encaissement / Decaissement', route: '/tresorerie/encaissement-decaissement', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' }
+            { title: 'Types de charges', route: '/tresorerie/types-charges', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', permission: 'tresorerie.charges.view' },
+            { title: 'Releve reglements', route: '/tresorerie/releve-reglements', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'tresorerie.releve-reglements.view' },
+            { title: 'Balance caisse', route: '/tresorerie/balance-caisse', icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z', permission: 'tresorerie.balance-caisse.view' },
+            { title: 'Liste reg impots', route: '/tresorerie/liste-impots', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', permission: 'tresorerie.impots.view' },
+            { title: 'Compte tresorerie', route: '/tresorerie/compte-bancaire', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', permission: 'tresorerie.compte-bancaire.view' },
+            { title: 'Encaissement / Decaissement', route: '/tresorerie/encaissement-decaissement', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z', permission: 'tresorerie.encaissement.view' }
         ]
     }
 }
+
+// Helper to check if user has a permission DIRECTLY (not through bidirectional mapping)
+const hasDirectPermission = (permission) => {
+    if (!props.user) return false
+    if (props.user.role === 'superadmin') return true
+    if (!props.user.roles) return false
+    if (props.user.roles.some(role => role.name === 'superadmin')) return true
+    
+    const userPermissions = (props.user?.roles || []).flatMap(role => {
+        if (!role || !role.permissions) return []
+        return role.permissions.map(p => typeof p === 'string' ? p : (p?.name || ''))
+    })
+    
+    return userPermissions.includes(permission)
+}
+
+// Computed property to filter menu items based on authorized children or main permission
+const authorizedMenuItems = computed(() => {
+    const result = {}
+    
+    for (const [key, item] of Object.entries(menuItems)) {
+        if (key === 'dashboard') {
+            if (hasPermission(item.permission)) result[key] = item
+            continue
+        }
+
+        // Check if user has the DIRECT legacy permission (like 'manage achats')
+        // Only then show ALL children - otherwise filter by specific permissions
+        const hasFullAccess = item.permission && hasDirectPermission(item.permission)
+
+        const filteredChildren = item.children?.filter(child => {
+            // If user has full access via legacy permission, show all children
+            if (hasFullAccess) return true
+            // Otherwise, only show children the user has specific permission for
+            return !child.permission || hasDirectPermission(child.permission)
+        })
+
+        // Item is shown if it has at least one authorized child
+        if (filteredChildren && filteredChildren.length > 0) {
+            result[key] = {
+                ...item,
+                children: filteredChildren
+            }
+        }
+    }
+    return result
+})
+
 
 const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value

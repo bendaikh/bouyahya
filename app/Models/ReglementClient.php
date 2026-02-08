@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class ReglementClient extends Model
 {
+    use BelongsToUser;
+
     protected $table = 'reglements_clients';
     
     protected $fillable = [
+        'user_id',
         'code_reglement',
         'date_reglement',
         'client_id',

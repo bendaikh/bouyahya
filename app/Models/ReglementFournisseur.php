@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class ReglementFournisseur extends Model
 {
+    use BelongsToUser;
+
     protected $table = 'reglements_fournisseurs';
     
     protected $fillable = [
+        'user_id',
         'code_reglement',
         'date_reglement',
         'fournisseur_id',
