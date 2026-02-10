@@ -7,7 +7,7 @@
     window.bonLivraisonArticles = @json($articles ?? []);
 </script>
 
-<div x-data="bonLivraisonApp()" class="space-y-6">
+<div x-data="bonLivraisonApp()" class="space-y-6 pl-4 lg:pl-6">
 
 <script>
 function bonLivraisonApp() {
