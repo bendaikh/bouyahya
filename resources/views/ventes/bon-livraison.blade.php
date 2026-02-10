@@ -5,6 +5,14 @@
 @section('content')
 <script>
     window.bonLivraisonArticles = @json($articles ?? []);
+    // User permissions for frontend checks
+    window.userPermissions = {
+        canCreate: @json(auth()->user()?->can('ventes.bon-livraison.create') ?? false),
+        canEdit: @json(auth()->user()?->can('ventes.bon-livraison.edit') ?? false),
+        canDelete: @json(auth()->user()?->can('ventes.bon-livraison.delete') ?? false),
+        canValidate: @json(auth()->user()?->can('ventes.bon-livraison.validate') ?? false),
+        canPrint: @json(auth()->user()?->can('ventes.bon-livraison.print') ?? false),
+    };
 </script>
 
 <div x-data="bonLivraisonApp()" class="space-y-6 pl-4 lg:pl-6">
@@ -19,6 +27,8 @@ function bonLivraisonApp() {
         editingId: null,
         showPaymentModal: false,
         hasPayment: false,
+        // User permissions
+        permissions: window.userPermissions || {},
         paymentData: {
             tresorerieId: '',
             modeReglement: 'Espèces',
@@ -1168,7 +1178,7 @@ function exportToPDF() {
                 <button @click="updateForm()" type="button" x-show="editMode && !viewMode" :disabled="isSubmitting" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
                     Modifier
                 </button>
-                <button @click="deleteBonLivraisonFunc(editingId, formData.numero)" type="button" x-show="(editMode || viewMode) && editingId" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+                <button @click="deleteBonLivraisonFunc(editingId, formData.numero)" type="button" x-show="(editMode || viewMode) && editingId && permissions.canDelete" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
                     Supprimer
                 </button>
                 <button @click="cancelEdit()" type="button" class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
@@ -1758,7 +1768,7 @@ function exportToPDF() {
             </div>
 
             <!-- Button Card -->
-            <div class="flex items-center justify-center">
+            <div class="flex items-center justify-center" x-show="permissions.canCreate">
                 <button @click="openNewForm()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg font-semibold flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -2008,7 +2018,7 @@ function exportToPDF() {
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                                             </svg>
                                         </button>
-                                        <template x-if="!(bonLivraison.statut === 'Livré' && parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0)">
+                                        <template x-if="permissions.canEdit && !(bonLivraison.statut === 'Livré' && parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0)">
                                             <button @click="loadBonLivraisonForEdit(bonLivraison.id)" class="text-blue-400 hover:text-blue-300 transition-colors" title="Modifier">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -2020,7 +2030,7 @@ function exportToPDF() {
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                             </svg>
                                         </button>
-                                        <template x-if="!(bonLivraison.statut === 'Livré' && parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0)">
+                                        <template x-if="permissions.canDelete && !(bonLivraison.statut === 'Livré' && parseFloat(bonLivraison.montant_paye || 0) >= parseFloat(bonLivraison.total_general || 0) && parseFloat(bonLivraison.total_general || 0) > 0)">
                                             <button @click="deleteBonLivraisonFunc(bonLivraison.id, bonLivraison.numero_bon)" class="text-red-400 hover:text-red-300 transition-colors" title="Supprimer">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

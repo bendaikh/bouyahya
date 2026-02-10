@@ -21,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Define the mapping between legacy permissions and their granular prefixes
+        // This is only used for checking legacy permissions (like route middleware)
+        // NOT for granting granular permissions automatically
         $permissionMappings = [
             'manage achats' => 'achats.',
             'manage ventes' => 'ventes.',
@@ -56,7 +58,9 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            // If checking a legacy permission, also accept granular permissions
+            // If checking a legacy permission (like 'manage ventes' from route middleware),
+            // also accept if user has ANY granular permission for that module
+            // This allows users with granular permissions to access the module routes
             if (isset($permissionMappings[$ability])) {
                 // Check direct legacy permission first
                 if (in_array($ability, $userPermissions)) {
@@ -74,20 +78,10 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            // If checking a granular permission, also check if user has the legacy parent permission
-            foreach ($permissionMappings as $legacyPerm => $prefixes) {
-                $prefixList = is_array($prefixes) ? $prefixes : [$prefixes];
-                foreach ($prefixList as $prefix) {
-                    if (str_starts_with($ability, $prefix)) {
-                        // User is checking a granular permission
-                        // Allow if they have the legacy parent permission
-                        if (in_array($legacyPerm, $userPermissions)) {
-                            return true;
-                        }
-                        break 2;
-                    }
-                }
-            }
+            // IMPORTANT: Do NOT grant granular permissions based on legacy permissions
+            // Each granular permission must be explicitly assigned
+            // This ensures that if superadmin unchecks 'ventes.bon-commande.create',
+            // the user won't be able to create even if they have 'manage ventes'
 
             // Return null to let Spatie's normal permission check run
             return null;

@@ -19,33 +19,11 @@ trait BelongsToUser
             }
         });
 
-        // Global scope to filter by user (except for superadmins)
+        // Global scope disabled - all users can now see all data
+        // The user_id is still tracked for audit purposes (who created the record)
         static::addGlobalScope('user_scope', function (Builder $builder) {
-            $user = auth()->user();
-            
-            // If no user is authenticated, don't apply scope
-            if (!$user) {
-                return;
-            }
-
-            // Superadmin sees everything
-            if ($user->hasRole('superadmin')) {
-                return;
-            }
-
-            // Commercial role sees all bon_livraison_clients data (but not bon_commande_clients)
-            if ($user->hasRole('commercial')) {
-                $table = $builder->getModel()->getTable();
-                // Commercial can see all bon de livraison data
-                if ($table === 'bon_livraison_clients') {
-                    return;
-                }
-            }
-
-            // Regular users only see their own data
-            $builder->where(function ($query) use ($user) {
-                $query->where($query->getModel()->getTable() . '.user_id', $user->id);
-            });
+            // No filtering - all users see all data
+            return;
         });
     }
 

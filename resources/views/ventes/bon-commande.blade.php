@@ -5,6 +5,15 @@
 @section('content')
 <script>
     window.bonCommandeArticles = @json($articles ?? []);
+    // User permissions for frontend checks
+    window.userPermissions = {
+        canCreate: @json(auth()->user()?->can('ventes.bon-commande.create') ?? false),
+        canEdit: @json(auth()->user()?->can('ventes.bon-commande.edit') ?? false),
+        canDelete: @json(auth()->user()?->can('ventes.bon-commande.delete') ?? false),
+        canValidate: @json(auth()->user()?->can('ventes.bon-commande.validate') ?? false),
+        canConvert: @json(auth()->user()?->can('ventes.bon-commande.convert') ?? false),
+        canPrint: @json(auth()->user()?->can('ventes.bon-commande.print') ?? false),
+    };
 </script>
 
 <div x-data="bonCommandeApp()" @open-new-form.window="openNewForm()" class="space-y-6">
@@ -621,11 +630,13 @@ function convertToBonLivraison(id, numero) {
                 <div class="flex-1"></div>
                 
                 <!-- New Bon de Commande Button -->
+                @can('ventes.bon-commande.create')
                 <div class="flex items-end">
                     <button @click="$dispatch('open-new-form')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         Nouveau bon de commande
                     </button>
                 </div>
+                @endcan
             </div>
             
             <!-- Print Bon de Charge Button -->
@@ -717,27 +728,35 @@ function convertToBonLivraison(id, numero) {
                                             </svg>
                                         </button>
                                         @if($bonCommande->statut === 'En attente')
+                                            @can('ventes.bon-commande.edit')
                                             <button onclick="editBonCommande({{ $bonCommande->id }})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200" title="Modifier">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                 </svg>
                                             </button>
+                                            @endcan
+                                            @can('ventes.bon-commande.validate')
                                             <button onclick="validateBonCommande({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200" title="Valider">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
                                             </button>
+                                            @endcan
+                                            @can('ventes.bon-commande.delete')
                                             <button onclick="deleteBonCommande({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="Supprimer">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                 </svg>
                                             </button>
+                                            @endcan
                                         @elseif($bonCommande->statut === 'Validé')
+                                            @can('ventes.bon-commande.convert')
                                             <button onclick="convertToBonLivraison({{ $bonCommande->id }}, '{{ $bonCommande->numero_bon }}')" class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-200" title="Convertir en Bon de Livraison">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                                 </svg>
                                             </button>
+                                            @endcan
                                         @endif
                                     </div>
                                 </td>
