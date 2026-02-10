@@ -33,6 +33,15 @@ trait BelongsToUser
                 return;
             }
 
+            // Commercial role sees all bon_livraison_clients data (but not bon_commande_clients)
+            if ($user->hasRole('commercial')) {
+                $table = $builder->getModel()->getTable();
+                // Commercial can see all bon de livraison data
+                if ($table === 'bon_livraison_clients') {
+                    return;
+                }
+            }
+
             // Regular users only see their own data
             $builder->where(function ($query) use ($user) {
                 $query->where($query->getModel()->getTable() . '.user_id', $user->id);

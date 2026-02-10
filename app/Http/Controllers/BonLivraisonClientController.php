@@ -13,12 +13,14 @@ use App\Models\BonLivraisonClientArticle;
 use App\Models\Setting;
 use App\Models\ReglementClient;
 use App\Models\ReglementClientLigne;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class BonLivraisonClientController extends Controller
 {
+    use UsesSelectedYear;
     /**
      * API endpoint to get bon livraison clients filtered by client_id
      */
@@ -57,8 +59,11 @@ class BonLivraisonClientController extends Controller
 
     public function index()
     {
+        $selectedYear = $this->getSelectedYear();
+        
         $bonLivraisons = BonLivraisonClient::with(['client', 'bonCommande', 'bonAchatFournisseur'])
             ->withSum('reglementLignes as montant_paye', 'montant_regle')
+            ->whereYear('date', $selectedYear)
             ->orderBy('created_at', 'desc')
             ->get();
         $clients = Client::orderBy('raison_sociale')->get();
@@ -97,6 +102,7 @@ class BonLivraisonClientController extends Controller
             'fournisseurs' => $fournisseurs,
             'articles' => $articles,
             'cities' => $cities,
+            'selectedYear' => $selectedYear,
         ]);
     }
 
@@ -229,7 +235,9 @@ class BonLivraisonClientController extends Controller
     public function nextNumero()
     {
         $year = date('Y');
-        $lastBon = BonLivraisonClient::whereYear('created_at', $year)
+        // Use withoutGlobalScope to check across ALL users for unique numero_bon
+        $lastBon = BonLivraisonClient::withoutGlobalScope('user_scope')
+            ->whereYear('created_at', $year)
             ->orderBy('id', 'desc')
             ->first();
 

@@ -6,17 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\ReglementFournisseur;
 use App\Models\ReglementFournisseurLigne;
 use App\Models\BonAchatFournisseur;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReglementFournisseurController extends Controller
 {
+    use UsesSelectedYear;
+
     /**
      * Liste tous les règlements fournisseurs
      */
     public function index()
     {
+        $selectedYear = $this->getSelectedYear();
+        
         $reglements = ReglementFournisseur::with(['fournisseur', 'lignes.bonAchat'])
+            ->whereYear('date_reglement', $selectedYear)
             ->orderBy('created_at', 'desc')
             ->get();
         

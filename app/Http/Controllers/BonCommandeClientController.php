@@ -10,15 +10,22 @@ use App\Models\Article;
 use App\Models\BonAchatArticle;
 use App\Models\BonLivraisonClientArticle;
 use App\Models\Setting;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class BonCommandeClientController extends Controller
 {
+    use UsesSelectedYear;
     public function index()
     {
-        $bonCommandes = BonCommandeClient::with(['client', 'fournisseur'])->orderBy('created_at', 'desc')->get();
+        $selectedYear = $this->getSelectedYear();
+        
+        $bonCommandes = BonCommandeClient::with(['client', 'fournisseur'])
+            ->whereYear('date', $selectedYear)
+            ->orderBy('created_at', 'desc')
+            ->get();
         $clients = Client::orderBy('raison_sociale')->get();
         $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
         
@@ -55,6 +62,7 @@ class BonCommandeClientController extends Controller
             'fournisseurs' => $fournisseurs,
             'articles' => $articles,
             'cities' => $cities,
+            'selectedYear' => $selectedYear,
         ]);
     }
 
@@ -126,7 +134,9 @@ class BonCommandeClientController extends Controller
     public function nextNumero()
     {
         $year = date('Y');
-        $lastBon = BonCommandeClient::whereYear('created_at', $year)
+        // Use withoutGlobalScope to check across ALL users for unique numero_bon
+        $lastBon = BonCommandeClient::withoutGlobalScope('user_scope')
+            ->whereYear('created_at', $year)
             ->orderBy('id', 'desc')
             ->first();
 
@@ -376,9 +386,10 @@ class BonCommandeClientController extends Controller
                 return response()->json(['error' => 'Seuls les bons de commande validés peuvent être convertis en bon de livraison'], 400);
             }
             
-            // Generate next bon de livraison number
+            // Generate next bon de livraison number (check across ALL users)
             $year = date('Y');
-            $lastBon = BonLivraisonClient::where('numero_bon', 'like', "BL-{$year}%")
+            $lastBon = BonLivraisonClient::withoutGlobalScope('user_scope')
+                ->where('numero_bon', 'like', "BL-{$year}%")
                 ->orderBy('numero_bon', 'desc')
                 ->first();
             

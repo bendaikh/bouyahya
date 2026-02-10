@@ -33,6 +33,24 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Year Selection API (system-wide)
+    Route::get('/api/selected-year', function () {
+        $currentYear = \Carbon\Carbon::now()->year;
+        $selectedYear = session('selected_year', $currentYear);
+        $availableYears = range(2020, $currentYear + 1);
+        return response()->json([
+            'selectedYear' => $selectedYear,
+            'availableYears' => $availableYears,
+            'currentYear' => $currentYear
+        ]);
+    })->name('api.selected-year');
+    
+    Route::post('/api/selected-year', function (\Illuminate\Http\Request $request) {
+        $year = $request->input('year');
+        session(['selected_year' => (int) $year]);
+        return response()->json(['success' => true, 'selectedYear' => (int) $year]);
+    })->name('api.selected-year.set');
 
     // La gestion des achats
     Route::prefix('achats')->middleware('can:manage achats')->group(function () {

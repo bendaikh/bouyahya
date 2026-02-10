@@ -7,17 +7,23 @@ use App\Models\ReglementClient;
 use App\Models\ReglementClientLigne;
 use App\Models\BonLivraisonClient;
 use App\Models\CompteTresorerie;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReglementClientController extends Controller
 {
+    use UsesSelectedYear;
+
     /**
      * Liste tous les règlements clients (optionnellement filtrés par client_id)
      */
     public function index(Request $request)
     {
-        $query = ReglementClient::with(['client', 'tresorerie', 'lignes.bonLivraison']);
+        $selectedYear = $this->getSelectedYear();
+        
+        $query = ReglementClient::with(['client', 'tresorerie', 'lignes.bonLivraison'])
+            ->whereYear('date_reglement', $selectedYear);
         
         // Filter by client_id if provided
         if ($request->has('client_id') && $request->client_id) {

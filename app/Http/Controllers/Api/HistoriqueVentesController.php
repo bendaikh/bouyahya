@@ -5,17 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BonLivraisonClient;
 use App\Models\ReglementClientLigne;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class HistoriqueVentesController extends Controller
 {
+    use UsesSelectedYear;
+
     public function index(Request $request)
     {
         try {
+            $selectedYear = $this->getSelectedYear();
+            
             // Get all bon livraison with client information and payment details
             // Include all statuses (En attente, En cours, livre, annule)
             $ventes = BonLivraisonClient::with(['client'])
+                ->whereYear('date', $selectedYear)
                 ->orderBy('date', 'desc')
                 ->get()
                 ->map(function ($bonLivraison) {

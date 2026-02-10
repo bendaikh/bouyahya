@@ -34,6 +34,23 @@
                     
                     <!-- Right Actions -->
                     <div class="flex items-center gap-3">
+                        <!-- Year Selector -->
+                        <div class="hidden md:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-violet-500 to-purple-600 rounded-xl shadow-lg shadow-violet-500/25">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <select 
+                                v-model="selectedYear"
+                                @change="changeYear($event.target.value)"
+                                class="bg-transparent border-0 text-sm font-bold text-white focus:ring-0 cursor-pointer appearance-none pr-6"
+                                style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27white%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0 center; background-size: 1em;"
+                            >
+                                <option v-for="year in availableYears" :key="year" :value="year" class="text-gray-900">
+                                    {{ year }}
+                                </option>
+                            </select>
+                        </div>
+                        
                         <!-- Search Button (Desktop) -->
                         <button class="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,6 +121,8 @@ const pageTitle = ref('Tableau de bord')
 const user = ref(null)
 const pageComponent = ref('')
 const sidebarCollapsed = ref(false)
+const selectedYear = ref(new Date().getFullYear())
+const availableYears = ref([])
 
 const onSidebarCollapseChange = (collapsed) => {
     sidebarCollapsed.value = collapsed
@@ -122,6 +141,39 @@ const getRoleName = () => {
         return user.value.roles[0].name
     }
     return 'Utilisateur'
+}
+
+const fetchSelectedYear = async () => {
+    try {
+        const response = await fetch('/api/selected-year')
+        const data = await response.json()
+        selectedYear.value = data.selectedYear
+        availableYears.value = data.availableYears
+    } catch (error) {
+        console.error('Error fetching selected year:', error)
+        // Fallback to current year
+        const currentYear = new Date().getFullYear()
+        selectedYear.value = currentYear
+        availableYears.value = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i)
+    }
+}
+
+const changeYear = async (year) => {
+    try {
+        await fetch('/api/selected-year', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
+            body: JSON.stringify({ year: year })
+        })
+        selectedYear.value = year
+        // Reload the page to apply the year filter
+        window.location.reload()
+    } catch (error) {
+        console.error('Error changing year:', error)
+    }
 }
 
 onMounted(() => {
@@ -150,5 +202,8 @@ onMounted(() => {
     if (logoutPlaceholder && logoutTemplate) {
         logoutPlaceholder.innerHTML = logoutTemplate.innerHTML
     }
+    
+    // Fetch selected year
+    fetchSelectedYear()
 })
 </script>

@@ -6,21 +6,30 @@ use App\Models\BonCommandeFournisseur;
 use App\Models\BonAchatFournisseur;
 use App\Models\BonAchatArticle;
 use App\Models\Fournisseur;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class BonCommandeFournisseurController extends Controller
 {
+    use UsesSelectedYear;
+
     public function index()
     {
-        $bonCommandes = BonCommandeFournisseur::with('fournisseur')->orderBy('created_at', 'desc')->get();
+        $selectedYear = $this->getSelectedYear();
+        
+        $bonCommandes = BonCommandeFournisseur::with('fournisseur')
+            ->whereYear('date', $selectedYear)
+            ->orderBy('created_at', 'desc')
+            ->get();
         $fournisseurs = Fournisseur::orderBy('nom_fournisseur')->get();
         
         return view('achats.bon-commande', [
             'page_title' => 'Bon de commande',
             'bonCommandes' => $bonCommandes,
             'fournisseurs' => $fournisseurs,
+            'selectedYear' => $selectedYear,
         ]);
     }
 

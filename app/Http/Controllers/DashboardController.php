@@ -16,30 +16,44 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Get selected year from session, default to current year
         $currentYear = Carbon::now()->year;
+        $selectedYear = session('selected_year', $currentYear);
         $currentMonth = Carbon::now()->month;
         
-        // Total Ventes (sum of all bon livraison totals)
-        $totalVentes = BonLivraisonClient::sum('total_general') ?? 0;
+        // Generate list of available years (from 2020 to current year + 1)
+        $availableYears = range(2020, $currentYear + 1);
         
-        // Total Achats (sum of all bon achat totals)
-        $totalAchats = BonAchatFournisseur::sum('total_ttc') ?? 0;
+        // Check if user is commercial
+        $isCommercial = auth()->user()->hasRole('commercial');
         
-        // Solde Clients (unpaid client balance)
-        // Calculate total bon livraison - total paid
-        $totalBonLivraisonClients = BonLivraisonClient::sum('total_general') ?? 0;
-        $totalPaidByClients = ReglementClient::whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
+        // Date range for selected year
+        $yearStart = Carbon::create($selectedYear, 1, 1)->startOfYear();
+        $yearEnd = Carbon::create($selectedYear, 12, 31)->endOfYear();
+        
+        // Total Ventes for selected year
+        $totalVentes = BonLivraisonClient::whereYear('date', $selectedYear)->sum('total_general') ?? 0;
+        
+        // Total Achats for selected year
+        $totalAchats = BonAchatFournisseur::whereYear('date', $selectedYear)->sum('total_ttc') ?? 0;
+        
+        // Solde Clients for selected year
+        $totalBonLivraisonClients = BonLivraisonClient::whereYear('date', $selectedYear)->sum('total_general') ?? 0;
+        $totalPaidByClients = ReglementClient::whereYear('date_reglement', $selectedYear)
+            ->whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
         $soldeClients = $totalBonLivraisonClients - $totalPaidByClients;
         
-        // Solde Fournisseurs (unpaid supplier balance)
-        $totalBonAchatFournisseurs = BonAchatFournisseur::sum('total_ttc') ?? 0;
-        $totalPaidToFournisseurs = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
+        // Solde Fournisseurs for selected year
+        $totalBonAchatFournisseurs = BonAchatFournisseur::whereYear('date', $selectedYear)->sum('total_ttc') ?? 0;
+        $totalPaidToFournisseurs = ReglementFournisseur::whereYear('date_reglement', $selectedYear)
+            ->whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
         $soldeFournisseurs = $totalBonAchatFournisseurs - $totalPaidToFournisseurs;
         
-        // 5 Derniers Bons de Livraisons
+        // 5 Derniers Bons de Livraisons for selected year
         $derniersBonsLivraison = BonLivraisonClient::with('client')
+            ->whereYear('date', $selectedYear)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->take(5)
@@ -55,8 +69,9 @@ class DashboardController extends Controller
                 ];
             });
         
-        // 5 Derniers Bons d'Achats
+        // 5 Derniers Bons d'Achats for selected year
         $derniersBonsAchat = BonAchatFournisseur::with('fournisseur')
+            ->whereYear('date', $selectedYear)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->take(5)
@@ -72,8 +87,8 @@ class DashboardController extends Controller
                 ];
             });
         
-        // Monthly data for chart (Achats and Ventes per month)
-        $mouvementsData = $this->getMonthlyMovements($currentYear);
+        // Monthly data for chart (Achats and Ventes per month) for selected year
+        $mouvementsData = $this->getMonthlyMovements($selectedYear);
         
         // Etat Caisse (Tresorerie accounts of type 'caisse')
         $etatCaisse = CompteTresorerie::where('type_compte', 'caisse')
@@ -97,15 +112,17 @@ class DashboardController extends Controller
                 ];
             });
         
-        // Payment methods breakdown for pie chart
-        $paymentBreakdown = $this->getPaymentBreakdown();
+        // Payment methods breakdown for pie chart (for selected year)
+        $paymentBreakdown = $this->getPaymentBreakdown($selectedYear);
         
-        // Encaissements and Decaissements totals
-        $encaissements = ReglementClient::whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
-        $decaissements = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
+        // Encaissements and Decaissements totals for selected year
+        $encaissements = ReglementClient::whereYear('date_reglement', $selectedYear)
+            ->whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
+        $decaissements = ReglementFournisseur::whereYear('date_reglement', $selectedYear)
+            ->whereIn('statut', ['paye', 'cour', 'instance'])->sum('montant') ?? 0;
         
-        // Charges total
-        $charges = \App\Models\ChargeEntry::sum('montant') ?? 0;
+        // Charges total for selected year
+        $charges = \App\Models\ChargeEntry::whereYear('date', $selectedYear)->sum('montant') ?? 0;
         
         return view('dashboard', compact(
             'totalVentes',
@@ -121,7 +138,10 @@ class DashboardController extends Controller
             'encaissements',
             'decaissements',
             'charges',
-            'currentYear'
+            'currentYear',
+            'selectedYear',
+            'availableYears',
+            'isCommercial'
         ));
     }
     
@@ -160,13 +180,17 @@ class DashboardController extends Controller
         ];
     }
     
-    private function getPaymentBreakdown()
+    private function getPaymentBreakdown($year = null)
     {
         // Get breakdown by payment type (type_reglement)
-        $breakdown = ReglementClient::selectRaw('type_reglement, SUM(montant) as total')
-            ->whereIn('statut', ['paye', 'cour', 'instance'])
-            ->groupBy('type_reglement')
-            ->get();
+        $query = ReglementClient::selectRaw('type_reglement, SUM(montant) as total')
+            ->whereIn('statut', ['paye', 'cour', 'instance']);
+        
+        if ($year) {
+            $query->whereYear('date_reglement', $year);
+        }
+        
+        $breakdown = $query->groupBy('type_reglement')->get();
         
         $totalPayments = $breakdown->sum('total');
         

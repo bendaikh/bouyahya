@@ -8,16 +8,22 @@ use App\Models\BonAchatFournisseur;
 use App\Models\BonAchatArticle;
 use App\Models\Fournisseur;
 use App\Models\ReglementFournisseurLigne;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Support\Facades\DB;
 
 class BonAchatFournisseurController extends Controller
 {
+    use UsesSelectedYear;
+
     /**
      * Get all bon d'achat (optionally filtered by fournisseur_id)
      */
     public function index(Request $request)
     {
-        $query = BonAchatFournisseur::with(['fournisseur', 'articles']);
+        $selectedYear = $this->getSelectedYear();
+        
+        $query = BonAchatFournisseur::with(['fournisseur', 'articles'])
+            ->whereYear('date', $selectedYear);
         
         // Filter by fournisseur_id if provided
         if ($request->has('fournisseur_id') && $request->fournisseur_id) {
@@ -34,7 +40,10 @@ class BonAchatFournisseurController extends Controller
      */
     public function historique(Request $request)
     {
+        $selectedYear = $this->getSelectedYear();
+        
         $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
+            ->whereYear('date', $selectedYear)
             ->where('statut', 'valide')
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')

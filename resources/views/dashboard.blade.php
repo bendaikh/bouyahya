@@ -72,7 +72,7 @@
     </div>
 
     <!-- Main Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8 xl:gap-10 fade-in delay-100">
+    <div class="grid grid-cols-1 sm:grid-cols-2 {{ $isCommercial ? 'lg:grid-cols-2' : 'lg:grid-cols-5' }} gap-6 lg:gap-8 xl:gap-10 fade-in delay-100">
         <!-- Ventes Card -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 p-6 lg:p-7 text-white shadow-xl shadow-rose-500/20 gradient-animate">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -83,12 +83,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                     </div>
-                    <span class="text-sm font-semibold opacity-90">Ventes</span>
+                    <span class="text-sm font-semibold opacity-90">Ventes ({{ $selectedYear }})</span>
                 </div>
                 <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($totalVentes, 2, ',', ' ') }}</p>
             </div>
         </div>
 
+        @if(!$isCommercial)
         <!-- Achats Card -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 p-6 lg:p-7 text-white shadow-xl shadow-slate-500/20">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -99,11 +100,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                     </div>
-                    <span class="text-sm font-semibold opacity-90">Achats</span>
+                    <span class="text-sm font-semibold opacity-90">Achats ({{ $selectedYear }})</span>
                 </div>
                 <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($totalAchats, 2, ',', ' ') }}</p>
             </div>
         </div>
+        @endif
 
         <!-- Solde Clients Card -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 p-6 lg:p-7 text-white shadow-xl shadow-amber-500/20">
@@ -115,12 +117,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                     </div>
-                    <span class="text-sm font-semibold opacity-90">Solde Clients</span>
+                    <span class="text-sm font-semibold opacity-90">Solde Clients ({{ $selectedYear }})</span>
                 </div>
                 <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($soldeClients, 2, ',', ' ') }}</p>
             </div>
         </div>
 
+        @if(!$isCommercial)
         <!-- Solde Fournisseurs Card -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-6 lg:p-7 text-white shadow-xl shadow-emerald-500/20">
             <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -131,7 +134,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
-                    <span class="text-sm font-semibold opacity-90">Solde Fournisseurs</span>
+                    <span class="text-sm font-semibold opacity-90">Solde Fournisseurs ({{ $selectedYear }})</span>
                 </div>
                 <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($soldeFournisseurs, 2, ',', ' ') }}</p>
             </div>
@@ -144,18 +147,19 @@
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
                         </svg>
                     </div>
-                    <span class="text-sm font-semibold opacity-90">Charges</span>
+                    <span class="text-sm font-semibold opacity-90">Charges ({{ $selectedYear }})</span>
                 </div>
                 <p class="text-xl xl:text-2xl 2xl:text-3xl font-bold tracking-tight whitespace-nowrap">{{ number_format($charges, 2, ',', ' ') }}</p>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Tables Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 fade-in delay-200">
+    <div class="grid grid-cols-1 {{ $isCommercial ? '' : 'lg:grid-cols-2' }} gap-6 lg:gap-8 fade-in delay-200">
         <!-- Derniers Bons de Livraisons -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-rose-500 to-rose-600">
@@ -163,7 +167,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    5 Derniers Bons de livraisons
+                    5 Derniers Bons de livraisons ({{ $selectedYear }})
                 </h3>
             </div>
             <div class="overflow-x-auto custom-scrollbar">
@@ -202,6 +206,7 @@
             </div>
         </div>
 
+        @if(!$isCommercial)
         <!-- Derniers Bons d'Achats -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-emerald-500 to-emerald-600">
@@ -209,7 +214,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    5 Derniers Bons de D'achats
+                    5 Derniers Bons de D'achats ({{ $selectedYear }})
                 </h3>
             </div>
             <div class="overflow-x-auto custom-scrollbar">
@@ -247,8 +252,10 @@
                 </table>
             </div>
         </div>
+        @endif
     </div>
 
+    @if(!$isCommercial)
     <!-- Chart and Treasury Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 fade-in delay-300">
         <!-- Chart Section -->
@@ -257,7 +264,7 @@
                 <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Mouvements Achats, Ventes & Charges
+                Mouvements Achats, Ventes & Charges - {{ $selectedYear }}
             </h3>
             <div class="h-80">
                 <canvas id="mouvementsChart"></canvas>
@@ -389,11 +396,13 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Quick Actions -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 lg:p-8 fade-in delay-400 mb-4">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Actions rapides</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6">
+        <div class="grid grid-cols-2 {{ $isCommercial ? 'sm:grid-cols-2' : 'sm:grid-cols-4' }} gap-4 lg:gap-6">
+            @if(!$isCommercial)
             <a href="/achats/bon-commande" class="group flex flex-col items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/30 dark:hover:to-blue-800/20 transition-all duration-200 border border-blue-200/50 dark:border-blue-800/50">
                 <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,6 +411,7 @@
                 </div>
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center">Nouvel Achat</span>
             </a>
+            @endif
             <a href="/ventes/bon-commande" class="group flex flex-col items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/10 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/20 transition-all duration-200 border border-emerald-200/50 dark:border-emerald-800/50">
                 <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,6 +428,7 @@
                 </div>
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center">Clients</span>
             </a>
+            @if(!$isCommercial)
             <a href="/fournisseurs" class="group flex flex-col items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/10 hover:from-violet-100 hover:to-violet-200 dark:hover:from-violet-900/30 dark:hover:to-violet-800/20 transition-all duration-200 border border-violet-200/50 dark:border-violet-800/50">
                 <div class="w-12 h-12 rounded-xl bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,6 +437,7 @@
                 </div>
                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center">Fournisseurs</span>
             </a>
+            @endif
         </div>
     </div>
 </div>

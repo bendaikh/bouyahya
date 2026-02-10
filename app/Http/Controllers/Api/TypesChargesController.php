@@ -7,21 +7,27 @@ use App\Models\TypeCharge;
 use App\Models\ChargeEntry;
 use App\Models\CompteTresorerie;
 use App\Models\Setting;
+use App\Traits\UsesSelectedYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class TypesChargesController extends Controller
 {
+    use UsesSelectedYear;
+
     /**
      * Get all charge entries with related data
      */
     public function index()
     {
+        $selectedYear = $this->getSelectedYear();
+        
         // Get types from settings (types_reglement)
         $typesReglement = json_decode(Setting::getValue('types_reglement', '[]'), true);
         $typesMap = collect($typesReglement)->keyBy('id');
 
         $charges = ChargeEntry::with(['compteCaisse'])
+            ->whereYear('date', $selectedYear)
             ->orderBy('date', 'desc')
             ->orderBy('heure', 'desc')
             ->get()
