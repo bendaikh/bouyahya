@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BonAchatFournisseur;
 use App\Models\BonAchatArticle;
 use App\Models\Fournisseur;
+use App\Models\ReglementFournisseur;
 use App\Models\ReglementFournisseurLigne;
 use App\Traits\UsesSelectedYear;
 use Illuminate\Support\Facades\DB;
@@ -49,15 +50,12 @@ class BonAchatFournisseurController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($bon) {
-                // Calculate amount paid from reglements
-                // Use the allocated montant_regle per bon (not the total règlement montant)
-                // This correctly handles règlements split across multiple bons
-                // Count règlements with status 'paye', 'cour' (en cours), or 'instance' as paid
-                // Exclude règlements with status 'devalide', 'impaye', or 'reporte' as they are not paid
-                $montantPaye = ReglementFournisseurLigne::where('bon_achat_id', $bon->id)
-                    ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-                    ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
-                    ->sum('reglement_fournisseur_lignes.montant_regle');
+                // Calculate amount paid from full règlement amounts linked to this bon
+                $montantPaye = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
+                    ->whereHas('lignes', function ($query) use ($bon) {
+                        $query->where('bon_achat_id', $bon->id);
+                    })
+                    ->sum('montant');
                 
                 $ttc = floatval($bon->total_ttc);
                 $paye = floatval($montantPaye);
@@ -337,11 +335,12 @@ class BonAchatFournisseurController extends Controller
                 ];
             });
         
-        // Calculate total paid amount
-        $totalPaye = ReglementFournisseurLigne::where('bon_achat_id', $id)
-            ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-            ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
-            ->sum('reglement_fournisseur_lignes.montant_regle');
+        // Calculate total paid amount using full règlement amounts linked to this bon
+        $totalPaye = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
+            ->whereHas('lignes', function ($query) use ($id) {
+                $query->where('bon_achat_id', $id);
+            })
+            ->sum('montant');
         
         return response()->json([
             'bon' => [

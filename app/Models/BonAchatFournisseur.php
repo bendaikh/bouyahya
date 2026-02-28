@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ReglementFournisseur;
 use App\Models\ReglementFournisseurLigne;
 use App\Traits\BelongsToUser;
 
@@ -41,10 +42,11 @@ class BonAchatFournisseur extends Model
 
     public function getMontantPayeAttribute()
     {
-        return $this->reglementLignes()
-            ->join('reglements_fournisseurs', 'reglement_fournisseur_lignes.reglement_id', '=', 'reglements_fournisseurs.id')
-            ->whereIn('reglements_fournisseurs.statut', ['paye', 'cour', 'instance'])
-            ->sum('reglement_fournisseur_lignes.montant_regle');
+        return ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
+            ->whereHas('lignes', function ($query) {
+                $query->where('bon_achat_id', $this->id);
+            })
+            ->sum('montant');
     }
     
     // Relationships
