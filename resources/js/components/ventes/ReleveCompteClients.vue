@@ -461,8 +461,15 @@ const combinedData = computed(() => {
         })
     })
     
-    // Sort by date
-    data.sort((a, b) => new Date(a.date) - new Date(b.date))
+    // Sort by date, then by numero (to ensure proper ordering of RF codes like RF-0001, RF-0002, etc.)
+    data.sort((a, b) => {
+        const dateCompare = new Date(a.date) - new Date(b.date)
+        if (dateCompare !== 0) return dateCompare
+        // Secondary sort by numero (natural sort for codes like RF-0001, RF-0002)
+        const numA = a.numero || ''
+        const numB = b.numero || ''
+        return numA.localeCompare(numB, undefined, { numeric: true, sensitivity: 'base' })
+    })
     
     // Calculate cumulative solde
     let runningSolde = 0
@@ -594,15 +601,16 @@ const loadDataForClient = async () => {
         const livResponse = await fetch(`/api/bon-livraison-clients?client_id=${filters.value.clientId}`)
         if (livResponse.ok) {
             const livData = await livResponse.json()
-            // Accept different status variations
-            livraisons.value = livData.filter(liv => 
-                liv.statut === 'valide' || 
-                liv.statut === 'Validé' ||
-                liv.statut === 'Valide' ||
-                liv.statut === 'livre' ||
-                liv.statut === 'Livré' ||
-                liv.statut === 'Livre'
-            )
+            // Accept different status variations (including encoding variations)
+            const validStatuses = [
+                'valide', 'Validé', 'Valide', 
+                'livre', 'Livré', 'Livre', 'LivrÃ©'
+            ]
+            livraisons.value = livData.filter(liv => {
+                if (!liv.statut) return false
+                const status = liv.statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                return status === 'valide' || status === 'livre' || validStatuses.includes(liv.statut)
+            })
         }
         
         // Load règlements clients

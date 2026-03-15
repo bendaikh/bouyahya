@@ -476,8 +476,15 @@ const combinedData = computed(() => {
         })
     })
     
-    // Sort by date
-    data.sort((a, b) => new Date(a.date) - new Date(b.date))
+    // Sort by date, then by numero (to ensure proper ordering of RF codes like RF-0001, RF-0002, etc.)
+    data.sort((a, b) => {
+        const dateCompare = new Date(a.date) - new Date(b.date)
+        if (dateCompare !== 0) return dateCompare
+        // Secondary sort by numero (natural sort for codes like RF-0001, RF-0002)
+        const numA = a.numero || ''
+        const numB = b.numero || ''
+        return numA.localeCompare(numB, undefined, { numeric: true, sensitivity: 'base' })
+    })
     
     // Calculate cumulative solde per client (Credit - Debit)
     // We track separate running totals for each client so one client's balance 
