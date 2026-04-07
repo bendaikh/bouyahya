@@ -423,12 +423,37 @@ const visiblePages = computed(() => {
 })
 
 const totaux = computed(() => {
-    return filteredBons.value.reduce((acc, bon) => {
-        acc.montantTTC += parseFloat(bon.total_ttc) || 0
-        acc.solde += getSolde(bon)
-        acc.reliquat += getReliquat(bon)
-        return acc
-    }, { montantTTC: 0, solde: 0, reliquat: 0 })
+    // For Montant TTC: sum all bons
+    const montantTTC = filteredBons.value.reduce((sum, bon) => sum + (parseFloat(bon.total_ttc) || 0), 0)
+    
+    // For Solde and Reliquat: we need the FINAL balance per fournisseur/client group
+    // Since rows are sorted by date DESC, we need to find the FIRST (most recent) row per group
+    const latestByGroup = {}
+    
+    filteredBons.value.forEach(bon => {
+        const clientLivre = (bon.client_livre || 'default').trim()
+        const groupId = `${bon.fournisseur_id}_${clientLivre}`
+        
+        // Only keep the first occurrence (most recent due to DESC sort)
+        if (!latestByGroup[groupId]) {
+            latestByGroup[groupId] = bon
+        }
+    })
+    
+    // Sum the final solde and reliquat from each group's latest row
+    let totalSolde = 0
+    let totalReliquat = 0
+    
+    Object.values(latestByGroup).forEach(bon => {
+        totalSolde += getSolde(bon)
+        totalReliquat += getReliquat(bon)
+    })
+    
+    return { 
+        montantTTC: montantTTC, 
+        solde: totalSolde, 
+        reliquat: totalReliquat 
+    }
 })
 
 // Methods

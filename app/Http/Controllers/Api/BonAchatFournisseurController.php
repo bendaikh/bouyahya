@@ -38,56 +38,147 @@ class BonAchatFournisseurController extends Controller
     
     /**
      * Get historique data with payment information
+     * Uses the same logic as ReleveCompteFournisseurs:
+     * - Credit = total_ttc of bons
+     * - Debit = montant of reglements (paye, cour, instance status only)
+     * - Solde = cumulative (Credit - Debit) per fournisseur/client group
      */
     public function historique(Request $request)
     {
         $selectedYear = $this->getSelectedYear();
         
+        // Get all valid bons for the selected year
         $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
             ->whereYear('date', $selectedYear)
             ->where('statut', 'valide')
             ->orderBy('date', 'asc')
-            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
-        $runningSoldeByGroup = [];
+        // Get all reglements for the same year that are linked to these bons
+        $reglements = ReglementFournisseur::with(['lignes.bonAchat'])
+            ->whereIn('statut', ['paye', 'cour', 'instance'])
+            ->whereHas('lignes.bonAchat', function ($query) use ($selectedYear) {
+                $query->whereYear('date', $selectedYear)
+                      ->where('statut', 'valide');
+            })
+            ->orderBy('date_reglement', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
-        $bons = $bons->map(function ($bon) use (&$runningSoldeByGroup) {
-            // Group by fournisseur AND client_livre
-            $groupId = $bon->fournisseur_id . '_' . ($bon->client_livre ?? 'default');
-            
-            if (!isset($runningSoldeByGroup[$groupId])) {
-                $runningSoldeByGroup[$groupId] = 0;
+        // Build a combined timeline of events (bons and reglements)
+        // Each bon adds to the balance (Credit), each reglement reduces it (Debit)
+        $events = [];
+        
+        foreach ($bons as $bon) {
+            $clientLivre = trim($bon->client_livre ?? 'default');
+            $events[] = [
+                'type' => 'bon',
+                'date' => $bon->date->format('Y-m-d'),
+                'id' => $bon->id,
+                'fournisseur_id' => $bon->fournisseur_id,
+                'client_livre' => $clientLivre,
+                'amount' => floatval($bon->total_ttc),
+                'bon' => $bon,
+            ];
+        }
+        
+        foreach ($reglements as $reglement) {
+            // Get linked bons to determine which client_livre groups this payment affects
+            foreach ($reglement->lignes as $ligne) {
+                if ($ligne->bonAchat) {
+                    $clientLivre = trim($ligne->bonAchat->client_livre ?? 'default');
+                    $events[] = [
+                        'type' => 'reglement',
+                        'date' => $reglement->date_reglement,
+                        'id' => $reglement->id,
+                        'fournisseur_id' => $reglement->fournisseur_id,
+                        'client_livre' => $clientLivre,
+                        'amount' => floatval($reglement->montant),
+                        'reglement' => $reglement,
+                        'bon_id' => $ligne->bon_achat_id,
+                    ];
+                    break; // Only add one event per reglement (the full amount)
+                }
             }
-
-            // Calculate amount paid from full règlement amounts linked to this bon
-            $montantPaye = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
-                ->whereHas('lignes', function ($query) use ($bon) {
-                    $query->where('bon_achat_id', $bon->id);
-                })
-                ->sum('montant');
+        }
+        
+        // Sort events by date, then by type (bons first), then by id
+        usort($events, function ($a, $b) {
+            $dateCompare = strcmp($a['date'], $b['date']);
+            if ($dateCompare !== 0) return $dateCompare;
+            // Bons come before reglements on the same date
+            if ($a['type'] !== $b['type']) {
+                return $a['type'] === 'bon' ? -1 : 1;
+            }
+            return $a['id'] - $b['id'];
+        });
+        
+        // Calculate running balance per fournisseur/client group
+        $runningBalanceByGroup = [];
+        $bonPayments = []; // Track total payments per bon
+        
+        foreach ($events as $event) {
+            $groupId = $event['fournisseur_id'] . '_' . $event['client_livre'];
+            
+            if (!isset($runningBalanceByGroup[$groupId])) {
+                $runningBalanceByGroup[$groupId] = 0;
+            }
+            
+            if ($event['type'] === 'bon') {
+                // Bon adds to balance (Credit = what we owe)
+                $runningBalanceByGroup[$groupId] += $event['amount'];
+                
+                // Store the running balance at this point for this bon
+                $event['bon']->running_balance = round($runningBalanceByGroup[$groupId], 2);
+            } else {
+                // Reglement reduces balance (Debit = what we paid)
+                $runningBalanceByGroup[$groupId] -= $event['amount'];
+                
+                // Track payments per bon
+                if (isset($event['bon_id'])) {
+                    if (!isset($bonPayments[$event['bon_id']])) {
+                        $bonPayments[$event['bon_id']] = 0;
+                    }
+                    $bonPayments[$event['bon_id']] += $event['amount'];
+                }
+            }
+        }
+        
+        // Get the final balance for each group (after all events)
+        $finalBalanceByGroup = $runningBalanceByGroup;
+        
+        // Now calculate solde for each bon based on final balance
+        // We need to recalculate from scratch to get proper cumulative solde per bon
+        $runningBalanceByGroup = [];
+        
+        $bons = $bons->map(function ($bon) use (&$runningBalanceByGroup, $bonPayments) {
+            $clientLivre = trim($bon->client_livre ?? 'default');
+            $groupId = $bon->fournisseur_id . '_' . $clientLivre;
+            
+            if (!isset($runningBalanceByGroup[$groupId])) {
+                $runningBalanceByGroup[$groupId] = 0;
+            }
             
             $ttc = floatval($bon->total_ttc);
-            $paye = floatval($montantPaye);
+            $paye = isset($bonPayments[$bon->id]) ? $bonPayments[$bon->id] : 0;
             
-            // Current bon net balance (TTC - Paye)
-            $currentBonNet = $ttc - $paye;
+            // Add this bon's net to the running balance
+            $runningBalanceByGroup[$groupId] += ($ttc - $paye);
             
-            // Running net balance includes previous bons
-            $runningSoldeByGroup[$groupId] += $currentBonNet;
+            $currentBalance = round($runningBalanceByGroup[$groupId], 2);
             
             $bon->montant_paye = $paye;
             
-            // If running balance is positive, it's a SOLDE (amount owed to supplier)
-            // If running balance is negative, it's a RELIQUAT (overpayment/credit)
-            $currentRunningBalance = $runningSoldeByGroup[$groupId];
-            
-            if ($currentRunningBalance >= 0) {
-                $bon->solde = $currentRunningBalance;
+            if ($currentBalance > 0) {
+                $bon->solde = $currentBalance;
                 $bon->reliquat = 0;
+            } elseif ($currentBalance < 0) {
+                $bon->solde = 0;
+                $bon->reliquat = abs($currentBalance);
             } else {
                 $bon->solde = 0;
-                $bon->reliquat = abs($currentRunningBalance);
+                $bon->reliquat = 0;
             }
             
             return $bon;
@@ -95,7 +186,7 @@ class BonAchatFournisseurController extends Controller
 
         // Sort back to descending for the view
         $bons = $bons->sortByDesc(function($bon) {
-            return $bon->date->format('Y-m-d') . $bon->created_at;
+            return $bon->date->format('Y-m-d') . str_pad($bon->id, 10, '0', STR_PAD_LEFT);
         })->values();
         
         return response()->json($bons);
