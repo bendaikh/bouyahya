@@ -40,11 +40,13 @@ class HistoriqueVentesController extends Controller
                 
                 $totalGeneral = (float) $bonLivraison->total_general;
                 
-                // Current bon solde
-                $currentBonSolde = $totalGeneral - $montantPaye;
+                // Current bon net balance (Total - Paye)
+                $currentBonNet = $totalGeneral - $montantPaye;
                 
-                // Running solde includes previous bons' solde
-                $runningSoldeByClient[$clientId] += $currentBonSolde;
+                // Running net balance includes previous bons
+                $runningSoldeByClient[$clientId] += $currentBonNet;
+                
+                $currentRunningBalance = $runningSoldeByClient[$clientId];
                 
                 return [
                     'id' => $bonLivraison->id,
@@ -59,8 +61,8 @@ class HistoriqueVentesController extends Controller
                     'total_quantites' => $bonLivraison->total_quantites,
                     'total_general' => $totalGeneral,
                     'montant_paye' => $montantPaye,
-                    'solde' => $runningSoldeByClient[$clientId],
-                    'reliquat' => max($montantPaye - $totalGeneral, 0),
+                    'solde' => $currentRunningBalance >= 0 ? $currentRunningBalance : 0,
+                    'reliquat' => $currentRunningBalance < 0 ? abs($currentRunningBalance) : 0,
                     'mode_paiement' => $bonLivraison->mode_paiement,
                     'statut' => $bonLivraison->statut,
                 ];

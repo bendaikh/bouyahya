@@ -70,17 +70,25 @@ class BonAchatFournisseurController extends Controller
             $ttc = floatval($bon->total_ttc);
             $paye = floatval($montantPaye);
             
-            // Current bon solde
-            $currentBonSolde = $ttc - $paye;
+            // Current bon net balance (TTC - Paye)
+            $currentBonNet = $ttc - $paye;
             
-            // Running solde includes previous bons' solde
-            $runningSoldeByGroup[$groupId] += $currentBonSolde;
+            // Running net balance includes previous bons
+            $runningSoldeByGroup[$groupId] += $currentBonNet;
             
             $bon->montant_paye = $paye;
-            $bon->solde = $runningSoldeByGroup[$groupId];
             
-            // RELIQUAT: trop-perçu (payé > TTC) - excédent de paiement for this specific bon
-            $bon->reliquat = max($paye - $ttc, 0);
+            // If running balance is positive, it's a SOLDE (amount owed to supplier)
+            // If running balance is negative, it's a RELIQUAT (overpayment/credit)
+            $currentRunningBalance = $runningSoldeByGroup[$groupId];
+            
+            if ($currentRunningBalance >= 0) {
+                $bon->solde = $currentRunningBalance;
+                $bon->reliquat = 0;
+            } else {
+                $bon->solde = 0;
+                $bon->reliquat = abs($currentRunningBalance);
+            }
             
             return $bon;
         });
