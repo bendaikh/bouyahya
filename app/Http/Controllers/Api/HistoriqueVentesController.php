@@ -22,37 +22,55 @@ class HistoriqueVentesController extends Controller
             // Include all statuses (En attente, En cours, livre, annule)
             $ventes = BonLivraisonClient::with(['client'])
                 ->whereYear('date', $selectedYear)
-                ->orderBy('date', 'desc')
-                ->get()
-                ->map(function ($bonLivraison) {
-                    // Calculate montant_paye from reglement_client_lignes
-                    $montantPaye = ReglementClientLigne::where('bon_livraison_id', $bonLivraison->id)
-                        ->sum('montant_regle');
-                    
-                    $totalGeneral = (float) $bonLivraison->total_general;
-                    $solde = $totalGeneral - $montantPaye;
-                    $reliquat = $solde > 0 ? $solde : 0;
-                    
-                    return [
-                        'id' => $bonLivraison->id,
-                        'numero_bon' => $bonLivraison->numero_bon,
-                        'date' => $bonLivraison->date?->format('Y-m-d'),
-                        'client' => [
-                            'id' => $bonLivraison->client?->id,
-                            'code_client' => $bonLivraison->client?->code_client,
-                            'raison_sociale' => $bonLivraison->client?->raison_sociale,
-                        ],
-                        'ville_livraison' => $bonLivraison->ville_livraison,
-                        'total_quantites' => $bonLivraison->total_quantites,
-                        'total_general' => $totalGeneral,
-                        'montant_paye' => $montantPaye,
-                        'solde' => $solde,
-                        'reliquat' => $reliquat,
-                        'mode_paiement' => $bonLivraison->mode_paiement,
-                        'statut' => $bonLivraison->statut,
-                    ];
-                });
+                ->orderBy('date', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $runningSoldeByClient = [];
+
+            $ventes = $ventes->map(function ($bonLivraison) use (&$runningSoldeByClient) {
+                $clientId = $bonLivraison->client_id;
+                if (!isset($runningSoldeByClient[$clientId])) {
+                    $runningSoldeByClient[$clientId] = 0;
+                }
+
+                // Calculate montant_paye from reglement_client_lignes
+                $montantPaye = ReglementClientLigne::where('bon_livraison_id', $bonLivraison->id)
+                    ->sum('montant_regle');
+                
+                $totalGeneral = (float) $bonLivraison->total_general;
+                
+                // Current bon solde
+                $currentBonSolde = $totalGeneral - $montantPaye;
+                
+                // Running solde includes previous bons' solde
+                $runningSoldeByClient[$clientId] += $currentBonSolde;
+                
+                return [
+                    'id' => $bonLivraison->id,
+                    'numero_bon' => $bonLivraison->numero_bon,
+                    'date' => $bonLivraison->date?->format('Y-m-d'),
+                    'client' => [
+                        'id' => $bonLivraison->client?->id,
+                        'code_client' => $bonLivraison->client?->code_client,
+                        'raison_sociale' => $bonLivraison->client?->raison_sociale,
+                    ],
+                    'ville_livraison' => $bonLivraison->ville_livraison,
+                    'total_quantites' => $bonLivraison->total_quantites,
+                    'total_general' => $totalGeneral,
+                    'montant_paye' => $montantPaye,
+                    'solde' => $runningSoldeByClient[$clientId],
+                    'reliquat' => max($montantPaye - $totalGeneral, 0),
+                    'mode_paiement' => $bonLivraison->mode_paiement,
+                    'statut' => $bonLivraison->statut,
+                ];
+            });
             
+            // Sort back to descending for the view
+            $ventes = $ventes->sortByDesc(function($bon) {
+                return $bon['date'] . $bon['id'];
+            })->values();
+
             return response()->json($ventes);
         } catch (\Exception $e) {
             return response()->json([

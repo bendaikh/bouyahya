@@ -46,32 +46,49 @@ class BonAchatFournisseurController extends Controller
         $bons = BonAchatFournisseur::with(['fournisseur', 'articles'])
             ->whereYear('date', $selectedYear)
             ->where('statut', 'valide')
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($bon) {
-                // Calculate amount paid from full règlement amounts linked to this bon
-                $montantPaye = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
-                    ->whereHas('lignes', function ($query) use ($bon) {
-                        $query->where('bon_achat_id', $bon->id);
-                    })
-                    ->sum('montant');
-                
-                $ttc = floatval($bon->total_ttc);
-                $paye = floatval($montantPaye);
-                
-                // SOLDE: montant restant à payer (TTC > payé) - ce que le client doit encore
-                $solde = max($ttc - $paye, 0);
-                
-                // RELIQUAT: trop-perçu (payé > TTC) - excédent de paiement
-                $reliquat = max($paye - $ttc, 0);
-                
-                $bon->montant_paye = $paye;
-                $bon->solde = $solde;
-                $bon->reliquat = $reliquat;
-                
-                return $bon;
-            });
+            ->orderBy('date', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $runningSoldeByGroup = [];
+
+        $bons = $bons->map(function ($bon) use (&$runningSoldeByGroup) {
+            // Group by fournisseur AND client_livre
+            $groupId = $bon->fournisseur_id . '_' . ($bon->client_livre ?? 'default');
+            
+            if (!isset($runningSoldeByGroup[$groupId])) {
+                $runningSoldeByGroup[$groupId] = 0;
+            }
+
+            // Calculate amount paid from full règlement amounts linked to this bon
+            $montantPaye = ReglementFournisseur::whereIn('statut', ['paye', 'cour', 'instance', 'reporte'])
+                ->whereHas('lignes', function ($query) use ($bon) {
+                    $query->where('bon_achat_id', $bon->id);
+                })
+                ->sum('montant');
+            
+            $ttc = floatval($bon->total_ttc);
+            $paye = floatval($montantPaye);
+            
+            // Current bon solde
+            $currentBonSolde = $ttc - $paye;
+            
+            // Running solde includes previous bons' solde
+            $runningSoldeByGroup[$groupId] += $currentBonSolde;
+            
+            $bon->montant_paye = $paye;
+            $bon->solde = $runningSoldeByGroup[$groupId];
+            
+            // RELIQUAT: trop-perçu (payé > TTC) - excédent de paiement for this specific bon
+            $bon->reliquat = max($paye - $ttc, 0);
+            
+            return $bon;
+        });
+
+        // Sort back to descending for the view
+        $bons = $bons->sortByDesc(function($bon) {
+            return $bon->date->format('Y-m-d') . $bon->created_at;
+        })->values();
         
         return response()->json($bons);
     }
