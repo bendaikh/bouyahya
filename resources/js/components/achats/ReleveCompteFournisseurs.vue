@@ -201,9 +201,9 @@
                 <p class="text-4xl font-bold text-white whitespace-nowrap">{{ formatCurrency(totals.solde) }}</p>
             </div>
             
-            <!-- Commis (Yellow) -->
+            <!-- Quantité (Yellow) -->
             <div class="bg-yellow-500 rounded-lg px-8 py-4 min-w-[240px]">
-                <p class="text-sm font-semibold text-yellow-900">Commis</p>
+                <p class="text-sm font-semibold text-yellow-900">Quantité</p>
                 <p class="text-4xl font-bold text-yellow-900 whitespace-nowrap">{{ formatNumber(totals.quantite) }}</p>
             </div>
             
@@ -846,7 +846,7 @@ const printReleve = () => {
                 <div class="summary-card" style="background: #f97316;"><h4>Encaissé</h4><p>${formatCurrency(totals.value.paye)}</p></div>
                 <div class="summary-card" style="background: #c026d3;"><h4>Coffre</h4><p>${formatCurrency(totals.value.instance)}</p></div>
                 <div class="summary-card red"><h4>Solde</h4><p>${formatCurrency(totals.value.solde)}</p></div>
-                <div class="summary-card yellow"><h4>Commis</h4><p>${formatNumber(totals.value.quantite)}</p></div>
+                <div class="summary-card yellow"><h4>Quantité</h4><p>${formatNumber(totals.value.quantite)}</p></div>
             </div>
             
             <table>
