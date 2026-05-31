@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Liste rég impôts - Bouyahya')
+@section('title', 'Liste rég impôts')
 
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Les stocks - Bouyahya')
+@section('title', 'Les stocks')
 
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col h-[calc(100vh-130px)] overflow-hidden">

@@ -669,6 +669,7 @@ import { usePermissions } from '@/composables/usePermissions'
 const { hasPermission } = usePermissions()
 
 const reglements = ref([])
+const appName = ref(document.getElementById('app')?.dataset?.appName || 'Bouyahya')
 const clients = ref([])
 const tresoreries = ref([])
 const banques = ref([])
@@ -1681,7 +1682,7 @@ const printReglementPDF = (reglement) => {
             
             <div class="footer">
                 <span>Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</span>
-                <span>Bouyahya - Système de Gestion</span>
+                <span>${appName.value} - Système de Gestion</span>
             </div>
             
             <br><br>

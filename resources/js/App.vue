@@ -1,7 +1,7 @@
 <template>
     <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
         <!-- Sidebar Component -->
-        <Sidebar :user="user" @collapse-change="onSidebarCollapseChange"></Sidebar>
+        <Sidebar :user="user" :app-name="appName" @collapse-change="onSidebarCollapseChange"></Sidebar>
         
         <!-- Main Content Area -->
         <div 
@@ -113,11 +113,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Sidebar from './components/Sidebar.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const pageTitle = ref('Tableau de bord')
+const appName = ref('Bouyahya')
 const user = ref(null)
 const pageComponent = ref('')
 const sidebarCollapsed = ref(false)
@@ -176,11 +177,30 @@ const changeYear = async (year) => {
     }
 }
 
+const updateDocumentTitle = (name) => {
+    const currentTitle = document.title
+    const separatorIndex = currentTitle.lastIndexOf(' - ')
+    if (separatorIndex !== -1) {
+        document.title = `${currentTitle.slice(0, separatorIndex)} - ${name}`
+    }
+}
+
+const handleAppNameUpdated = (event) => {
+    if (event.detail) {
+        appName.value = event.detail
+        updateDocumentTitle(event.detail)
+    }
+}
+
 onMounted(() => {
     // Get page title from data attribute on the app element
     const appEl = document.getElementById('app')
     if (appEl && appEl.dataset.pageTitle) {
         pageTitle.value = appEl.dataset.pageTitle
+    }
+
+    if (appEl && appEl.dataset.appName) {
+        appName.value = appEl.dataset.appName
     }
 
     if (appEl && appEl.dataset.pageComponent) {
@@ -205,5 +225,11 @@ onMounted(() => {
     
     // Fetch selected year
     fetchSelectedYear()
+
+    window.addEventListener('app-name-updated', handleAppNameUpdated)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('app-name-updated', handleAppNameUpdated)
 })
 </script>

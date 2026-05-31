@@ -145,7 +145,7 @@
                         </div>
                     </div>
                     <div>
-                        <span class="text-xl font-bold bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">Bouyahya</span>
+                        <span class="text-xl font-bold bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">{{ appName }}</span>
                     </div>
                 </div>
                 <div v-else class="flex items-center justify-center w-full">
@@ -372,6 +372,10 @@ const props = defineProps({
     user: {
         type: Object,
         default: () => ({})
+    },
+    appName: {
+        type: String,
+        default: 'Bouyahya'
     }
 })
 

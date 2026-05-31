@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Paramètres Échéances - Bouyahya')
+@section('title', 'Paramètres Échéances')
 
 @section('content')
     <noscript>

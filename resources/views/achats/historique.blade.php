@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Historique achats - Bouyahya')
+@section('title', 'Historique achats')
 
 @section('content')
     <noscript>

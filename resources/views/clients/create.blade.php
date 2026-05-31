@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Nouveau client - Bouyahya')
+@section('title', 'Nouveau client')
 
 @section('content')
     <noscript>

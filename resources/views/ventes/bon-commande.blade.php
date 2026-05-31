@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bon de Commande - Bouyahya')
+@section('title', 'Bon de Commande')
 
 @section('content')
 <script>

@@ -16,7 +16,7 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = [
-            'app_name' => Setting::getValue('app_name', 'Bouyahya'),
+            'app_name' => Setting::getAppName(),
             'app_logo' => Setting::getValue('app_logo', null),
             'cities' => json_decode(Setting::getValue('cities', '[]'), true),
             'familles_article' => json_decode(Setting::getValue('familles_article', '[]'), true),

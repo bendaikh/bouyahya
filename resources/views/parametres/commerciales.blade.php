@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Paramètres Commerciales - Bouyahya')
+@section('title', 'Paramètres Commerciales')
 
 @section('content')
     <noscript>

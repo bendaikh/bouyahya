@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Connexion - LES ATELIERS BOUYAHYA</title>
+    <title>Connexion - {{ $appName }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -132,7 +132,7 @@
                                 LES ATELIERS
                             </h1>
                             <h2 class="font-bebas text-3xl text-amber-400 tracking-widest -mt-1">
-                                BOUYAHYA
+                                {{ strtoupper($appName) }}
                             </h2>
                         </div>
                     </div>
@@ -267,7 +267,7 @@
 
                 <!-- Footer -->
                 <p class="text-center text-sm text-gray-600">
-                    © {{ date('Y') }} Les Ateliers Bouyahya. Tous droits réservés.
+                    © {{ date('Y') }} {{ $appName }}. Tous droits réservés.
                 </p>
             </div>
         </div>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Balance caisse - Bouyahya')
+@section('title', 'Balance caisse')
 
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

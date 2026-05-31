@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tableau de bord - Bouyahya')
+@section('title', 'Tableau de bord')
 @section('page-title', 'Tableau de bord')
 
 @push('styles')

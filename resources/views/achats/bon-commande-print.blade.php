@@ -203,7 +203,7 @@
     </div>
     
     <div class="footer">
-        <p>Ce document est généré automatiquement par le système de gestion Bouyahya</p>
+        <p>Ce document est généré automatiquement par le système de gestion {{ $appName }}</p>
         <p>Imprimé le {{ now()->format('d/m/Y à H:i') }}</p>
     </div>
 </body>

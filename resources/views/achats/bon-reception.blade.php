@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bon de réception - Bouyahya')
+@section('title', 'Bon de réception')
 
 @section('content')
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

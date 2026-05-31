@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
@@ -18,6 +19,16 @@ class Setting extends Model
     }
 
     /**
+     * Get the application display name from settings.
+     */
+    public static function getAppName(): string
+    {
+        return Cache::remember('settings.app_name', 86400, function () {
+            return self::getValue('app_name', config('app.name', 'Bouyahya'));
+        });
+    }
+
+    /**
      * Set a setting value
      */
     public static function setValue(string $key, $value): void
@@ -26,5 +37,9 @@ class Setting extends Model
             ['key' => $key],
             ['value' => $value]
         );
+
+        if ($key === 'app_name') {
+            Cache::forget('settings.app_name');
+        }
     }
 }

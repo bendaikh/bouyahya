@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Trésorerie - Bouyahya')
+@section('title', 'Trésorerie')
 
 @section('content')
 <div x-data="compteTresorerieApp()" class="space-y-6">

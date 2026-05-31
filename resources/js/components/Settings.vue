@@ -551,6 +551,7 @@ const updateAppName = async () => {
 
         if (response.ok) {
             showMessage('Nom de l\'application mis à jour avec succès')
+            window.dispatchEvent(new CustomEvent('app-name-updated', { detail: appName.value }))
         } else {
             throw new Error('Erreur lors de la mise à jour')
         }

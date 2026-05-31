@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Paramètres Banques - Bouyahya')
+@section('title', 'Paramètres Banques')
 
 @section('content')
     <noscript>

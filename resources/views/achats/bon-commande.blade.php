@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bon de commande - Bouyahya')
+@section('title', 'Bon de commande')
 
 @section('content')
 <div x-data="{

@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Paramètres Types Règlement - Bouyahya')
+@section('title', 'Paramètres Types Règlement')
 
 @section('content')
     <noscript>

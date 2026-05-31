@@ -4,7 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Bouyahya - Administration')</title>
+    <title>
+        @hasSection('title')
+            @yield('title') - {{ $appName }}
+        @else
+            {{ $appName }} - Administration
+        @endif
+    </title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -48,6 +54,7 @@
         id="app" 
         data-page-title="{{ $page_title ?? 'Tableau de bord' }}"
         data-page-component="{{ $vue_component ?? '' }}"
+        data-app-name="{{ $appName }}"
         data-user="{{ json_encode(auth()->user()?->load('roles.permissions')) }}"
     >
         <!-- Content will be rendered here by Vue -->

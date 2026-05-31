@@ -2,7 +2,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Échéancier fournisseurs - Bouyahya')
+@section('title', 'Échéancier fournisseurs')
 
 @section('content')
     <noscript>
